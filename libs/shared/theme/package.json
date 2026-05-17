@@ -1,0 +1,12 @@
+{
+  "name": "@trouvermontraiteur/theme",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@primeuix/themes": "^2.0.3",
+    "tslib": "^2.3.0"
+  }
+}

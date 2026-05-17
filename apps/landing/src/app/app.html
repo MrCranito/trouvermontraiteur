@@ -1,0 +1,48 @@
+<p-menubar [model]="menuItems" class="landing-menubar">
+  <ng-template #start>
+    <a routerLink="/" class="landing-menubar__brand">
+      <span class="landing-menubar__mark" aria-hidden="true">
+        <i class="pi pi-sparkles"></i>
+      </span>
+      <span class="landing-menubar__title">Trouver mon traiteur</span>
+    </a>
+  </ng-template>
+</p-menubar>
+
+<main class="landing-main">
+  <router-outlet />
+</main>
+
+<footer class="landing-footer" aria-label="Pied de page">
+  <div class="landing-footer__inner">
+    <div class="landing-footer__col landing-footer__col--brand">
+      <a routerLink="/" class="landing-footer__brand">Trouver mon traiteur</a>
+      <p class="landing-footer__tagline">
+        Trouvez le traiteur idéal pour votre événement à Paris et en Île-de-France.
+      </p>
+    </div>
+
+    <div class="landing-footer__col">
+      <h2 class="landing-footer__heading">Navigation</h2>
+      <ul class="landing-footer__links">
+        <li><a routerLink="/">Accueil</a></li>
+        <li><a routerLink="/recherche">Rechercher</a></li>
+      </ul>
+    </div>
+
+    <div class="landing-footer__col">
+      <h2 class="landing-footer__heading">Informations légales</h2>
+      <ul class="landing-footer__links">
+        @for (link of legalLinks; track link.label) {
+          <li>
+            <a href="#" (click)="onPlaceholderLink($event)">{{ link.label }}</a>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="landing-footer__bottom">
+    <p>© {{ currentYear }} Trouver mon traiteur. Tous droits réservés.</p>
+  </div>
+</footer>

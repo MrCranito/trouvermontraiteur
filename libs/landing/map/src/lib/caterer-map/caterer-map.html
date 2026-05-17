@@ -1,0 +1,26 @@
+<div class="caterer-map" role="application" aria-label="Carte des traiteurs">
+  <div class="caterer-map__canvas">
+  <div class="caterer-map__grid" aria-hidden="true"></div>
+
+  @for (caterer of caterers(); track caterer.id) {
+    <button
+      type="button"
+      class="caterer-map__marker"
+      [class.caterer-map__marker--active]="selectedId() === caterer.id"
+      [style.left]="markerPosition(caterer).left"
+      [style.top]="markerPosition(caterer).top"
+      [pTooltip]="caterer.name + ' · ' + caterer.rating + '★'"
+      tooltipPosition="top"
+      (click)="selectCaterer(caterer.id)"
+    >
+      <span class="caterer-map__marker-dot"></span>
+      <span class="caterer-map__marker-label">{{ caterer.rating }}★</span>
+    </button>
+  }
+  </div>
+
+  <p class="caterer-map__hint">
+    <i class="pi pi-info-circle"></i>
+    Aperçu — positions approximatives autour de Paris
+  </p>
+</div>

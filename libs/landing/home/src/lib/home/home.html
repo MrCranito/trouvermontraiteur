@@ -1,0 +1,182 @@
+<div class="home">
+  <section class="home__hero" aria-label="Trouver un traiteur près de chez vous">
+    <div class="home__hero-overlay" aria-hidden="true"></div>
+    <div class="home__hero-content">
+      <p class="home__hero-eyebrow">Traiteurs d'exception, près de chez vous</p>
+      <h1 class="home__hero-title">Votre événement mérite le bon artisan</h1>
+      <p class="home__hero-description">
+        Mariages, cocktails, brunchs ou repas d'entreprise&nbsp;: comparez les
+        prestations, parcourez les menus et trouvez le traiteur qui correspond à
+        votre ambiance.
+      </p>
+      <p-button
+        label="Trouver un traiteur"
+        icon="pi pi-search"
+        size="large"
+        routerLink="/recherche"
+      />
+    </div>
+  </section>
+
+  <section class="home__trust" aria-label="En chiffres">
+    <ul class="home__trust-list">
+      @for (stat of stats; track stat.label) {
+        <li class="home__trust-item">
+          <span class="home__trust-value">{{ stat.value }}</span>
+          <span class="home__trust-label">{{ stat.label }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="home__categories" aria-labelledby="home-prestations-title">
+    <header class="home__section-header">
+      <p class="home__section-eyebrow">Événements</p>
+      <h2 id="home-prestations-title">Pour chaque occasion</h2>
+      <p class="home__section-lead">
+        Mariage, fête, cocktail ou séminaire — trouvez le traiteur adapté à votre
+        événement.
+      </p>
+    </header>
+    <div class="home__prestation-grid">
+      @for (item of prestations; track item.key) {
+        <a
+          [routerLink]="['/recherche']"
+          [class]="'home__prestation home__prestation--' + item.accent"
+        >
+          <span class="home__prestation-icon" aria-hidden="true">
+            <i [class]="item.icon"></i>
+          </span>
+          <div class="home__prestation-body">
+            <h3>{{ item.label }}</h3>
+            <p>{{ item.blurb }}</p>
+          </div>
+        </a>
+      }
+    </div>
+  </section>
+
+  <section class="home__featured" aria-labelledby="home-featured-title">
+    <header class="home__section-header">
+      <p class="home__section-eyebrow">Sélection</p>
+      <h2 id="home-featured-title">Les mieux notés</h2>
+      <p class="home__section-lead">
+        Découvrez les traiteurs plébiscités par nos utilisateurs à Paris.
+      </p>
+    </header>
+    <div class="home__featured-grid">
+      @for (caterer of featured; track caterer.id) {
+        <tmt-caterer-card [caterer]="caterer" />
+      }
+    </div>
+    <div class="home__section-actions">
+      <p-button
+        label="Voir tous les traiteurs"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        [outlined]="true"
+        routerLink="/recherche"
+      />
+    </div>
+  </section>
+
+  <section class="home__benefits" aria-labelledby="home-benefits-title">
+    <header class="home__section-header">
+      <p class="home__section-eyebrow">Pourquoi nous</p>
+      <h2 id="home-benefits-title">Une recherche pensée pour vos événements</h2>
+      <p class="home__section-lead">
+        Moins de stress, plus de clarté — du premier clic jusqu’au traiteur idéal.
+      </p>
+    </header>
+    <div class="home__benefits-grid">
+      @for (benefit of benefits; track benefit.title) {
+        <article class="home__benefit-card">
+          <span class="home__benefit-icon" aria-hidden="true">
+            <i [class]="benefit.icon"></i>
+          </span>
+          <h3>{{ benefit.title }}</h3>
+          <p>{{ benefit.description }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="home__steps" aria-labelledby="home-steps-title">
+    <header class="home__section-header">
+      <p class="home__section-eyebrow">Parcours</p>
+      <h2 id="home-steps-title">Comment ça marche</h2>
+      <p class="home__section-lead">
+        Trois étapes simples pour trouver le traiteur qui fera briller votre événement.
+      </p>
+    </header>
+    <ol class="home__steps-grid">
+      @for (step of steps; track step.num) {
+        <li class="home__step-card">
+          <span class="home__step-num" aria-hidden="true">{{ step.num }}</span>
+          <span class="home__step-icon" aria-hidden="true">
+            <i [class]="step.icon"></i>
+          </span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </li>
+      }
+    </ol>
+    <div class="home__section-actions">
+      <p-button
+        label="Commencer ma recherche"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        routerLink="/recherche"
+      />
+    </div>
+  </section>
+
+  <section class="home__pro" aria-labelledby="home-pro-title">
+    <div class="home__pro-inner">
+      <div class="home__pro-content">
+        <p class="home__section-eyebrow home__pro-eyebrow">Espace professionnel</p>
+        <h2 id="home-pro-title">Vous êtes traiteur&nbsp;? Développez votre activité</h2>
+        <p class="home__pro-lead">
+          Rejoignez Trouver mon traiteur et présentez vos prestations aux
+          organisateurs d'événements qui recherchent un artisan près de chez eux.
+        </p>
+        <ul class="home__pro-perks">
+          @for (perk of proPerks; track perk.title) {
+            <li>
+              <span class="home__pro-perk-icon" aria-hidden="true">
+                <i [class]="perk.icon"></i>
+              </span>
+              <div>
+                <strong>{{ perk.title }}</strong>
+                <p>{{ perk.description }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+        <div class="home__pro-actions">
+          <p-button
+            label="Créer mon compte professionnel"
+            icon="pi pi-user-plus"
+            size="large"
+            routerLink="/inscription-pro"
+          />
+          <span class="home__pro-note">Inscription gratuite · sans engagement</span>
+        </div>
+      </div>
+      <div class="home__pro-visual" aria-hidden="true">
+        <div class="home__pro-card home__pro-card--primary">
+          <i class="pi pi-shop"></i>
+          <span>Votre vitrine en ligne</span>
+        </div>
+        <div class="home__pro-card home__pro-card--secondary">
+          <i class="pi pi-chart-line"></i>
+          <span>Plus de visibilité</span>
+        </div>
+        <div class="home__pro-card home__pro-card--accent">
+          <i class="pi pi-comments"></i>
+          <span>Demandes qualifiées</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

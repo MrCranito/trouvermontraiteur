@@ -1,0 +1,51 @@
+<p-card
+  class="caterer-card"
+  [class.caterer-card--list]="layout() === 'list'"
+  [style]="{ overflow: 'hidden' }"
+>
+  <ng-template #header>
+    <div class="caterer-card__media">
+      <img
+        [src]="caterer().imageUrl"
+        [alt]="caterer().name"
+        loading="lazy"
+      />
+    </div>
+  </ng-template>
+
+  <div class="caterer-card__body">
+    <div class="caterer-card__head">
+      <h3>{{ caterer().name }}</h3>
+      <p-rating
+        [ngModel]="caterer().rating"
+        [readonly]="true"
+        [stars]="5"
+      />
+      <span class="caterer-card__reviews"
+        >{{ caterer().rating }} · {{ caterer().reviewCount }} avis</span
+      >
+    </div>
+
+    <p class="caterer-card__description">{{ caterer().description }}</p>
+
+    <div class="caterer-card__tags">
+      @for (cat of caterer().categories.slice(0, 3); track cat) {
+        <p-tag [value]="categoryLabels[cat]" severity="secondary" />
+      }
+    </div>
+
+    <p class="caterer-card__location">
+      <i class="pi pi-map-marker"></i>
+      {{ caterer().location.city }} — {{ caterer().location.address }}
+    </p>
+  </div>
+
+  <ng-template #footer>
+    <p-button
+      label="Voir le traiteur"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      [routerLink]="['/traiteurs', caterer().slug]"
+    />
+  </ng-template>
+</p-card>

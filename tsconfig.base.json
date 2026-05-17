@@ -1,0 +1,31 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@trouvermontraiteur/models": ["./libs/shared/models/src/index.ts"],
+      "@trouvermontraiteur/api": ["./libs/shared/api/src/index.ts"],
+      "@trouvermontraiteur/theme": ["./libs/shared/theme/src/index.ts"],
+      "@trouvermontraiteur/ui": ["./libs/landing/ui/src/index.ts"],
+      "@trouvermontraiteur/data": ["./libs/landing/data/src/index.ts"],
+      "@trouvermontraiteur/map": ["./libs/landing/map/src/index.ts"],
+      "@trouvermontraiteur/home": ["./libs/landing/home/src/index.ts"],
+      "@trouvermontraiteur/search": ["./libs/landing/search/src/index.ts"],
+      "@trouvermontraiteur/caterer-detail": [
+        "./libs/landing/caterer-detail/src/index.ts"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

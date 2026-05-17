@@ -1,0 +1,14 @@
+{
+  "name": "@trouvermontraiteur/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@angular/core": "~21.2.0",
+    "@supabase/supabase-js": "^2.105.4",
+    "@trouvermontraiteur/models": "0.0.1",
+    "tslib": "^2.3.0"
+  }
+}

@@ -1,0 +1,114 @@
+<div class="search-page">
+  <header class="search-page__header">
+    <a routerLink="/" class="search-page__back">
+      <i class="pi pi-arrow-left"></i> Accueil
+    </a>
+    <h1>Trouver un traiteur</h1>
+    <p>Recherchez parmi nos partenaires autour de vous</p>
+  </header>
+
+  <div class="search-page__layout">
+    <aside class="search-page__filters">
+      <h2>Filtres</h2>
+
+      <label class="search-page__filter-label">Recherche</label>
+      <p-iconfield iconPosition="left" class="search-page__search-field">
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          type="search"
+          placeholder="Nom, ville, spécialité…"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+        />
+      </p-iconfield>
+
+      <span class="search-page__filter-label">Note minimum</span>
+      <div class="search-page__rating-filter">
+        <p-slider
+          [ngModel]="minRating()"
+          (ngModelChange)="minRating.set($event)"
+          [min]="0"
+          [max]="5"
+          [step]="0.5"
+        />
+        <span>{{ minRating() || 'Toutes' }} @if (minRating() > 0) { ★ }</span>
+      </div>
+
+      <span class="search-page__filter-label">Prestations</span>
+      <div class="search-page__checkboxes">
+        @for (opt of categoryOptions; track opt.key) {
+          <label class="search-page__checkbox">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="isCategoryChecked(opt.key)"
+              (ngModelChange)="toggleCategory(opt.key, $event)"
+              [inputId]="'cat-' + opt.key"
+            />
+            <span>{{ opt.label }}</span>
+          </label>
+        }
+      </div>
+
+      <p-button
+        label="Réinitialiser"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-refresh"
+        (onClick)="resetFilters()"
+      />
+    </aside>
+
+    <main class="search-page__results">
+      <div class="search-page__toolbar">
+        <p class="search-page__count">
+          <strong>{{ resultCount() }}</strong>
+          traiteur{{ resultCount() > 1 ? 's' : '' }} trouvé{{
+            resultCount() > 1 ? 's' : ''
+          }}
+        </p>
+        <p-selectButton
+          [options]="viewOptions"
+          [ngModel]="viewMode()"
+          (ngModelChange)="viewMode.set($event)"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      @if (resultCount() === 0) {
+        <div class="search-page__empty">
+          <i class="pi pi-inbox"></i>
+          <p>Aucun traiteur ne correspond à vos critères.</p>
+          <p-button label="Effacer les filtres" (onClick)="resetFilters()" />
+        </div>
+      } @else if (viewMode() === 'map') {
+        <div class="search-page__map-layout">
+          <tmt-caterer-map
+            class="search-page__map"
+            [caterers]="results()"
+            [selectedId]="mapSelectedId()"
+            (catererSelect)="onMapSelect($event)"
+          />
+          @if (mapSelectedId(); as selectedId) {
+            @if (findCaterer(selectedId); as selected) {
+              <tmt-caterer-card [caterer]="selected" layout="list" />
+            }
+          }
+        </div>
+      } @else {
+        <div
+          class="search-page__grid"
+          [class.search-page__grid--list]="viewMode() === 'list'"
+        >
+          @for (caterer of results(); track caterer.id) {
+            <tmt-caterer-card
+              [caterer]="caterer"
+              [layout]="viewMode() === 'list' ? 'list' : 'grid'"
+            />
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>
