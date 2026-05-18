@@ -1,6 +1,7 @@
 <p-card
   class="caterer-card"
   [class.caterer-card--list]="layout() === 'list'"
+  [class.caterer-card--featured]="variant() === 'featured'"
   [style]="{ overflow: 'hidden' }"
 >
   <ng-template #header>
@@ -41,11 +42,21 @@
   </div>
 
   <ng-template #footer>
-    <p-button
-      label="Voir le traiteur"
-      icon="pi pi-arrow-right"
-      iconPos="right"
-      [routerLink]="['/traiteurs', caterer().slug]"
-    />
+    @if (detailUrl(); as url) {
+      <a [href]="url" target="_blank" rel="noopener noreferrer" class="caterer-card__cta">
+        <p-button
+          label="Voir le traiteur"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+        />
+      </a>
+    } @else {
+      <p-button
+        label="Voir le traiteur"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        [routerLink]="['/traiteurs', caterer().slug]"
+      />
+    }
   </ng-template>
 </p-card>

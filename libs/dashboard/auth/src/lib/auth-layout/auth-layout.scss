@@ -1,0 +1,112 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-page__brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  background:
+    linear-gradient(145deg, rgba(42, 34, 25, 0.92), rgba(42, 34, 25, 0.78)),
+    url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80')
+      center / cover no-repeat;
+  color: #faf6ef;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+}
+
+.auth-page__brand-inner {
+  max-width: 22rem;
+
+  h1 {
+    margin: 1rem 0 0.75rem;
+    font-size: 1.75rem;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  > p {
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(250, 246, 239, 0.85);
+  }
+}
+
+.auth-page__logo {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #c4622d, #d4a853);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #faf6ef;
+
+  &--sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+  }
+}
+
+.auth-page__perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: rgba(250, 246, 239, 0.9);
+  }
+
+  i {
+    color: #e8825a;
+  }
+}
+
+.auth-page__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(180deg, #f0e8d8 0%, #faf6ef 35%, #faf6ef 100%);
+}
+
+.auth-page__mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  font-weight: 700;
+  color: #2a2219;
+
+  @media (max-width: 900px) {
+    display: inline-flex;
+  }
+}

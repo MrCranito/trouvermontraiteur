@@ -1,0 +1,25 @@
+<div class="auth-page">
+  <aside class="auth-page__brand" aria-hidden="true">
+    <div class="auth-page__brand-inner">
+      <span class="auth-page__logo">T</span>
+      <h1>Trouver mon traiteur</h1>
+      <p>
+        Gérez votre vitrine, suivez vos statistiques et recevez des demandes
+        qualifiées depuis votre espace professionnel.
+      </p>
+      <ul class="auth-page__perks">
+        <li><i class="pi pi-chart-bar"></i> Statistiques en temps réel</li>
+        <li><i class="pi pi-id-card"></i> Fiche visible sur l'application</li>
+        <li><i class="pi pi-shield"></i> Connexion sécurisée</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="auth-page__main">
+    <a routerLink="/auth/connexion" class="auth-page__mobile-brand">
+      <span class="auth-page__logo auth-page__logo--sm">T</span>
+      <span>Espace pro</span>
+    </a>
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,269 @@
+@if (caterer(); as c) {
+<div class="detail-page">
+  <header class="detail-page__hero">
+    <div class="detail-page__hero-inner">
+      <h1>{{ c.name }}</h1>
+      <p class="detail-page__lead">
+        <i class="pi pi-map-marker" aria-hidden="true"></i>
+        {{ c.location.city }} · {{ c.rating }} · {{ c.reviewCount }} avis
+      </p>
+    </div>
+  </header>
+
+  <div class="detail-page__body">
+    <div class="detail-page__main">
+      <figure class="detail-page__cover-wrap">
+        <img class="detail-page__cover" [src]="c.imageUrl" [alt]="c.name" />
+      </figure>
+
+      <section
+        class="detail-page__section"
+        aria-labelledby="detail-about-title"
+      >
+        <header class="detail-page__section-header">
+          <p class="detail-page__section-eyebrow">Présentation</p>
+          <h2 id="detail-about-title">À propos</h2>
+        </header>
+        <div class="detail-page__card">
+          <p class="detail-page__description">{{ c.description }}</p>
+        </div>
+      </section>
+
+      @if (c.realisations.length > 0) {
+      <section
+        class="detail-page__section"
+        aria-labelledby="detail-gallery-title"
+      >
+        <header class="detail-page__section-header">
+          <p class="detail-page__section-eyebrow">Portfolio</p>
+          <h2 id="detail-gallery-title">Réalisations</h2>
+          <p class="detail-page__section-lead">
+            Quelques événements récents organisés par ce traiteur.
+          </p>
+        </header>
+        <div class="detail-page__card detail-page__card--gallery">
+          <div class="detail-page__slider-wrap">
+            <button
+              type="button"
+              class="detail-page__slider-nav detail-page__slider-nav--prev"
+              aria-label="Photo précédente"
+              (click)="scrollGallery(-1)"
+            >
+              <i class="pi pi-chevron-left" aria-hidden="true"></i>
+            </button>
+            <div
+              #gallerySlider
+              class="detail-page__slider"
+              tabindex="0"
+              aria-label="Galerie des réalisations"
+            >
+              @for (photo of c.realisations; track photo.id) {
+              <figure class="detail-page__slide">
+                <img
+                  [src]="photo.imageUrl"
+                  [alt]="photo.caption"
+                  loading="lazy"
+                  draggable="false"
+                />
+                <figcaption>{{ photo.caption }}</figcaption>
+              </figure>
+              }
+            </div>
+            <button
+              type="button"
+              class="detail-page__slider-nav detail-page__slider-nav--next"
+              aria-label="Photo suivante"
+              (click)="scrollGallery(1)"
+            >
+              <i class="pi pi-chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p class="detail-page__slider-hint">
+            <i class="pi pi-arrows-h" aria-hidden="true"></i>
+            Faites défiler pour voir plus de photos
+          </p>
+        </div>
+      </section>
+      } @if (c.eventTypes.length > 0 || c.dietary.length > 0) {
+      <section
+        class="detail-page__section"
+        aria-labelledby="detail-prestations-title"
+      >
+        <header class="detail-page__section-header">
+          <p class="detail-page__section-eyebrow">Prestations</p>
+          <h2 id="detail-prestations-title">Événements & régimes</h2>
+        </header>
+        <div class="detail-page__card detail-page__card--chips">
+          @if (c.eventTypes.length > 0) {
+          <div class="detail-page__chip-group">
+            <h3>Types d'événement</h3>
+            <ul class="detail-page__chips">
+              @for (event of c.eventTypes; track event) {
+              <li>
+                <span class="detail-page__chip detail-page__chip--event"
+                  >{{ eventLabels[event] }}</span
+                >
+              </li>
+              }
+            </ul>
+          </div>
+          } @if (c.dietary.length > 0) {
+          <div class="detail-page__chip-group">
+            <h3>Régimes proposés</h3>
+            <ul class="detail-page__chips">
+              @for (option of c.dietary; track option) {
+              <li>
+                <span class="detail-page__chip detail-page__chip--dietary"
+                  >{{ dietaryLabels[option] }}</span
+                >
+              </li>
+              }
+            </ul>
+          </div>
+          }
+        </div>
+      </section>
+      }
+
+      <section class="detail-page__section" aria-labelledby="detail-menu-title">
+        <header class="detail-page__section-header">
+          <p class="detail-page__section-eyebrow">Carte</p>
+          <h2 id="detail-menu-title">Menu & prestations</h2>
+          <p class="detail-page__section-lead">
+            Parcourez les formules et tarifs proposés par ce traiteur.
+          </p>
+        </header>
+        <div class="detail-page__card detail-page__card--menu">
+          <p-accordion
+            class="detail-page__menu-accordion"
+            [multiple]="true"
+            expandIcon="pi pi-chevron-down"
+            collapseIcon="pi pi-chevron-down"
+          >
+            @for (group of menuByCategory(); track group.category) {
+            <p-accordionpanel [value]="group.category">
+              <p-accordionheader>{{ group.label }}</p-accordionheader>
+              <p-accordioncontent>
+                <ul class="detail-page__menu-list">
+                  @for (item of group.items; track item.id) {
+                  <li class="detail-page__menu-item">
+                    <div class="detail-page__menu-item-body">
+                      <strong>{{ item.name }}</strong>
+                      <p>{{ item.description }}</p>
+                    </div>
+                    <span class="detail-page__menu-price"
+                      >{{ formatPrice(item.price) }}</span
+                    >
+                  </li>
+                  }
+                </ul>
+              </p-accordioncontent>
+            </p-accordionpanel>
+            }
+          </p-accordion>
+        </div>
+      </section>
+
+      <section
+        class="detail-page__section"
+        aria-labelledby="detail-location-title"
+      >
+        <header class="detail-page__section-header">
+          <p class="detail-page__section-eyebrow">Localisation</p>
+          <h2 id="detail-location-title">Où nous trouver</h2>
+          <p class="detail-page__section-lead">
+            {{ c.location.address }}, {{ c.location.city }}
+          </p>
+        </header>
+        <div class="detail-page__card detail-page__card--map">
+          <tmt-caterer-map
+            class="detail-page__map"
+            [caterers]="mapCaterers()"
+            [selectedId]="c.id"
+            [interactive]="false"
+            [showHint]="false"
+          />
+          <a
+            class="detail-page__maps-link"
+            [href]="mapsUrl(c.location)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="pi pi-external-link" aria-hidden="true"></i>
+            Ouvrir dans Google Maps
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="detail-page__aside" aria-label="Informations et contact">
+      <div class="detail-page__aside-card">
+        <div class="detail-page__rating-wrap">
+          <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5" />
+          <p class="detail-page__rating-text">
+            <strong>{{ c.rating }}</strong> / 5 · {{ c.reviewCount }} avis
+          </p>
+        </div>
+
+        <ul class="detail-page__tags">
+          @for (cat of c.categories; track cat) {
+          <li>
+            <p-tag [value]="categoryLabels[cat]" severity="secondary" />
+          </li>
+          }
+        </ul>
+
+        <ul class="detail-page__facts">
+          <li>
+            <i class="pi pi-map-marker" aria-hidden="true"></i>
+            <span>{{ c.location.address }}, {{ c.location.city }}</span>
+          </li>
+          @if (c.minOrder) {
+          <li>
+            <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+            <span>Commande minimum : {{ formatPrice(c.minOrder) }}</span>
+          </li>
+          } @if (c.deliveryRadiusKm) {
+          <li>
+            <i class="pi pi-truck" aria-hidden="true"></i>
+            <span>Rayon de livraison : {{ c.deliveryRadiusKm }} km</span>
+          </li>
+          }
+        </ul>
+
+        <div class="detail-page__aside-actions">
+          <p-button
+            label="Demander un devis"
+            icon="pi pi-envelope"
+            size="large"
+            styleClass="detail-page__cta-primary"
+          />
+          <p-button
+            label="Voir d'autres traiteurs"
+            [outlined]="true"
+            severity="secondary"
+            icon="pi pi-search"
+            routerLink="/"
+            styleClass="detail-page__cta-secondary"
+          />
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+} @else {
+<div class="detail-page detail-page--empty">
+  <div class="detail-page__empty">
+    <span class="detail-page__empty-icon" aria-hidden="true">
+      <i class="pi pi-exclamation-circle"></i>
+    </span>
+    <h1>Traiteur introuvable</h1>
+    <p>Ce traiteur n'existe pas ou n'est plus disponible.</p>
+    <p-button
+      label="Retour à la recherche"
+      icon="pi pi-arrow-left"
+      routerLink="/"
+    />
+  </div>
+</div>
+}

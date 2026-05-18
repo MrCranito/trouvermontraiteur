@@ -1,29 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import { MenuItem } from 'primeng/api';
-import { Menubar } from 'primeng/menubar';
+import { Button } from 'primeng/button';
+import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
 
 @Component({
-  imports: [RouterModule, RouterLink, Menubar],
+  imports: [RouterModule, RouterLink, Button],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
+  protected readonly searchAppUrl = inject(PUBLIC_APP_URL) ?? '/';
   protected readonly currentYear = new Date().getFullYear();
-
-  protected readonly menuItems: MenuItem[] = [
-    {
-      label: 'Accueil',
-      icon: 'pi pi-home',
-      routerLink: '/',
-    },
-    {
-      label: 'Rechercher',
-      icon: 'pi pi-search',
-      routerLink: '/recherche',
-    },
-  ];
 
   protected readonly legalLinks = [
     { label: 'Mentions légales' },

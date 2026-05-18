@@ -275,6 +275,50 @@ export const TmtPreset = definePreset(Aura, {
         },
       },
     },
+    accordion: {
+      colorScheme: {
+        light: {
+          header: {
+            background: 'transparent',
+            hoverBackground: 'transparent',
+            activeBackground: 'transparent',
+            activeHoverBackground: 'transparent',
+            borderWidth: '0',
+          },
+          panel: {
+            borderWidth: '0',
+          },
+          content: {
+            background: 'transparent',
+            borderWidth: '0',
+          },
+        },
+      },
+    },
+    checkbox: {
+      colorScheme: {
+        light: {
+          root: {
+            background: colors.cream,
+            checkedBackground: colors.terracotta,
+            checkedHoverBackground: colors.terracottaLight,
+            borderColor: colors.border,
+            hoverBorderColor: colors.terracotta,
+            checkedBorderColor: colors.terracotta,
+            checkedHoverBorderColor: colors.terracottaLight,
+            shadow: 'none',
+            focusRing: {
+              width: '0',
+              shadow: 'none',
+            },
+          },
+          icon: {
+            checkedColor: colors.cream,
+            checkedHoverColor: colors.cream,
+          },
+        },
+      },
+    },
     rating: {
       colorScheme: {
         light: {

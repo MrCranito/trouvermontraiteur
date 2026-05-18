@@ -1,0 +1,254 @@
+<div class="dash-profile">
+  <header class="dash-profile__head">
+    <div>
+      <p class="dash-profile__eyebrow">Mon profil</p>
+      <h2>Gérer ma fiche sur l'application</h2>
+      <p class="dash-profile__lead">
+        Les modifications sont enregistrées localement (démo) et reflétées dans
+        l'aperçu public de l'app.
+      </p>
+    </div>
+    <div class="dash-profile__head-actions">
+      <p-button
+        label="Réinitialiser"
+        icon="pi pi-refresh"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="loadFromService()"
+      />
+      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="save()" />
+    </div>
+  </header>
+
+  @if (saved()) {
+    <p-message severity="success" text="Profil enregistré avec succès." />
+  }
+
+  @if (completeness().missing.length > 0) {
+    <aside class="dash-profile__hint" role="status">
+      <strong>Complétude : {{ completeness().score }}%</strong>
+      <span>Manque : {{ completeness().missing.join(', ') }}</span>
+    </aside>
+  }
+
+  <form class="dash-profile__form" (submit)="$event.preventDefault(); save()">
+    <section class="dash-profile__section" aria-labelledby="profile-presentation">
+      <h3 id="profile-presentation">Présentation</h3>
+      <div class="dash-profile__grid dash-profile__grid--2">
+        <div class="dash-profile__field">
+          <label for="profile-name">Nom de l'établissement</label>
+          <input
+            pInputText
+            id="profile-name"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            autocomplete="organization"
+          />
+        </div>
+        <div class="dash-profile__field">
+          <label for="profile-image">URL de la photo de couverture</label>
+          <input
+            pInputText
+            id="profile-image"
+            [ngModel]="imageUrl()"
+            (ngModelChange)="imageUrl.set($event)"
+            name="imageUrl"
+          />
+        </div>
+        <div class="dash-profile__field dash-profile__field--full">
+          <label for="profile-description">Description</label>
+          <textarea
+            pTextarea
+            id="profile-description"
+            rows="4"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            name="description"
+          ></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="dash-profile__section" aria-labelledby="profile-location">
+      <h3 id="profile-location">Localisation</h3>
+      <div class="dash-profile__grid dash-profile__grid--2">
+        <div class="dash-profile__field">
+          <label for="profile-address">Adresse</label>
+          <input
+            pInputText
+            id="profile-address"
+            [ngModel]="address()"
+            (ngModelChange)="address.set($event)"
+            name="address"
+          />
+        </div>
+        <div class="dash-profile__field">
+          <label for="profile-city">Ville</label>
+          <input
+            pInputText
+            id="profile-city"
+            [ngModel]="city()"
+            (ngModelChange)="city.set($event)"
+            name="city"
+          />
+        </div>
+        <div class="dash-profile__field">
+          <label for="profile-min-order">Commande minimum (€)</label>
+          <p-inputnumber
+            inputId="profile-min-order"
+            [ngModel]="minOrder()"
+            (ngModelChange)="minOrder.set($event)"
+            name="minOrder"
+            [min]="0"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+          />
+        </div>
+        <div class="dash-profile__field">
+          <label for="profile-radius">Rayon de livraison (km)</label>
+          <p-inputnumber
+            inputId="profile-radius"
+            [ngModel]="deliveryRadiusKm()"
+            (ngModelChange)="deliveryRadiusKm.set($event)"
+            name="deliveryRadiusKm"
+            [min]="0"
+            [max]="100"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="dash-profile__section" aria-labelledby="profile-prestations">
+      <h3 id="profile-prestations">Prestations & événements</h3>
+      <div class="dash-profile__checks-grid">
+        <div>
+          <h4>Catégories</h4>
+          <ul class="dash-profile__checks">
+            @for (opt of categoryOptions; track opt.key) {
+              <li>
+                <label class="dash-profile__check">
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isCategoryChecked(opt.key)"
+                    (ngModelChange)="toggleCategory(opt.key, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                  {{ opt.label }}
+                </label>
+              </li>
+            }
+          </ul>
+        </div>
+        <div>
+          <h4>Types d'événement</h4>
+          <ul class="dash-profile__checks">
+            @for (opt of eventOptions; track opt.key) {
+              <li>
+                <label class="dash-profile__check">
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isEventChecked(opt.key)"
+                    (ngModelChange)="toggleEvent(opt.key, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                  {{ opt.label }}
+                </label>
+              </li>
+            }
+          </ul>
+        </div>
+        <div>
+          <h4>Régimes</h4>
+          <ul class="dash-profile__checks">
+            @for (opt of dietaryOptions; track opt.key) {
+              <li>
+                <label class="dash-profile__check">
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isDietaryChecked(opt.key)"
+                    (ngModelChange)="toggleDietary(opt.key, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                  {{ opt.label }}
+                </label>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="dash-profile__section" aria-labelledby="profile-availability">
+      <h3 id="profile-availability">Disponibilités</h3>
+      <div class="dash-profile__field dash-profile__field--full">
+        <label for="profile-dates">Dates indisponibles (AAAA-MM-JJ, séparées par des virgules)</label>
+        <input
+          pInputText
+          id="profile-dates"
+          [ngModel]="unavailableDatesText()"
+          (ngModelChange)="unavailableDatesText.set($event)"
+          name="unavailableDates"
+          placeholder="2026-12-24, 2026-12-31"
+        />
+      </div>
+    </section>
+
+    <section class="dash-profile__section" aria-labelledby="profile-menu">
+      <div class="dash-profile__section-head">
+        <h3 id="profile-menu">Menu</h3>
+        <p-button
+          type="button"
+          label="Ajouter un plat"
+          icon="pi pi-plus"
+          [outlined]="true"
+          size="small"
+          (onClick)="addMenuItem()"
+        />
+      </div>
+      <ul class="dash-profile__menu-list">
+        @for (item of menuItems(); track item.id) {
+          <li class="dash-profile__menu-item">
+            <input
+              pInputText
+              [ngModel]="item.name"
+              (ngModelChange)="updateMenuItem(item.id, 'name', $event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nom du plat"
+            />
+            <input
+              pInputText
+              class="dash-profile__menu-desc"
+              [ngModel]="item.description"
+              (ngModelChange)="updateMenuItem(item.id, 'description', $event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Description"
+            />
+            <p-inputnumber
+              [ngModel]="item.price"
+              (ngModelChange)="updateMenuItem(item.id, 'price', $event)"
+              [ngModelOptions]="{ standalone: true }"
+              [min]="0"
+              mode="currency"
+              currency="EUR"
+              locale="fr-FR"
+            />
+            <p-button
+              type="button"
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              (onClick)="removeMenuItem(item.id)"
+              aria-label="Supprimer le plat"
+            />
+          </li>
+        }
+      </ul>
+    </section>
+
+    <footer class="dash-profile__footer">
+      <p-button type="submit" label="Enregistrer les modifications" icon="pi pi-check" />
+    </footer>
+  </form>
+</div>

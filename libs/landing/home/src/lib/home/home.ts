@@ -1,17 +1,34 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CatererService } from '@trouvermontraiteur/data';
-import { CatererCard } from '@trouvermontraiteur/ui';
 import { Button } from 'primeng/button';
+import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
 
 @Component({
   selector: 'tmt-home',
-  imports: [Button, CatererCard, RouterLink],
+  imports: [Button, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
-  private readonly catererService = inject(CatererService);
+  private readonly searchAppUrl = inject(PUBLIC_APP_URL) ?? '';
+
+  protected searchUrl(query?: Record<string, string>): string {
+    const qs = query
+      ? new URLSearchParams(query).toString()
+      : '';
+    const base = this.searchAppUrl.replace(/\/$/, '') || '';
+
+    if (base.startsWith('http://') || base.startsWith('https://')) {
+      const url = new URL(base);
+      if (qs) {
+        url.search = qs;
+      }
+      return url.toString();
+    }
+
+    const path = base || '/';
+    return qs ? `${path}?${qs}` : path;
+  }
 
   protected readonly stats = [
     { value: '8+', label: 'Traiteurs à Paris' },
@@ -64,11 +81,6 @@ export class Home {
       accent: 'sage',
     },
   ] as const;
-
-  protected readonly featured = this.catererService
-    .getAll()
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3);
 
   protected readonly benefits = [
     {

@@ -1,4 +1,5 @@
 import { Caterer } from '@trouvermontraiteur/models';
+import { mockRealisations } from './mock-realisations';
 
 export const MOCK_CATERERS: Caterer[] = [
   {
@@ -11,6 +12,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.8,
     reviewCount: 124,
     categories: ['aperitifs', 'repas', 'boissons_alcool'],
+    eventTypes: ['mariage', 'anniversaire', 'cocktail', 'entreprise'],
+    dietary: ['vegetarien', 'sans_gluten'],
+    unavailableDates: ['2026-06-15', '2026-12-24', '2026-12-31'],
     location: {
       lat: 48.8566,
       lng: 2.3522,
@@ -19,6 +23,12 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 150,
     deliveryRadiusKm: 25,
+    realisations: mockRealisations('maison-du-terroir', [
+      'Mariage champêtre — domaine de Vincennes',
+      'Cocktail dinatoire — Le Marais',
+      'Buffet fromages & charcuterie — réception entreprise',
+      'Brunch dominical — terrasse privée',
+    ]),
     menu: [
       {
         id: 'm1',
@@ -53,6 +63,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.5,
     reviewCount: 89,
     categories: ['boissons_soft', 'desserts'],
+    eventTypes: ['anniversaire', 'cocktail', 'entreprise', 'famille'],
+    dietary: ['vegetarien', 'vegan'],
+    unavailableDates: ['2026-07-14', '2026-08-15'],
     location: {
       lat: 48.8738,
       lng: 2.295,
@@ -61,6 +74,11 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 80,
     deliveryRadiusKm: 15,
+    realisations: mockRealisations('bubble-tea-paris', [
+      'Bar à bubble tea — anniversaire 30 ans',
+      'Fontaines colorées — lancement produit',
+      'Corner desserts — salon professionnel',
+    ]),
     menu: [
       {
         id: 'm4',
@@ -88,6 +106,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.9,
     reviewCount: 203,
     categories: ['aperitifs', 'repas', 'desserts'],
+    eventTypes: ['mariage', 'cocktail', 'anniversaire'],
+    dietary: ['vegetarien', 'halal', 'sans_gluten'],
+    unavailableDates: ['2026-05-25', '2026-12-31'],
     location: {
       lat: 48.8499,
       lng: 2.3809,
@@ -96,6 +117,12 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 200,
     deliveryRadiusKm: 30,
+    realisations: mockRealisations('saveurs-mediterranee', [
+      'Mariage oriental — 120 convives',
+      'Cocktail mezze — rooftop Paris 11e',
+      'Buffet grillades — garden party',
+      'Dîner assis — réception familiale',
+    ]),
     menu: [
       {
         id: 'm6',
@@ -130,6 +157,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.7,
     reviewCount: 67,
     categories: ['boissons_alcool', 'aperitifs'],
+    eventTypes: ['cocktail', 'entreprise', 'mariage'],
+    dietary: ['vegetarien'],
+    unavailableDates: ['2026-12-24', '2026-12-25'],
     location: {
       lat: 48.8606,
       lng: 2.3376,
@@ -138,6 +168,11 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 250,
     deliveryRadiusKm: 20,
+    realisations: mockRealisations('vin-et-fromage', [
+      'Dégustation vins & fromages — cave privée',
+      'Cocktail prestige — Place des Vosges',
+      'Accords mets-vins — séminaire entreprise',
+    ]),
     menu: [
       {
         id: 'm9',
@@ -165,6 +200,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 5,
     reviewCount: 156,
     categories: ['desserts'],
+    eventTypes: ['mariage', 'anniversaire', 'famille'],
+    dietary: ['vegetarien', 'sans_lactose'],
+    unavailableDates: ['2026-02-14', '2026-12-24'],
     location: {
       lat: 48.8422,
       lng: 2.3212,
@@ -173,6 +211,12 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 120,
     deliveryRadiusKm: 18,
+    realisations: mockRealisations('patisserie-lune', [
+      'Wedding cake — château en Île-de-France',
+      'Candy bar — baptême Saint-Germain',
+      'Pièce montée — anniversaire 50 ans',
+      'Macarons sur mesure — lancement boutique',
+    ]),
     menu: [
       {
         id: 'm11',
@@ -200,6 +244,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.4,
     reviewCount: 98,
     categories: ['repas', 'boissons_soft'],
+    eventTypes: ['entreprise', 'anniversaire', 'cocktail'],
+    dietary: ['halal'],
+    unavailableDates: ['2026-07-04', '2026-12-31'],
     location: {
       lat: 48.8925,
       lng: 2.238,
@@ -208,6 +255,11 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 300,
     deliveryRadiusKm: 35,
+    realisations: mockRealisations('street-food-fusion', [
+      'Food truck — festival urbain',
+      'Team building — 80 collaborateurs',
+      'Street food night — rooftop Neuilly',
+    ]),
     menu: [
       {
         id: 'm13',
@@ -235,6 +287,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.6,
     reviewCount: 72,
     categories: ['repas', 'boissons_soft', 'desserts'],
+    eventTypes: ['brunch', 'famille', 'anniversaire'],
+    dietary: ['vegetarien', 'vegan', 'sans_gluten'],
+    unavailableDates: ['2026-01-01', '2026-05-01'],
     location: {
       lat: 48.8333,
       lng: 2.3667,
@@ -243,6 +298,11 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 180,
     deliveryRadiusKm: 22,
+    realisations: mockRealisations('brunch-atelier', [
+      'Brunch buffet — mariage civil',
+      'Bar à jus pressés — événement bien-être',
+      'Brunch corporate — siège social',
+    ]),
     menu: [
       {
         id: 'm15',
@@ -270,6 +330,9 @@ export const MOCK_CATERERS: Caterer[] = [
     rating: 4.8,
     reviewCount: 141,
     categories: ['boissons_alcool', 'boissons_soft', 'aperitifs'],
+    eventTypes: ['cocktail', 'mariage', 'entreprise'],
+    dietary: ['vegan', 'sans_gluten'],
+    unavailableDates: ['2026-12-31', '2026-06-21'],
     location: {
       lat: 48.8799,
       lng: 2.3185,
@@ -278,6 +341,12 @@ export const MOCK_CATERERS: Caterer[] = [
     },
     minOrder: 400,
     deliveryRadiusKm: 40,
+    realisations: mockRealisations('cocktails-mobil-bar', [
+      'Open bar — mariage Haussmann',
+      'Bar mobile — soirée entreprise',
+      'Cocktails signature — vernissage galerie',
+      'Mocktails premium — événement sans alcool',
+    ]),
     menu: [
       {
         id: 'm17',

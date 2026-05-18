@@ -1,13 +1,22 @@
-<p-menubar [model]="menuItems" class="landing-menubar">
-  <ng-template #start>
-    <a routerLink="/" class="landing-menubar__brand">
-      <span class="landing-menubar__mark" aria-hidden="true">
-        <i class="pi pi-sparkles"></i>
-      </span>
-      <span class="landing-menubar__title">Trouver mon traiteur</span>
-    </a>
-  </ng-template>
-</p-menubar>
+<header class="landing-header">
+  <a routerLink="/" class="landing-header__brand">Trouver mon traiteur</a>
+
+  <nav class="landing-header__actions" aria-label="Compte et espace professionnel">
+    <p-button
+      label="Espace Pro"
+      icon="pi pi-briefcase"
+      styleClass="landing-header__btn landing-header__btn--pro"
+      routerLink="/inscription-pro"
+    />
+    <p-button
+      label="Connexion / inscription"
+      [outlined]="true"
+      severity="secondary"
+      styleClass="landing-header__btn"
+      (onClick)="onPlaceholderLink($event)"
+    />
+  </nav>
+</header>
 
 <main class="landing-main">
   <router-outlet />
@@ -26,7 +35,7 @@
       <h2 class="landing-footer__heading">Navigation</h2>
       <ul class="landing-footer__links">
         <li><a routerLink="/">Accueil</a></li>
-        <li><a routerLink="/recherche">Rechercher</a></li>
+        <li><a [href]="searchAppUrl">Rechercher</a></li>
       </ul>
     </div>
 

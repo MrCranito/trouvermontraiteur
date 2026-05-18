@@ -1,0 +1,68 @@
+<article class="auth-card">
+  <p class="auth-card__eyebrow">Espace pro</p>
+  <h2>Connexion</h2>
+  <p class="auth-card__lead">Accédez à votre tableau de bord traiteur.</p>
+
+  @if (error()) {
+    <p class="auth-card__error" role="alert">{{ error() }}</p>
+  }
+
+  <form class="auth-card__form" (submit)="onSubmit($event)">
+    <div class="auth-field">
+      <label for="login-email">E-mail</label>
+      <input
+        pInputText
+        id="login-email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        autocomplete="email"
+        required
+        placeholder="vous@exemple.fr"
+      />
+    </div>
+    <div class="auth-field">
+      <label for="login-password">Mot de passe</label>
+      <p-password
+        inputId="login-password"
+        name="password"
+        [(ngModel)]="password"
+        [feedback]="false"
+        [toggleMask]="true"
+        autocomplete="current-password"
+        required
+        placeholder="••••••••"
+      />
+    </div>
+
+    <div class="auth-card__links">
+      <a routerLink="/auth/mot-de-passe-oublie">Mot de passe oublié ?</a>
+    </div>
+
+    <div class="auth-card__actions">
+      <p-button
+        type="submit"
+        label="Se connecter"
+        icon="pi pi-sign-in"
+        [loading]="loading()"
+        [disabled]="loading()"
+      />
+      <span class="auth-card__divider">ou</span>
+      <p-button
+        type="button"
+        label="Continuer avec Google"
+        icon="pi pi-google"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="loading()"
+        [disabled]="loading()"
+        (onClick)="onGoogle()"
+      />
+    </div>
+  </form>
+
+  <p class="auth-card__footer">
+    Pas encore de compte ?
+    <a routerLink="/auth/inscription">Créer un compte professionnel</a>
+  </p>
+</article>

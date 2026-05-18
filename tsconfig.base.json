@@ -19,11 +19,24 @@
       "@trouvermontraiteur/theme": ["./libs/shared/theme/src/index.ts"],
       "@trouvermontraiteur/ui": ["./libs/landing/ui/src/index.ts"],
       "@trouvermontraiteur/data": ["./libs/landing/data/src/index.ts"],
-      "@trouvermontraiteur/map": ["./libs/landing/map/src/index.ts"],
+      "@trouvermontraiteur/map": ["./libs/shared/ui/map/src/index.ts"],
       "@trouvermontraiteur/home": ["./libs/landing/home/src/index.ts"],
-      "@trouvermontraiteur/search": ["./libs/landing/search/src/index.ts"],
-      "@trouvermontraiteur/caterer-detail": [
-        "./libs/landing/caterer-detail/src/index.ts"
+      "@trouvermontraiteur/search": ["./libs/app/search/src/index.ts"],
+      "@trouvermontraiteur/details": ["./libs/app/details/src/index.ts"],
+      "@trouvermontraiteur/dashboard-data": [
+        "./libs/dashboard/data/src/index.ts"
+      ],
+      "@trouvermontraiteur/dashboard-shell": [
+        "./libs/dashboard/shell/src/index.ts"
+      ],
+      "@trouvermontraiteur/dashboard-overview": [
+        "./libs/dashboard/overview/src/index.ts"
+      ],
+      "@trouvermontraiteur/dashboard-profile": [
+        "./libs/dashboard/profile/src/index.ts"
+      ],
+      "@trouvermontraiteur/dashboard-auth": [
+        "./libs/dashboard/auth/src/index.ts"
       ]
     }
   },

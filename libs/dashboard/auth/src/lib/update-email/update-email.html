@@ -1,0 +1,44 @@
+<article class="auth-card">
+  <p class="auth-card__eyebrow">Compte</p>
+  <h2>Changer d'e-mail</h2>
+  <p class="auth-card__lead">
+    Adresse actuelle : <strong>{{ currentEmail() }}</strong
+    ><br />
+    Un lien de confirmation sera envoyé à la nouvelle adresse.
+  </p>
+
+  @if (error()) {
+    <p class="auth-card__error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="auth-card__success" role="status">{{ success() }}</p>
+  }
+
+  <form class="auth-card__form" (submit)="onSubmit($event)">
+    <div class="auth-field">
+      <label for="new-email">Nouvel e-mail</label>
+      <input
+        pInputText
+        id="new-email"
+        type="email"
+        name="newEmail"
+        [(ngModel)]="newEmail"
+        autocomplete="email"
+        required
+      />
+    </div>
+    <div class="auth-card__actions">
+      <p-button
+        type="submit"
+        label="Mettre à jour l'e-mail"
+        icon="pi pi-envelope"
+        [loading]="loading()"
+        [disabled]="loading()"
+      />
+    </div>
+  </form>
+
+  <p class="auth-card__footer">
+    <a routerLink="/apercu">Retour au tableau de bord</a>
+  </p>
+</article>

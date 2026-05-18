@@ -38,7 +38,7 @@
             {
               "type": "anyComponentStyle",
               "maximumWarning": "6kb",
-              "maximumError": "10kb"
+              "maximumError": "12kb"
             }
           ],
           "outputHashing": "all"
@@ -46,7 +46,13 @@
         "development": {
           "optimization": false,
           "extractLicenses": false,
-          "sourceMap": true
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "apps/landing/src/environments/environment.ts",
+              "with": "apps/landing/src/environments/environment.development.ts"
+            }
+          ]
         }
       },
       "defaultConfiguration": "production"

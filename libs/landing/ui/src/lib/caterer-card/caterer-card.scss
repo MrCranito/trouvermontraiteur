@@ -18,6 +18,11 @@
   }
 }
 
+.caterer-card__cta {
+  display: block;
+  text-decoration: none;
+}
+
 .caterer-card__media {
   aspect-ratio: 16 / 10;
   overflow: hidden;
@@ -97,5 +102,68 @@
   .pi {
     margin-top: 0.1rem;
     color: var(--p-primary-color);
+  }
+}
+
+.caterer-card--featured {
+  ::ng-deep .p-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(42, 34, 25, 0.1);
+    box-shadow: 0 4px 18px rgba(42, 34, 25, 0.07);
+  }
+
+  ::ng-deep .p-card-header {
+    padding: 0;
+  }
+
+  ::ng-deep .p-card-body {
+    padding: 1.15rem 1.15rem 0.65rem;
+    gap: 0.65rem;
+  }
+
+  ::ng-deep .p-card-footer {
+    padding: 0 1.15rem 1.15rem;
+    margin-top: 0;
+  }
+
+  .caterer-card__head {
+    gap: 0.35rem;
+
+    h3 {
+      font-size: 1.05rem;
+      line-height: 1.3;
+    }
+  }
+
+  ::ng-deep .p-rating {
+    gap: 0.2rem;
+  }
+
+  .caterer-card__reviews {
+    margin-top: 0.1rem;
+    font-size: 0.8rem;
+  }
+
+  .caterer-card__description {
+    margin: 0.15rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    -webkit-line-clamp: 2;
+  }
+
+  .caterer-card__tags {
+    gap: 0.4rem;
+    margin-top: 0.15rem;
+  }
+
+  .caterer-card__location {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  ::ng-deep .p-card-footer .p-button {
+    width: 100%;
+    justify-content: center;
   }
 }

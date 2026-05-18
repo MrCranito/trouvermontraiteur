@@ -1,0 +1,293 @@
+<div class="search-page">
+  <header class="search-page__hero">
+    <div class="search-page__hero-inner">
+      @if (showBackLink) {
+        <a routerLink="/" class="search-page__back">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+          Accueil
+        </a>
+      }
+      <p class="search-page__eyebrow">Recherche</p>
+      <h1>Trouver un traiteur</h1>
+      <p class="search-page__lead">
+        Comparez les artisans près de chez vous et trouvez la prestation idéale
+        pour votre événement.
+      </p>
+    </div>
+  </header>
+
+  <div class="search-page__body">
+    <aside class="search-page__filters" aria-label="Filtres de recherche">
+      <div class="search-page__filters-head">
+        <span class="search-page__filters-icon" aria-hidden="true">
+          <i class="pi pi-sliders-h"></i>
+        </span>
+        <div>
+          <h2>Affiner la recherche</h2>
+          <p>Ajustez les critères pour cibler votre événement.</p>
+        </div>
+      </div>
+
+      <div class="search-page__filter-block search-page__filter-block--date">
+        <label class="search-page__filter-label" for="search-event-date">
+          Date de l'événement
+        </label>
+        <input
+          id="search-event-date"
+          class="search-page__date-input"
+          type="date"
+          [min]="minEventDate"
+          [ngModel]="eventDate()"
+          (ngModelChange)="onEventDateChange($event)"
+        />
+        <p class="search-page__filter-hint">
+          Les traiteurs indisponibles ce jour-là seront masqués.
+        </p>
+      </div>
+
+      <p-accordion
+        class="search-page__filters-accordion"
+        [multiple]="true"
+        expandIcon="pi pi-chevron-down"
+        collapseIcon="pi pi-chevron-down"
+      >
+        <p-accordionpanel value="keywords">
+          <p-accordionheader>
+            Mots-clés
+            @if (query().trim()) {
+              <span class="search-page__accordion-badge" aria-hidden="true">1</span>
+            }
+          </p-accordionheader>
+          <p-accordioncontent>
+            <p-iconfield iconPosition="left" class="search-page__search-field">
+              <p-inputicon class="pi pi-search" />
+              <input
+                id="search-query"
+                pInputText
+                type="search"
+                placeholder="Nom, ville, spécialité…"
+                [ngModel]="query()"
+                (ngModelChange)="onQueryChange($event)"
+              />
+            </p-iconfield>
+          </p-accordioncontent>
+        </p-accordionpanel>
+
+        <p-accordionpanel value="events">
+          <p-accordionheader>
+            Type d'événement
+            @if (selectedEventTypes().length > 0) {
+              <span class="search-page__accordion-badge" aria-hidden="true">{{
+                selectedEventTypes().length
+              }}</span>
+            }
+          </p-accordionheader>
+          <p-accordioncontent>
+            <div class="search-page__checkboxes">
+              @for (opt of eventOptions; track opt.key) {
+                <label
+                  class="search-page__checkbox"
+                  [class.search-page__checkbox--checked]="isEventChecked(opt.key)"
+                >
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isEventChecked(opt.key)"
+                    (ngModelChange)="toggleEvent(opt.key, $event)"
+                    [inputId]="'event-' + opt.key"
+                  />
+                  <span>{{ opt.label }}</span>
+                </label>
+              }
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+
+        <p-accordionpanel value="dietary">
+          <p-accordionheader>
+            Régimes alimentaires
+            @if (selectedDietary().length > 0) {
+              <span class="search-page__accordion-badge" aria-hidden="true">{{
+                selectedDietary().length
+              }}</span>
+            }
+          </p-accordionheader>
+          <p-accordioncontent>
+            <p class="search-page__filter-hint search-page__filter-hint--tight">
+              Le traiteur doit proposer toutes les options cochées.
+            </p>
+            <div class="search-page__checkboxes">
+              @for (opt of dietaryOptions; track opt.key) {
+                <label
+                  class="search-page__checkbox"
+                  [class.search-page__checkbox--checked]="isDietaryChecked(opt.key)"
+                >
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isDietaryChecked(opt.key)"
+                    (ngModelChange)="toggleDietary(opt.key, $event)"
+                    [inputId]="'diet-' + opt.key"
+                  />
+                  <span>{{ opt.label }}</span>
+                </label>
+              }
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+
+        <p-accordionpanel value="rating">
+          <p-accordionheader>
+            Note minimum
+            @if (minRating() > 0) {
+              <span class="search-page__accordion-badge" aria-hidden="true">{{
+                minRating()
+              }}</span>
+            }
+          </p-accordionheader>
+          <p-accordioncontent>
+            <div class="search-page__rating-filter">
+              <p-slider
+                [ngModel]="minRating()"
+                (ngModelChange)="onMinRatingChange($event)"
+                [min]="0"
+                [max]="5"
+                [step]="0.5"
+              />
+              <span class="search-page__rating-value">
+                @if (minRating() > 0) {
+                  <i class="pi pi-star-fill" aria-hidden="true"></i>
+                  {{ minRating() }} et plus
+                } @else {
+                  Toutes les notes
+                }
+              </span>
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+
+        <p-accordionpanel value="categories">
+          <p-accordionheader>
+            Prestations
+            @if (selectedCategories().length > 0) {
+              <span class="search-page__accordion-badge" aria-hidden="true">{{
+                selectedCategories().length
+              }}</span>
+            }
+          </p-accordionheader>
+          <p-accordioncontent>
+            <div class="search-page__checkboxes">
+              @for (opt of categoryOptions; track opt.key) {
+                <label
+                  class="search-page__checkbox"
+                  [class.search-page__checkbox--checked]="isCategoryChecked(opt.key)"
+                >
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="isCategoryChecked(opt.key)"
+                    (ngModelChange)="toggleCategory(opt.key, $event)"
+                    [inputId]="'cat-' + opt.key"
+                  />
+                  <span>{{ opt.label }}</span>
+                </label>
+              }
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+      </p-accordion>
+
+
+      @if (hasActiveFilters()) {
+        <p-button
+          class="search-page__reset"
+          label="Réinitialiser les filtres"
+          severity="secondary"
+          [outlined]="true"
+          icon="pi pi-refresh"
+          (onClick)="resetFilters()"
+        />
+      }
+    </aside>
+
+    <main class="search-page__results">
+      <div class="search-page__results-panel">
+        <div class="search-page__toolbar">
+          <div class="search-page__count-wrap">
+            <p class="search-page__count">
+              <strong>{{ resultCount() }}</strong>
+              traiteur{{ resultCount() > 1 ? 's' : '' }}
+            </p>
+            <span class="search-page__count-hint">correspondant à vos critères</span>
+          </div>
+          <div class="search-page__toolbar-actions">
+            <p-selectButton
+            styleClass="search-page__view-toggle"
+            [options]="viewOptions"
+            [ngModel]="viewMode()"
+            (ngModelChange)="onViewModeChange($event)"
+            optionLabel="label"
+            optionValue="value"
+          />
+          </div>
+        </div>
+
+        @if (resultCount() > 0) {
+          <div class="search-page__list-header">
+            <label class="search-page__sort-label" for="search-sort">Trier par</label>
+            <p-select
+              inputId="search-sort"
+              styleClass="search-page__sort"
+              [options]="sortOptions"
+              [ngModel]="sort()"
+              (ngModelChange)="onSortChange($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Trier par"
+            />
+          </div>
+        }
+
+        @if (resultCount() === 0) {
+          <div class="search-page__empty">
+            <span class="search-page__empty-icon" aria-hidden="true">
+              <i class="pi pi-search"></i>
+            </span>
+            <h3>Aucun résultat</h3>
+            <p>Aucun traiteur ne correspond à vos critères pour le moment.</p>
+            <p-button
+              label="Effacer les filtres"
+              icon="pi pi-refresh"
+              (onClick)="resetFilters()"
+            />
+          </div>
+        } @else if (viewMode() === 'map') {
+          <div class="search-page__map-layout">
+            <tmt-caterer-map
+              class="search-page__map"
+              [caterers]="results()"
+              [selectedId]="mapSelectedId()"
+              (catererSelect)="onMapSelect($event)"
+            />
+            <div class="search-page__map-aside">
+              @if (mapSelectedId(); as selectedId) {
+                @if (findCaterer(selectedId); as selected) {
+                  <p class="search-page__map-aside-label">Sélection sur la carte</p>
+                  <tmt-caterer-card [caterer]="selected" variant="featured" />
+                }
+              } @else {
+                <div class="search-page__map-placeholder">
+                  <i class="pi pi-map-marker" aria-hidden="true"></i>
+                  <p>Cliquez sur un marqueur pour afficher la fiche du traiteur.</p>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="search-page__grid">
+            @for (caterer of results(); track caterer.id) {
+              <tmt-caterer-card [caterer]="caterer" variant="featured" />
+            }
+          </div>
+        }
+      </div>
+    </main>
+  </div>
+</div>

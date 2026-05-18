@@ -5,6 +5,21 @@ export type CatererCategory =
   | 'repas'
   | 'desserts';
 
+export type EventType =
+  | 'mariage'
+  | 'anniversaire'
+  | 'cocktail'
+  | 'entreprise'
+  | 'brunch'
+  | 'famille';
+
+export type DietaryOption =
+  | 'vegetarien'
+  | 'vegan'
+  | 'halal'
+  | 'sans_gluten'
+  | 'sans_lactose';
+
 export interface CatererLocation {
   lat: number;
   lng: number;
@@ -20,6 +35,12 @@ export interface MenuItem {
   category: CatererCategory;
 }
 
+export interface CatererRealisation {
+  id: string;
+  imageUrl: string;
+  caption: string;
+}
+
 export interface Caterer {
   id: string;
   name: string;
@@ -29,7 +50,13 @@ export interface Caterer {
   rating: number;
   reviewCount: number;
   categories: CatererCategory[];
+  eventTypes: EventType[];
+  dietary: DietaryOption[];
+  /** ISO dates (yyyy-MM-dd) when the caterer is unavailable */
+  unavailableDates: string[];
   location: CatererLocation;
+  /** Photos of past events and setups */
+  realisations: CatererRealisation[];
   menu: MenuItem[];
   minOrder?: number;
   deliveryRadiusKm?: number;

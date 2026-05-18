@@ -1,0 +1,167 @@
+<div class="dash-overview">
+  <section class="dash-overview__intro" aria-labelledby="overview-title">
+    <div>
+      <p class="dash-overview__eyebrow">Vue d'ensemble</p>
+      <h2 id="overview-title">Performances de votre vitrine</h2>
+      <p class="dash-overview__lead">
+        Statistiques de visibilité sur l'application publique — période :
+        {{ stats.periodLabel }}.
+      </p>
+    </div>
+    <p-button
+      label="Compléter mon profil"
+      icon="pi pi-pencil"
+      routerLink="/profil"
+    />
+  </section>
+
+  @if (completeness().score < 100) {
+    <aside class="dash-overview__alert" role="status">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <div>
+        <strong>Profil à {{ completeness().score }}%</strong>
+        <p>
+          Ajoutez
+          @for (item of completeness().missing; track item; let last = $last) {
+            {{ item }}@if (!last) {, }
+          }
+          pour améliorer votre visibilité dans les résultats.
+        </p>
+      </div>
+      <a routerLink="/profil" class="dash-overview__alert-link">Modifier</a>
+    </aside>
+  }
+
+  <section class="dash-overview__stats" aria-label="Indicateurs clés">
+    <ul class="dash-overview__stat-grid">
+      @for (card of statCards(); track card.key) {
+        <li
+          class="dash-overview__stat-card"
+          [class]="'dash-overview__stat-card--' + card.accent"
+        >
+          <span class="dash-overview__stat-icon" aria-hidden="true">
+            <i [class]="card.icon"></i>
+          </span>
+          <p class="dash-overview__stat-label">{{ card.label }}</p>
+          <p class="dash-overview__stat-value">
+            {{ formatTrend(card.trend, card.key === 'rating') }}
+            @if (card.key === 'rating') {
+              <span class="dash-overview__stat-suffix">/ 5</span>
+            }
+          </p>
+          @if (trendLabel(card.trend.delta); as label) {
+            <span
+              class="dash-overview__trend"
+              [class]="trendClass(card.trend.delta)"
+            >
+              {{ label }}
+            </span>
+          }
+          <span class="dash-overview__stat-hint">{{ card.hint }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <div class="dash-overview__panels">
+    <section class="dash-overview__panel" aria-labelledby="chart-title">
+      <header class="dash-overview__panel-head">
+        <div>
+          <p class="dash-overview__eyebrow">Tendance</p>
+          <h3 id="chart-title">Vues du profil (7 jours)</h3>
+        </div>
+      </header>
+      <div class="dash-overview__chart" role="img" aria-label="Graphique des vues sur 7 jours">
+        @for (day of stats.viewsSeries; track day.date) {
+          <div class="dash-overview__bar-wrap">
+            <div
+              class="dash-overview__bar"
+              [style.height.%]="(day.views / maxViews()) * 100"
+            >
+              <span class="dash-overview__bar-value">{{ day.views }}</span>
+            </div>
+            <span class="dash-overview__bar-label">{{ day.label }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="dash-overview__panel" aria-labelledby="keywords-title">
+      <header class="dash-overview__panel-head">
+        <div>
+          <p class="dash-overview__eyebrow">Recherche</p>
+          <h3 id="keywords-title">Mots-clés fréquents</h3>
+        </div>
+      </header>
+      <ul class="dash-overview__keywords">
+        @for (kw of stats.topKeywords; track kw) {
+          <li><p-tag [value]="kw" severity="secondary" /></li>
+        }
+      </ul>
+      <p class="dash-overview__panel-note">
+        Ces requêtes ont mené les utilisateurs vers votre fiche.
+      </p>
+    </section>
+  </div>
+
+  <section class="dash-overview__panel dash-overview__panel--wide" aria-labelledby="activity-title">
+    <header class="dash-overview__panel-head">
+      <div>
+        <p class="dash-overview__eyebrow">Activité récente</p>
+        <h3 id="activity-title">Dernières interactions</h3>
+      </div>
+    </header>
+    <ol class="dash-overview__activity">
+      @for (item of stats.recentActivity; track item.id) {
+        <li class="dash-overview__activity-item">
+          <span class="dash-overview__activity-icon" aria-hidden="true">
+            <i [class]="item.icon"></i>
+          </span>
+          <div class="dash-overview__activity-body">
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.description }}</p>
+          </div>
+          <time>{{ item.timeAgo }}</time>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="dash-overview__snapshot" aria-labelledby="snapshot-title">
+    <header class="dash-overview__panel-head">
+      <div>
+        <p class="dash-overview__eyebrow">Aperçu public</p>
+        <h3 id="snapshot-title">Ce que voient les clients sur l'app</h3>
+      </div>
+    </header>
+    <div class="dash-overview__snapshot-grid">
+      <figure class="dash-overview__snapshot-cover">
+        <img [src]="caterer().imageUrl" [alt]="caterer().name" />
+      </figure>
+      <div class="dash-overview__snapshot-meta">
+        <h4>{{ caterer().name }}</h4>
+        <p>{{ caterer().description }}</p>
+        <ul class="dash-overview__snapshot-facts">
+          <li>
+            <i class="pi pi-map-marker" aria-hidden="true"></i>
+            {{ caterer().location.address }}, {{ caterer().location.city }}
+          </li>
+          <li>
+            <i class="pi pi-book" aria-hidden="true"></i>
+            {{ caterer().menu.length }} plats au menu
+          </li>
+          <li>
+            <i class="pi pi-images" aria-hidden="true"></i>
+            {{ caterer().realisations.length }} réalisations
+          </li>
+        </ul>
+        <p-button
+          label="Gérer la fiche"
+          icon="pi pi-pencil"
+          [outlined]="true"
+          routerLink="/profil"
+        />
+      </div>
+    </div>
+  </section>
+</div>

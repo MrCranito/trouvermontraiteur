@@ -10,9 +10,14 @@ import {
 } from '@angular/platform-browser';
 import { providePrimeNG } from 'primeng/config';
 import { TmtPreset } from '@trouvermontraiteur/theme';
+import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { SEARCH_APP_URL } from '@trouvermontraiteur/home';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: PUBLIC_APP_URL, useValue: environment.searchAppUrl },
+    { provide: SEARCH_APP_URL, useValue: environment.searchAppUrl },
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),

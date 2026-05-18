@@ -9,12 +9,13 @@
         prestations, parcourez les menus et trouvez le traiteur qui correspond à
         votre ambiance.
       </p>
-      <p-button
-        label="Trouver un traiteur"
-        icon="pi pi-search"
-        size="large"
-        routerLink="/recherche"
-      />
+      <a [href]="searchUrl()" class="home__hero-cta">
+        <p-button
+          label="Trouver un traiteur"
+          icon="pi pi-search"
+          size="large"
+        />
+      </a>
     </div>
   </section>
 
@@ -41,7 +42,7 @@
     <div class="home__prestation-grid">
       @for (item of prestations; track item.key) {
         <a
-          [routerLink]="['/recherche']"
+          [href]="searchUrl({ events: item.key })"
           [class]="'home__prestation home__prestation--' + item.accent"
         >
           <span class="home__prestation-icon" aria-hidden="true">
@@ -53,30 +54,6 @@
           </div>
         </a>
       }
-    </div>
-  </section>
-
-  <section class="home__featured" aria-labelledby="home-featured-title">
-    <header class="home__section-header">
-      <p class="home__section-eyebrow">Sélection</p>
-      <h2 id="home-featured-title">Les mieux notés</h2>
-      <p class="home__section-lead">
-        Découvrez les traiteurs plébiscités par nos utilisateurs à Paris.
-      </p>
-    </header>
-    <div class="home__featured-grid">
-      @for (caterer of featured; track caterer.id) {
-        <tmt-caterer-card [caterer]="caterer" />
-      }
-    </div>
-    <div class="home__section-actions">
-      <p-button
-        label="Voir tous les traiteurs"
-        icon="pi pi-arrow-right"
-        iconPos="right"
-        [outlined]="true"
-        routerLink="/recherche"
-      />
     </div>
   </section>
 
@@ -122,12 +99,13 @@
       }
     </ol>
     <div class="home__section-actions">
-      <p-button
-        label="Commencer ma recherche"
-        icon="pi pi-arrow-right"
-        iconPos="right"
-        routerLink="/recherche"
-      />
+      <a [href]="searchUrl()">
+        <p-button
+          label="Commencer ma recherche"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+        />
+      </a>
     </div>
   </section>
 
