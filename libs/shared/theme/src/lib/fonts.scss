@@ -1,0 +1,22 @@
+// Loaded via <link> in each app's index.html (see fonts.constants.ts).
+$tmt-font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+
+:root {
+  --tmt-font-family: #{$tmt-font-family};
+}
+
+html {
+  font-family: var(--tmt-font-family);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+.p-component {
+  font-family: var(--tmt-font-family);
+}

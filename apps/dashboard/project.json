@@ -36,18 +36,18 @@
               "maximumError": "14kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": ".env/environment.ts",
+              "with": ".env/environment.prod.ts"
+            }
+          ]
         },
         "development": {
           "optimization": false,
           "extractLicenses": false,
-          "sourceMap": true,
-          "fileReplacements": [
-            {
-              "replace": "apps/dashboard/src/environments/environment.ts",
-              "with": "apps/dashboard/src/environments/environment.development.ts"
-            }
-          ]
+          "sourceMap": true
         }
       },
       "defaultConfiguration": "production"
@@ -55,6 +55,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 4300
+      },
       "configurations": {
         "production": {
           "buildTarget": "dashboard:build:production"
@@ -79,7 +82,7 @@
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "dashboard:build",
-        "port": 4200,
+        "port": 4300,
         "staticFilePath": "dist/apps/dashboard/browser",
         "spa": true
       }

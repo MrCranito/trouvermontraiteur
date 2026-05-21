@@ -17,6 +17,9 @@
         >
           <i [class]="item.icon" aria-hidden="true"></i>
           {{ item.label }}
+          @if (item.badge && newDevisCount() > 0) {
+            <span class="dash-shell__nav-badge">{{ newDevisCount() }}</span>
+          }
         </a>
       }
     </nav>

@@ -1,64 +1,38 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CatererService, SearchSort } from '@trouvermontraiteur/data';
 import {
-  ALL_CATEGORIES,
-  ALL_DIETARY_OPTIONS,
-  ALL_EVENT_TYPES,
-  CATEGORY_LABELS,
-  DIETARY_LABELS,
-  EVENT_LABELS,
-  CatererService,
-  SearchSort,
-} from '@trouvermontraiteur/data';
-import {
-  Caterer,
   CatererCategory,
   DietaryOption,
   EventType,
 } from '@trouvermontraiteur/models';
-import { CatererCard } from '@trouvermontraiteur/ui';
-import { CatererMap } from '@trouvermontraiteur/map';
-import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
-import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
-import { InputText } from 'primeng/inputtext';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionPanel,
-} from 'primeng/accordion';
+import type { MapViewport } from '@trouvermontraiteur/map-base';
+import { MultipleMarkersMap } from '@trouvermontraiteur/multiple-markers-map';
 import { Select } from 'primeng/select';
-import { SelectButton } from 'primeng/selectbutton';
-import { Slider } from 'primeng/slider';
 import { FormsModule } from '@angular/forms';
 import {
   buildSearchQueryParams,
   parseSearchQueryParams,
-  SearchViewMode,
 } from '../search-query-params';
+import { SearchListing } from '../search-listing/search-listing';
+import { SearchListingSkeleton } from '../search-listing-skeleton/search-listing-skeleton';
+import {
+  SearchFilterValues,
+  SearchFiltersDialog,
+} from '../search-filters-dialog/search-filters-dialog';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'tmt-search',
   imports: [
     FormsModule,
-    Button,
-    InputText,
-    IconField,
-    InputIcon,
-    Accordion,
-    AccordionPanel,
-    AccordionHeader,
-    AccordionContent,
-    Checkbox,
     Select,
-    SelectButton,
-    Slider,
-    CatererCard,
-    CatererMap,
-    RouterLink,
+    Button,
+    MultipleMarkersMap,
+    SearchListing,
+    SearchListingSkeleton,
+    SearchFiltersDialog,
   ],
   templateUrl: './search.html',
   styleUrl: './search.scss',
@@ -66,24 +40,6 @@ import {
 export class Search {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private querySyncTimer: ReturnType<typeof setTimeout> | undefined;
-
-  protected readonly minEventDate = new Date().toISOString().slice(0, 10);
-
-  protected readonly categoryOptions = ALL_CATEGORIES.map((key) => ({
-    key,
-    label: CATEGORY_LABELS[key],
-  }));
-
-  protected readonly eventOptions = ALL_EVENT_TYPES.map((key) => ({
-    key,
-    label: EVENT_LABELS[key],
-  }));
-
-  protected readonly dietaryOptions = ALL_DIETARY_OPTIONS.map((key) => ({
-    key,
-    label: DIETARY_LABELS[key],
-  }));
 
   protected readonly sortOptions: { label: string; value: SearchSort }[] = [
     { label: 'Pertinence', value: 'relevance' },
@@ -93,11 +49,6 @@ export class Search {
     { label: 'Prix croissant', value: 'price' },
   ];
 
-  protected readonly viewOptions = [
-    { label: 'Grille', value: 'grid' as SearchViewMode, icon: 'pi pi-th-large' },
-    { label: 'Carte', value: 'map' as SearchViewMode, icon: 'pi pi-map' },
-  ];
-
   protected query = signal('');
   protected minRating = signal(0);
   protected selectedCategories = signal<CatererCategory[]>([]);
@@ -105,11 +56,27 @@ export class Search {
   protected selectedEventTypes = signal<EventType[]>([]);
   protected selectedDietary = signal<DietaryOption[]>([]);
   protected sort = signal<SearchSort>('relevance');
-  protected viewMode = signal<SearchViewMode>('grid');
   protected mapSelectedId = signal<string | null>(null);
-  protected showBackLink = true;
+  protected hoveredId = signal<string | null>(null);
+  protected filtersVisible = signal(false);
+  protected mapViewport = signal<MapViewport | null>(null);
+  protected mapAutoFit = signal(true);
+  protected mapLoading = signal(false);
 
-  protected readonly filteredResults = computed(() =>
+  private viewportLoadToken = 0;
+  private static readonly MAP_LOAD_MIN_MS = 320;
+  protected static readonly LIST_SKELETON_COUNT = 6;
+
+  protected readonly skeletonItems = Array.from(
+    { length: Search.LIST_SKELETON_COUNT },
+    (_, i) => i,
+  );
+
+  protected readonly highlightedId = computed(
+    () => this.hoveredId() ?? this.mapSelectedId(),
+  );
+
+  protected readonly filteredByCriteria = computed(() =>
     this.catererService.filter({
       query: this.query(),
       categories: this.selectedCategories(),
@@ -120,27 +87,74 @@ export class Search {
     }),
   );
 
-  protected readonly results = computed(() =>
-    this.catererService.sort(this.filteredResults(), this.sort()),
-  );
+  /** Up to 20 caterers in the map viewport (radius + center). */
+  protected readonly results = computed(() => {
+    const viewport = this.mapViewport();
+    if (!viewport) {
+      return [];
+    }
+    return this.catererService.searchInMapArea(
+      this.filteredByCriteria(),
+      viewport,
+      this.sort(),
+    );
+  });
+
+  /** All caterers matching filters (for map markers and initial fit). */
+  protected readonly mapCaterers = computed(() => this.filteredByCriteria());
 
   protected readonly resultCount = computed(() => this.results().length);
 
-  protected readonly hasActiveFilters = computed(
-    () =>
-      this.query().trim().length > 0 ||
-      this.minRating() > 0 ||
-      this.selectedCategories().length > 0 ||
-      this.eventDate().length > 0 ||
-      this.selectedEventTypes().length > 0 ||
-      this.selectedDietary().length > 0,
+  /** Grid placeholders while the map viewport or results are updating. */
+  protected readonly listLoading = computed(
+    () => this.mapLoading() || this.mapViewport() === null,
   );
 
-  constructor(private readonly catererService: CatererService) {
-    this.route.data.pipe(takeUntilDestroyed()).subscribe((data) => {
-      this.showBackLink = data['showBackLink'] !== false;
-    });
+  protected readonly currentFilters = computed<SearchFilterValues>(() => ({
+    query: this.query(),
+    minRating: this.minRating(),
+    categories: this.selectedCategories(),
+    eventTypes: this.selectedEventTypes(),
+    dietary: this.selectedDietary(),
+    eventDate: this.eventDate(),
+  }));
 
+  protected readonly activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.query().trim()) {
+      count++;
+    }
+    if (this.minRating() > 0) {
+      count++;
+    }
+    if (this.eventDate()) {
+      count++;
+    }
+    if (this.selectedCategories().length > 0) {
+      count++;
+    }
+    if (this.selectedEventTypes().length > 0) {
+      count++;
+    }
+    if (this.selectedDietary().length > 0) {
+      count++;
+    }
+    return count;
+  });
+
+  protected readonly filtersButtonLabel = computed(() => {
+    const count = this.activeFilterCount();
+    return count > 0 ? `Filtres (${count})` : 'Filtres';
+  });
+
+  protected readonly filtersButtonAriaLabel = computed(() => {
+    const count = this.activeFilterCount();
+    return count > 0
+      ? `Filtres, ${count} critère${count > 1 ? 's' : ''} actif${count > 1 ? 's' : ''}`
+      : 'Filtres';
+  });
+
+  constructor(private readonly catererService: CatererService) {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const state = parseSearchQueryParams(params);
       this.query.set(state.query);
@@ -150,24 +164,7 @@ export class Search {
       this.selectedEventTypes.set(state.eventTypes);
       this.selectedDietary.set(state.dietary);
       this.sort.set(state.sort);
-      this.viewMode.set(state.view);
     });
-  }
-
-  protected onQueryChange(value: string): void {
-    this.query.set(value);
-    clearTimeout(this.querySyncTimer);
-    this.querySyncTimer = setTimeout(() => this.syncToUrl(), 300);
-  }
-
-  protected onMinRatingChange(value: number): void {
-    this.minRating.set(value);
-    this.syncToUrl();
-  }
-
-  protected onEventDateChange(value: string): void {
-    this.eventDate.set(value);
-    this.syncToUrl();
   }
 
   protected onSortChange(value: SearchSort): void {
@@ -175,71 +172,75 @@ export class Search {
     this.syncToUrl();
   }
 
-  protected onViewModeChange(value: SearchViewMode): void {
-    this.viewMode.set(value);
+  protected openFilters(): void {
+    this.filtersVisible.set(true);
+  }
+
+  protected onFiltersApply(values: SearchFilterValues): void {
+    this.query.set(values.query);
+    this.minRating.set(values.minRating);
+    this.selectedCategories.set(values.categories);
+    this.selectedEventTypes.set(values.eventTypes);
+    this.selectedDietary.set(values.dietary);
+    this.eventDate.set(values.eventDate);
+    this.mapAutoFit.set(true);
     this.syncToUrl();
   }
 
-  protected isCategoryChecked(cat: CatererCategory): boolean {
-    return this.selectedCategories().includes(cat);
+  protected onMapMoveStart(): void {
+    this.viewportLoadToken++;
+    this.mapLoading.set(true);
+    this.mapSelectedId.set(null);
+    this.hoveredId.set(null);
   }
 
-  protected toggleCategory(cat: CatererCategory, checked: boolean): void {
-    this.toggleInList(this.selectedCategories, cat, checked);
-    this.syncToUrl();
+  protected onMapViewportChange(viewport: MapViewport): void {
+    void this.applyMapViewport(viewport);
   }
 
-  protected isEventChecked(event: EventType): boolean {
-    return this.selectedEventTypes().includes(event);
+  private async applyMapViewport(viewport: MapViewport): Promise<void> {
+    const token = this.viewportLoadToken;
+    const startedAt = performance.now();
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+    if (token !== this.viewportLoadToken) {
+      return;
+    }
+
+    this.catererService.searchInMapArea(
+      this.filteredByCriteria(),
+      viewport,
+      this.sort(),
+    );
+
+    const elapsed = performance.now() - startedAt;
+    const remaining = Search.MAP_LOAD_MIN_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+    }
+
+    if (token !== this.viewportLoadToken) {
+      return;
+    }
+
+    this.mapViewport.set(viewport);
+    this.mapAutoFit.set(false);
+    this.mapLoading.set(false);
   }
 
-  protected toggleEvent(event: EventType, checked: boolean): void {
-    this.toggleInList(this.selectedEventTypes, event, checked);
-    this.syncToUrl();
-  }
-
-  protected isDietaryChecked(option: DietaryOption): boolean {
-    return this.selectedDietary().includes(option);
-  }
-
-  protected toggleDietary(option: DietaryOption, checked: boolean): void {
-    this.toggleInList(this.selectedDietary, option, checked);
-    this.syncToUrl();
+  protected onListingHover(id: string | null): void {
+    this.hoveredId.set(id);
   }
 
   protected onMapSelect(id: string): void {
     this.mapSelectedId.set(id);
   }
 
-  protected findCaterer(id: string): Caterer | undefined {
-    return this.results().find((c) => c.id === id);
-  }
-
-  protected resetFilters(): void {
-    clearTimeout(this.querySyncTimer);
-    this.query.set('');
-    this.minRating.set(0);
-    this.selectedCategories.set([]);
-    this.eventDate.set('');
-    this.selectedEventTypes.set([]);
-    this.selectedDietary.set([]);
-    this.sort.set('relevance');
-    this.viewMode.set('grid');
+  protected onMapClear(): void {
     this.mapSelectedId.set(null);
-    this.syncToUrl();
-  }
-
-  private toggleInList<T>(
-    listSignal: { (): T[]; set: (value: T[]) => void },
-    item: T,
-    checked: boolean,
-  ): void {
-    const current = listSignal();
-    if (checked) {
-      listSignal.set([...current, item]);
-    } else {
-      listSignal.set(current.filter((x) => x !== item));
-    }
   }
 
   private syncToUrl(): void {
@@ -251,7 +252,7 @@ export class Search {
       eventTypes: this.selectedEventTypes(),
       dietary: this.selectedDietary(),
       sort: this.sort(),
-      view: this.viewMode(),
+      view: 'grid',
     });
 
     void this.router.navigate([], {

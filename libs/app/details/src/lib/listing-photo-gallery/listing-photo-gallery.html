@@ -1,0 +1,54 @@
+@if (visible() && photos().length > 0) {
+<div
+  class="photo-gallery"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Galerie photos"
+  (click)="onBackdropClick($event)"
+>
+  <header class="photo-gallery__bar">
+    <span class="photo-gallery__counter">{{ counterLabel() }}</span>
+    <button
+      type="button"
+      class="photo-gallery__close"
+      aria-label="Fermer"
+      (click)="close()"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="photo-gallery__body">
+    @if (photos().length > 1) {
+    <button
+      type="button"
+      class="photo-gallery__nav photo-gallery__nav--prev"
+      aria-label="Photo précédente"
+      (click)="prev(); $event.stopPropagation()"
+    >
+      <i class="pi pi-chevron-left" aria-hidden="true"></i>
+    </button>
+    }
+
+    <figure class="photo-gallery__stage" (click)="$event.stopPropagation()">
+      @if (currentPhoto(); as photo) {
+      <img [src]="photo.imageUrl" [alt]="photo.caption" />
+      @if (photo.caption) {
+      <figcaption>{{ photo.caption }}</figcaption>
+      }
+      }
+    </figure>
+
+    @if (photos().length > 1) {
+    <button
+      type="button"
+      class="photo-gallery__nav photo-gallery__nav--next"
+      aria-label="Photo suivante"
+      (click)="next(); $event.stopPropagation()"
+    >
+      <i class="pi pi-chevron-right" aria-hidden="true"></i>
+    </button>
+    }
+  </div>
+</div>
+}

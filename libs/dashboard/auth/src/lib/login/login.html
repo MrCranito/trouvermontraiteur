@@ -51,13 +51,17 @@
       <p-button
         type="button"
         label="Continuer avec Google"
-        icon="pi pi-google"
+        styleClass="auth-google-btn"
         severity="secondary"
         [outlined]="true"
         [loading]="loading()"
         [disabled]="loading()"
         (onClick)="onGoogle()"
-      />
+      >
+        <ng-template pTemplate="icon">
+          <tmt-google-icon />
+        </ng-template>
+      </p-button>
     </div>
   </form>
 

@@ -1,0 +1,13 @@
+{
+  "name": "multiple-markers-map",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/ui/multiple-markers-map/src",
+  "prefix": "tmt",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

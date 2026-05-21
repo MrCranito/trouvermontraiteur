@@ -14,15 +14,33 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
+      "@env": ["./.env/environment.ts"],
       "@trouvermontraiteur/models": ["./libs/shared/models/src/index.ts"],
       "@trouvermontraiteur/api": ["./libs/shared/api/src/index.ts"],
       "@trouvermontraiteur/theme": ["./libs/shared/theme/src/index.ts"],
       "@trouvermontraiteur/ui": ["./libs/landing/ui/src/index.ts"],
       "@trouvermontraiteur/data": ["./libs/landing/data/src/index.ts"],
-      "@trouvermontraiteur/map": ["./libs/shared/ui/map/src/index.ts"],
+      "@trouvermontraiteur/map-base": [
+        "./libs/shared/ui/map-base/src/index.ts"
+      ],
+      "@trouvermontraiteur/multiple-markers-map": [
+        "./libs/shared/ui/multiple-markers-map/src/index.ts"
+      ],
+      "@trouvermontraiteur/single-marker-map": [
+        "./libs/shared/ui/single-marker-map/src/index.ts"
+      ],
       "@trouvermontraiteur/home": ["./libs/landing/home/src/index.ts"],
       "@trouvermontraiteur/search": ["./libs/app/search/src/index.ts"],
       "@trouvermontraiteur/details": ["./libs/app/details/src/index.ts"],
+      "@trouvermontraiteur/app-auth": ["./libs/app/auth/src/index.ts"],
+      "@trouvermontraiteur/app-shell": ["./libs/app/shell/src/index.ts"],
+      "@trouvermontraiteur/app-consumer-data": [
+        "./libs/app/consumer-data/src/index.ts"
+      ],
+      "@trouvermontraiteur/app-favorites": [
+        "./libs/app/favorites/src/index.ts"
+      ],
+      "@trouvermontraiteur/app-my-devis": ["./libs/app/my-devis/src/index.ts"],
       "@trouvermontraiteur/dashboard-data": [
         "./libs/dashboard/data/src/index.ts"
       ],
@@ -37,6 +55,16 @@
       ],
       "@trouvermontraiteur/dashboard-auth": [
         "./libs/dashboard/auth/src/index.ts"
+      ],
+      "@trouvermontraiteur/topbar": ["./libs/shared/ui/topbar/src/index.ts"],
+      "@trouvermontraiteur/dashboard-devis": [
+        "./libs/dashboard/devis/src/index.ts"
+      ],
+      "@trouvermontraiteur/dashboard-availability": [
+        "./libs/dashboard/availability/src/index.ts"
+      ],
+      "@trouvermontraiteur/availability-calendar": [
+        "./libs/shared/ui/availability-calendar/src/index.ts"
       ]
     }
   },

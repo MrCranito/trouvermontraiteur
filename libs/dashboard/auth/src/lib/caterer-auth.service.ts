@@ -2,6 +2,15 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from '@trouvermontraiteur/api';
+import {
+  USER_TYPE,
+  getUserType,
+  isConsumerUser,
+  isProUser,
+  proUserMetadata,
+} from '@trouvermontraiteur/models';
+import { consumeAuthIntent, setAuthIntent } from './auth-intent.storage';
+import { WRONG_PORTAL_ERROR_CODE, wrongPortalAuthError } from './auth.errors';
 import { AUTH_REDIRECT_BASE } from './auth-redirect.token';
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +23,15 @@ export class CatererAuthService {
   private readonly initialized = signal(false);
 
   readonly user = computed<User | null>(() => this.session()?.user ?? null);
+  readonly userType = computed(() =>
+    getUserType(this.user()?.user_metadata),
+  );
+  readonly isConsumer = computed(() =>
+    isConsumerUser(this.user()?.user_metadata),
+  );
+  readonly isPro = computed(
+    () => this.isAuthenticated() && isProUser(this.user()?.user_metadata),
+  );
   readonly isAuthenticated = computed(
     () => this.initialized() && this.session() !== null,
   );
@@ -54,12 +72,109 @@ export class CatererAuthService {
     return `${base}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
+  private patchSessionUser(user: User): void {
+    const current = this.session();
+    if (!current) {
+      return;
+    }
+    this.session.set({ ...current, user });
+  }
+
+  private async refreshSession(): Promise<void> {
+    const { data, error } = await this.supabase.auth.refreshSession();
+    if (!error && data.session) {
+      this.session.set(data.session);
+      return;
+    }
+
+    const { data: userData, error: userError } =
+      await this.supabase.auth.getUser();
+    if (!userError && userData.user) {
+      this.patchSessionUser(userData.user);
+      return;
+    }
+
+    const { data: sessionData } = await this.supabase.auth.getSession();
+    this.session.set(sessionData.session);
+  }
+
+  /** Ensures the signed-in user may use the pro dashboard. */
+  async ensureProAccess(): Promise<AuthError | null> {
+    const user = this.user();
+    if (!user) {
+      return null;
+    }
+
+    const type = getUserType(user.user_metadata);
+
+    if (type === USER_TYPE.consumer) {
+      await this.supabase.auth.signOut();
+      this.session.set(null);
+      return wrongPortalAuthError();
+    }
+
+    if (type === USER_TYPE.pro) {
+      return null;
+    }
+
+    const { data, error } = await this.supabase.auth.updateUser({
+      data: proUserMetadata(),
+    });
+    if (error) {
+      return error;
+    }
+
+    if (data.user) {
+      this.patchSessionUser(data.user);
+    }
+    await this.refreshSession();
+    return null;
+  }
+
+  private async applyOAuthIntent(): Promise<AuthError | null> {
+    const intent = consumeAuthIntent();
+    if (intent !== USER_TYPE.pro) {
+      return this.ensureProAccess();
+    }
+
+    const user = this.user();
+    if (!user) {
+      return null;
+    }
+
+    const type = getUserType(user.user_metadata);
+    if (type === USER_TYPE.consumer) {
+      await this.supabase.auth.signOut();
+      this.session.set(null);
+      return wrongPortalAuthError();
+    }
+
+    if (type !== USER_TYPE.pro) {
+      const { data, error } = await this.supabase.auth.updateUser({
+        data: proUserMetadata(),
+      });
+      if (error) {
+        return error;
+      }
+      if (data.user) {
+        this.patchSessionUser(data.user);
+      }
+      await this.refreshSession();
+    }
+
+    return null;
+  }
+
   async signInWithEmail(email: string, password: string): Promise<AuthError | null> {
     const { error } = await this.supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
-    return error;
+    if (error) {
+      return error;
+    }
+
+    return this.ensureProAccess();
   }
 
   async signUpWithEmail(
@@ -70,6 +185,7 @@ export class CatererAuthService {
       email: email.trim(),
       password,
       options: {
+        data: proUserMetadata(),
         emailRedirectTo: this.redirectUrl('/auth/callback'),
       },
     });
@@ -81,6 +197,8 @@ export class CatererAuthService {
   }
 
   async signInWithGoogle(): Promise<AuthError | null> {
+    setAuthIntent(USER_TYPE.pro);
+
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -90,8 +208,13 @@ export class CatererAuthService {
     return error;
   }
 
-  async signOut(): Promise<void> {
+  async clearSession(): Promise<void> {
     await this.supabase.auth.signOut();
+    this.session.set(null);
+  }
+
+  async signOut(): Promise<void> {
+    await this.clearSession();
     await this.router.navigate(['/auth/connexion']);
   }
 
@@ -123,11 +246,17 @@ export class CatererAuthService {
 
     if (code) {
       const { error } = await this.supabase.auth.exchangeCodeForSession(code);
-      return error;
+      if (error) {
+        return error;
+      }
+    } else {
+      const { error } = await this.supabase.auth.getSession();
+      if (error) {
+        return error;
+      }
     }
 
-    const { error } = await this.supabase.auth.getSession();
-    return error;
+    return this.applyOAuthIntent();
   }
 
   isRecoveryFlow(): boolean {
@@ -149,6 +278,8 @@ export class CatererAuthService {
       email_not_confirmed:
         'Confirmez votre adresse e-mail avant de vous connecter.',
       weak_password: 'Le mot de passe est trop faible (8 caractères minimum).',
+      [WRONG_PORTAL_ERROR_CODE]:
+        'Ce compte est un compte particulier. Utilisez l’application publique pour vous connecter.',
     };
     return map[error.message] ?? error.message;
   }

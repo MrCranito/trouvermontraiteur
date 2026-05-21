@@ -1,14 +1,24 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { CatererAuthService } from '../caterer-auth.service';
+import { GoogleIcon } from '../google-icon/google-icon';
 
 @Component({
   selector: 'tmt-signup',
-  imports: [FormsModule, RouterLink, Button, InputText, Password],
+  imports: [
+    FormsModule,
+    RouterLink,
+    Button,
+    InputText,
+    Password,
+    PrimeTemplate,
+    GoogleIcon,
+  ],
   templateUrl: './signup.html',
   styleUrl: '../auth-form.scss',
 })

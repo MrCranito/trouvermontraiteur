@@ -52,8 +52,10 @@ export interface Caterer {
   categories: CatererCategory[];
   eventTypes: EventType[];
   dietary: DietaryOption[];
-  /** ISO dates (yyyy-MM-dd) when the caterer is unavailable */
+  /** ISO dates (yyyy-MM-dd) when the caterer is unavailable (legacy / fallback). */
   unavailableDates: string[];
+  /** ISO dates when bookings are accepted. When non-empty, only these dates count as available. */
+  availableDates: string[];
   location: CatererLocation;
   /** Photos of past events and setups */
   realisations: CatererRealisation[];

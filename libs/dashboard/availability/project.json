@@ -1,0 +1,13 @@
+{
+  "name": "dashboard-availability",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/dashboard/availability/src",
+  "prefix": "tmt",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

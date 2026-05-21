@@ -1,0 +1,31 @@
+<a
+  class="map-marker-popup"
+  [routerLink]="['/traiteurs', caterer().slug]"
+  (click)="$event.stopPropagation()"
+>
+  <div class="map-marker-popup__media">
+    <img [src]="caterer().imageUrl" [alt]="caterer().name" loading="lazy" />
+  </div>
+  <div class="map-marker-popup__body">
+    <div class="map-marker-popup__head">
+      <h3 class="map-marker-popup__name">{{ caterer().name }}</h3>
+      <span class="map-marker-popup__rating">
+        <i class="pi pi-star-fill" aria-hidden="true"></i>
+        {{ ratingLabel() }}
+      </span>
+    </div>
+    <p class="map-marker-popup__location">
+      <i class="pi pi-map-marker" aria-hidden="true"></i>
+      {{ caterer().location.city }}
+    </p>
+    @if (visibleEventTypes().length > 0) {
+    <ul class="map-marker-popup__chips" aria-label="Types d'événement">
+      @for (event of visibleEventTypes(); track event) {
+      <li>
+        <span class="map-marker-popup__chip">{{ eventLabels[event] }}</span>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+</a>

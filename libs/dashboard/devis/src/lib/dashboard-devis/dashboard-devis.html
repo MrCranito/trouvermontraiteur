@@ -1,0 +1,352 @@
+<div class="dash-devis">
+  <header class="dash-devis__head">
+    <div>
+      <p class="dash-devis__eyebrow">Demandes clients</p>
+      <h2>Devis</h2>
+      <p class="dash-devis__lead">
+        Consultez et répondez aux demandes envoyées depuis l'application publique.
+      </p>
+    </div>
+    @if (newCount() > 0) {
+      <p-tag
+        [value]="newCount() + ' nouvelle' + (newCount() > 1 ? 's' : '')"
+        severity="warn"
+        icon="pi pi-inbox"
+      />
+    }
+  </header>
+
+  <ul class="dash-devis__stats" aria-label="Synthèse des demandes">
+    <li class="dash-devis__stat">
+      <span class="dash-devis__stat-value">{{ statsSummary().total }}</span>
+      <span class="dash-devis__stat-label">Total</span>
+    </li>
+    <li class="dash-devis__stat dash-devis__stat--new">
+      <span class="dash-devis__stat-value">{{ statsSummary().new }}</span>
+      <span class="dash-devis__stat-label">Nouveaux</span>
+    </li>
+    <li class="dash-devis__stat dash-devis__stat--pending">
+      <span class="dash-devis__stat-value">{{ statsSummary().pending }}</span>
+      <span class="dash-devis__stat-label">En cours</span>
+    </li>
+    <li class="dash-devis__stat dash-devis__stat--done">
+      <span class="dash-devis__stat-value">{{ statsSummary().answered }}</span>
+      <span class="dash-devis__stat-label">Répondus</span>
+    </li>
+  </ul>
+
+  <div class="dash-devis__card">
+    <p-table
+      class="dash-devis__table"
+      [value]="tableRows()"
+      [rowHover]="true"
+      [stripedRows]="false"
+      [paginator]="tableRows().length > 8"
+      [rows]="8"
+      [rowsPerPageOptions]="[8, 15, 25]"
+      dataKey="id"
+      responsiveLayout="scroll"
+      sortField="requestedAtMs"
+      [sortOrder]="-1"
+      styleClass="dash-devis-table"
+      paginatorStyleClass="dash-devis-paginator"
+    >
+      <ng-template pTemplate="sorticon" let-sortOrder>
+        @if (sortOrder === 1) {
+          <i class="pi pi-arrow-up dash-devis__sort-arrow" aria-hidden="true"></i>
+        } @else if (sortOrder === -1) {
+          <i class="pi pi-arrow-down dash-devis__sort-arrow" aria-hidden="true"></i>
+        }
+      </ng-template>
+
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="clientName">
+            <span class="dash-devis__th-sort">
+              Client
+              <p-sortIcon field="clientName" />
+            </span>
+          </th>
+          <th pSortableColumn="eventType">
+            <span class="dash-devis__th-sort">
+              Événement
+              <p-sortIcon field="eventType" />
+            </span>
+          </th>
+          <th pSortableColumn="eventDateLabel">
+            <span class="dash-devis__th-sort">
+              Date
+              <p-sortIcon field="eventDateLabel" />
+            </span>
+          </th>
+          <th pSortableColumn="guestCount" class="dash-devis__col-numeric">
+            <span class="dash-devis__th-sort">
+              Invités
+              <p-sortIcon field="guestCount" />
+            </span>
+          </th>
+          <th pSortableColumn="budgetHint">
+            <span class="dash-devis__th-sort">
+              Budget
+              <p-sortIcon field="budgetHint" />
+            </span>
+          </th>
+          <th pSortableColumn="status">
+            <span class="dash-devis__th-sort">
+              Statut
+              <p-sortIcon field="status" />
+            </span>
+          </th>
+          <th pSortableColumn="requestedAtMs" class="dash-devis__col-received">
+            <span class="dash-devis__th-sort">
+              Reçu
+              <p-sortIcon field="requestedAtMs" />
+            </span>
+          </th>
+          <th class="dash-devis__col-actions" scope="col">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-request>
+        <tr [class.dash-devis__row--new]="request.status === 'new'">
+          <td>
+            <div class="dash-devis__client">
+              <span class="dash-devis__avatar" aria-hidden="true">{{
+                clientInitials(request.clientName)
+              }}</span>
+              <div>
+                <strong>{{ request.clientName }}</strong>
+                <span class="dash-devis__email">{{ request.clientEmail }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="dash-devis__event-chip">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              {{ request.eventType }}
+            </span>
+          </td>
+          <td>{{ request.eventDateLabel }}</td>
+          <td class="dash-devis__col-numeric">
+            <span class="dash-devis__guests">
+              <i class="pi pi-users" aria-hidden="true"></i>
+              {{ request.guestCount }}
+            </span>
+          </td>
+          <td>
+            <span
+              class="dash-devis__budget"
+              [class.dash-devis__budget--muted]="!request.budgetHint"
+            >
+              {{ request.budgetHint ?? 'Non précisé' }}
+            </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="statusLabel(request.status)"
+              [severity]="statusSeverity(request.status)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="dash-devis__col-received">
+            <span class="dash-devis__time">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ request.requestedAt }}
+            </span>
+          </td>
+          <td class="dash-devis__col-actions">
+            <div class="dash-devis__actions">
+              <p-button
+                type="button"
+                icon="pi pi-eye"
+                [rounded]="true"
+                [outlined]="true"
+                severity="secondary"
+                size="small"
+                ariaLabel="Voir le message"
+               
+                (onClick)="openDetail(request)"
+              />
+              @if (canRespond(request)) {
+                <p-button
+                  type="button"
+                  icon="pi pi-reply"
+                  [rounded]="true"
+                  size="small"
+                  ariaLabel="Répondre au client"
+                 
+                  (onClick)="openRespond(request)"
+                />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="8">
+            <div class="dash-devis__empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>Aucune demande pour ce filtre.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    header="Demande de devis"
+    [visible]="detailVisible()"
+    (visibleChange)="detailVisible.set($event)"
+    [modal]="true"
+    [style]="{ width: 'min(34rem, 94vw)' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="dash-devis-dialog"
+  >
+    @if (detailRequest(); as request) {
+      <div class="dash-devis__dialog">
+        <header class="dash-devis__dialog-head">
+          <div class="dash-devis__dialog-client">
+            <span class="dash-devis__avatar dash-devis__avatar--lg" aria-hidden="true">{{
+              clientInitials(request.clientName)
+            }}</span>
+            <div>
+              <p class="dash-devis__eyebrow">{{ request.eventType }}</p>
+              <h3>{{ request.clientName }}</h3>
+              <p class="dash-devis__dialog-sub">
+                {{ request.eventDateLabel }} ·
+                {{ request.guestCount }} invité{{ request.guestCount > 1 ? 's' : '' }}
+              </p>
+            </div>
+          </div>
+          <p-tag
+            [value]="statusLabel(request.status)"
+            [severity]="statusSeverity(request.status)"
+            [rounded]="true"
+          />
+        </header>
+
+        <dl class="dash-devis__facts">
+          <div>
+            <dt>E-mail</dt>
+            <dd>
+              <a [href]="'mailto:' + request.clientEmail">{{ request.clientEmail }}</a>
+            </dd>
+          </div>
+          @if (request.budgetHint) {
+            <div>
+              <dt>Budget indicatif</dt>
+              <dd>{{ request.budgetHint }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Reçu</dt>
+            <dd>{{ request.requestedAt }}</dd>
+          </div>
+        </dl>
+
+        <article class="dash-devis__message dash-devis__message--inbound">
+          <h4><i class="pi pi-comment" aria-hidden="true"></i> Message du client</h4>
+          <p>{{ request.message }}</p>
+        </article>
+
+        @if (request.proResponse) {
+          <article class="dash-devis__message dash-devis__message--outbound">
+            <h4><i class="pi pi-send" aria-hidden="true"></i> Votre réponse</h4>
+            <p>{{ request.proResponse }}</p>
+            @if (request.respondedAt) {
+              <footer class="dash-devis__message-meta">Envoyée le {{ request.respondedAt }}</footer>
+            }
+          </article>
+        }
+
+        <footer class="dash-devis__dialog-actions">
+          @if (canRespond(request)) {
+            <p-button
+              label="Répondre au client"
+              icon="pi pi-reply"
+              (onClick)="openRespondFromDetail()"
+            />
+          }
+          @if (request.status === 'new' || request.status === 'viewed') {
+            <p-button
+              label="Marquer comme répondu"
+              icon="pi pi-check"
+              [outlined]="true"
+              severity="secondary"
+              (onClick)="markAsAnswered(request.id)"
+            />
+          }
+        </footer>
+      </div>
+    }
+  </p-dialog>
+
+  <p-dialog
+    header="Répondre au client"
+    [visible]="respondVisible()"
+    (visibleChange)="respondVisible.set($event)"
+    [modal]="true"
+    [style]="{ width: 'min(36rem, 94vw)' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="dash-devis-dialog dash-devis-dialog--respond"
+  >
+    @if (respondRequest(); as request) {
+      <div class="dash-devis__respond">
+        @if (respondSuccess()) {
+          <p-message
+            severity="success"
+            text="Votre réponse a été enregistrée. Le client sera notifié (démo)."
+          />
+        }
+
+        <aside class="dash-devis__respond-context">
+          <p class="dash-devis__respond-label">Destinataire</p>
+          <p class="dash-devis__respond-recipient">
+            <strong>{{ request.clientName }}</strong>
+            <span>{{ request.clientEmail }}</span>
+          </p>
+          <p class="dash-devis__respond-label">Demande</p>
+          <p class="dash-devis__respond-quote">
+            {{ request.eventType }} · {{ request.eventDateLabel }} ·
+            {{ request.guestCount }} invités
+          </p>
+          <blockquote class="dash-devis__respond-inbound">{{ request.message }}</blockquote>
+        </aside>
+
+        <div class="dash-devis__respond-field">
+          <label for="devis-response">Votre réponse</label>
+          <textarea
+            pTextarea
+            id="devis-response"
+            rows="8"
+            class="dash-devis__respond-textarea"
+            placeholder="Rédigez votre proposition : formules, tarifs, disponibilités, questions complémentaires…"
+            [ngModel]="responseText()"
+            (ngModelChange)="responseText.set($event); respondSuccess.set(false)"
+          ></textarea>
+          <p class="dash-devis__respond-hint">
+            Cette réponse sera associée à la demande (démo locale).
+          </p>
+        </div>
+
+        <footer class="dash-devis__dialog-actions dash-devis__dialog-actions--end">
+          <p-button
+            label="Annuler"
+            [text]="true"
+            severity="secondary"
+            (onClick)="closeRespond()"
+          />
+          <p-button
+            label="Envoyer la réponse"
+            icon="pi pi-send"
+            [disabled]="!responseText().trim()"
+            (onClick)="sendResponse()"
+          />
+        </footer>
+      </div>
+    }
+  </p-dialog>
+</div>

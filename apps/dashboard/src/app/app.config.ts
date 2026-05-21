@@ -4,32 +4,27 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import { providePrimeNG } from 'primeng/config';
-import { TmtPreset } from '@trouvermontraiteur/theme';
-import { provideSupabase } from '@trouvermontraiteur/api';
+import { provideTmtPrimeNG } from '@trouvermontraiteur/theme';
 import { APP_PREVIEW_URL } from '@trouvermontraiteur/dashboard-data';
-import {
-  AUTH_REDIRECT_BASE,
-} from '@trouvermontraiteur/dashboard-auth';
-import { environment } from '../environments/environment';
+import { AUTH_REDIRECT_BASE } from '@trouvermontraiteur/dashboard-auth';
+import { environment } from '@env';
+import { SUPABASE_CLIENT } from '@trouvermontraiteur/api';
+import { createClient } from '@supabase/supabase-js';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    {
+      provide: SUPABASE_CLIENT,
+      useFactory: () =>
+        createClient(environment.supabase_url, environment.supabase_key),
+    },
     { provide: APP_PREVIEW_URL, useValue: environment.appPreviewUrl },
     {
       provide: AUTH_REDIRECT_BASE,
-      useValue:
-        typeof window !== 'undefined'
-          ? window.location.origin
-          : 'http://localhost:4400',
+      useValue: environment.dashboardUrl.replace(/\/$/, ''),
     },
-    provideSupabase(environment.supabaseUrl, environment.supabaseAnonKey),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
-    providePrimeNG({
-      theme: {
-        preset: TmtPreset,
-      },
-    }),
+    provideTmtPrimeNG(),
   ],
 };

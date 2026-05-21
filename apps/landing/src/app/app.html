@@ -1,22 +1,7 @@
-<header class="landing-header">
-  <a routerLink="/" class="landing-header__brand">Trouver mon traiteur</a>
-
-  <nav class="landing-header__actions" aria-label="Compte et espace professionnel">
-    <p-button
-      label="Espace Pro"
-      icon="pi pi-briefcase"
-      styleClass="landing-header__btn landing-header__btn--pro"
-      routerLink="/inscription-pro"
-    />
-    <p-button
-      label="Connexion / inscription"
-      [outlined]="true"
-      severity="secondary"
-      styleClass="landing-header__btn"
-      (onClick)="onPlaceholderLink($event)"
-    />
-  </nav>
-</header>
+<tmt-topbar
+  [dashboardUrl]="dashboardAppUrl"
+  (loginClick)="onPlaceholderLink($event)"
+/>
 
 <main class="landing-main">
   <router-outlet />

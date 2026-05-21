@@ -3,14 +3,14 @@ import { createClient, SupabaseClientOptions } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from './supabase.token';
 
 export function provideSupabase(
-  url: string,
-  key: string,
+  supabase_url: string,
+  supabase_key: string,
   options?: SupabaseClientOptions<'public'>,
 ): EnvironmentProviders {
   return makeEnvironmentProviders([
     {
       provide: SUPABASE_CLIENT,
-      useValue: createClient(url, key, options),
+      useValue: createClient(supabase_url, supabase_key, options),
     },
   ]);
 }

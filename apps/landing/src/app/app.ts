@@ -1,16 +1,20 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterModule } from '@angular/router';
-import { Button } from 'primeng/button';
-import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { RouterModule } from '@angular/router';
+import { buildAppUrl, DASHBOARD_APP_URL, PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { TmtTopbar } from '@trouvermontraiteur/topbar';
 
 @Component({
-  imports: [RouterModule, RouterLink, Button],
+  imports: [RouterModule, TmtTopbar],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly searchAppUrl = inject(PUBLIC_APP_URL) ?? '/';
+  private readonly searchAppBase = inject(PUBLIC_APP_URL);
+  private readonly dashboardAppBase = inject(DASHBOARD_APP_URL);
+
+  protected readonly searchAppUrl = buildAppUrl(this.searchAppBase);
+  protected readonly dashboardAppUrl = buildAppUrl(this.dashboardAppBase);
   protected readonly currentYear = new Date().getFullYear();
 
   protected readonly legalLinks = [

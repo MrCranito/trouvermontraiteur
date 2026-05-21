@@ -1,0 +1,123 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.consumer-auth-page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1.05fr 1fr;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.consumer-auth-page__visual {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 2.75rem;
+  background:
+    url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1400&q=80')
+    center / cover no-repeat;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
+}
+
+.consumer-auth-page__visual-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    rgba(42, 34, 25, 0.35) 0%,
+    rgba(92, 122, 94, 0.72) 45%,
+    rgba(42, 34, 25, 0.88) 100%
+  );
+}
+
+.consumer-auth-page__visual-content {
+  position: relative;
+  z-index: 1;
+  max-width: 24rem;
+  color: #faf6ef;
+
+  h1 {
+    margin: 1.1rem 0 0.85rem;
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  > p {
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: rgba(250, 246, 239, 0.9);
+  }
+}
+
+.consumer-auth-page__logo {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #5c7a5e, #7fa382);
+  box-shadow: 0 8px 24px rgba(42, 34, 25, 0.25);
+  font-weight: 800;
+  font-size: 1.35rem;
+}
+
+.consumer-auth-page__perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 0.92rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  i {
+    color: #d4e8d5;
+    font-size: 0.95rem;
+  }
+}
+
+.consumer-auth-page__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem 2.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(92, 122, 94, 0.12), transparent),
+    linear-gradient(180deg, #f5efe3 0%, #faf6ef 40%, #faf6ef 100%);
+}
+
+.consumer-auth-page__home {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #5c7a5e;
+  text-decoration: none;
+
+  &:hover {
+    color: #4a634c;
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,74 @@
+<div class="consumer-page consumer-devis">
+  <header class="consumer-page__head">
+    <a routerLink="/" class="consumer-page__back">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      Retour à la recherche
+    </a>
+    <h1>Mes devis</h1>
+    <p>Les demandes de devis que vous avez envoyées aux traiteurs.</p>
+  </header>
+
+  @if (quotes().length === 0) {
+    <div class="consumer-page__empty">
+      <i class="pi pi-file-edit" aria-hidden="true"></i>
+      <h2>Aucune demande</h2>
+      <p>Depuis une fiche traiteur, utilisez « Demander un devis » pour contacter un professionnel.</p>
+      <p-button label="Rechercher un traiteur" icon="pi pi-search" routerLink="/" />
+    </div>
+  } @else {
+    <ul class="consumer-devis__list">
+      @for (quote of quotes(); track quote.id) {
+        <li class="consumer-devis__card">
+          <a
+            class="consumer-devis__caterer"
+            [routerLink]="['/traiteurs', quote.catererSlug]"
+          >
+            <img [src]="quote.catererImageUrl" [alt]="quote.catererName" loading="lazy" />
+            <span>{{ quote.catererName }}</span>
+          </a>
+
+          <div class="consumer-devis__meta">
+            <p-tag
+              [value]="statusLabel(quote.status)"
+              [severity]="statusSeverity(quote.status)"
+            />
+            <span class="consumer-devis__date">{{ quote.requestedAt }}</span>
+          </div>
+
+          <dl class="consumer-devis__facts">
+            <div>
+              <dt>Événement</dt>
+              <dd>{{ quote.eventType }}</dd>
+            </div>
+            <div>
+              <dt>Date</dt>
+              <dd>{{ quote.eventDateLabel }}</dd>
+            </div>
+            <div>
+              <dt>Convives</dt>
+              <dd>{{ quote.guestCount }}</dd>
+            </div>
+            @if (quote.budgetHint) {
+              <div>
+                <dt>Budget</dt>
+                <dd>{{ quote.budgetHint }}</dd>
+              </div>
+            }
+          </dl>
+
+          <blockquote class="consumer-devis__message">{{ quote.message }}</blockquote>
+
+          @if (quote.proResponse) {
+            <article class="consumer-devis__response">
+              <h3>Réponse du traiteur</h3>
+              <p>{{ quote.proResponse }}</p>
+              @if (quote.respondedAt) {
+                <footer>{{ quote.respondedAt }}</footer>
+              }
+            </article>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,11 @@
+<div class="app-shell">
+  <tmt-topbar
+    [dashboardUrl]="dashboardUrl"
+    [auth]="authState()"
+    loginHref="/auth/connexion"
+    (signOut)="signOut()"
+  />
+  <main class="app-shell__main">
+    <router-outlet />
+  </main>
+</div>

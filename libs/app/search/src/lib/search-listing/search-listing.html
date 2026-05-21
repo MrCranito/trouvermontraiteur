@@ -1,0 +1,102 @@
+<article
+  class="search-listing"
+  [id]="'listing-' + caterer().id"
+  [class.search-listing--active]="active()"
+>
+  @if (showFavorite()) {
+    <button
+      type="button"
+      class="search-listing__favorite"
+      [class.search-listing__favorite--on]="isFavorite()"
+      [attr.aria-label]="
+        isFavorite()
+          ? 'Retirer des favoris'
+          : 'Ajouter aux favoris'
+      "
+      [attr.aria-pressed]="isFavorite()"
+      (click)="onFavoriteClick($event)"
+    >
+      <i
+        [class]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+        aria-hidden="true"
+      ></i>
+    </button>
+  }
+
+  <div class="search-listing__frame">
+    <a
+      class="search-listing__media-link"
+      [routerLink]="['/traiteurs', caterer().slug]"
+      [attr.aria-label]="'Voir ' + caterer().name"
+    >
+      <div class="search-listing__media">
+        <div
+          #photoTrack
+          class="search-listing__track"
+          (scroll)="onPhotoScroll($event)"
+        >
+          @for (photo of photos(); track photo.id; let i = $index) {
+            <div class="search-listing__slide">
+              <img
+                [src]="photo.imageUrl"
+                [alt]="photo.caption"
+                [loading]="i === 0 ? 'eager' : 'lazy'"
+                draggable="false"
+              />
+            </div>
+          }
+        </div>
+        <span class="search-listing__media-shade" aria-hidden="true"></span>
+      </div>
+    </a>
+
+    @if (hasMultiplePhotos()) {
+      <button
+        type="button"
+        class="search-listing__nav search-listing__nav--prev"
+        aria-label="Photo précédente"
+        (click)="prevPhoto($event)"
+      >
+        <i class="pi pi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="search-listing__nav search-listing__nav--next"
+        aria-label="Photo suivante"
+        (click)="nextPhoto($event)"
+      >
+        <i class="pi pi-chevron-right" aria-hidden="true"></i>
+      </button>
+      <span class="search-listing__photo-count" aria-hidden="true">
+        {{ photoIndex() + 1 }} / {{ photos().length }}
+      </span>
+    }
+  </div>
+
+  <a class="search-listing__link" [routerLink]="['/traiteurs', caterer().slug]">
+    <div class="search-listing__body">
+      <div class="search-listing__head">
+        <h3>{{ caterer().name }}</h3>
+        <span class="search-listing__rating">
+          <i class="pi pi-star-fill" aria-hidden="true"></i>
+          {{ caterer().rating }}
+        </span>
+      </div>
+
+      <p class="search-listing__location">
+        <i class="pi pi-map-marker" aria-hidden="true"></i>
+        {{ caterer().location.city }}
+      </p>
+
+      @if (caterer().eventTypes.length > 0) {
+        <ul class="search-listing__chips" aria-label="Types d'événement">
+          @for (event of caterer().eventTypes; track event) {
+            <li>
+              <span class="search-listing__chip">{{ eventLabels[event] }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </a>
+</article>

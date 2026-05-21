@@ -1,0 +1,26 @@
+<div class="consumer-auth-page">
+  <aside class="consumer-auth-page__visual" aria-hidden="true">
+    <div class="consumer-auth-page__visual-overlay"></div>
+    <div class="consumer-auth-page__visual-content">
+      <span class="consumer-auth-page__logo">T</span>
+      <h1>Votre événement,<br />sans stress</h1>
+      <p>
+        Créez un compte pour enregistrer vos recherches, contacter des traiteurs
+        et préparer votre réception en toute sérénité.
+      </p>
+      <ul class="consumer-auth-page__perks">
+        <li><i class="pi pi-heart-fill"></i> Favoris et listes</li>
+        <li><i class="pi pi-search"></i> Recherche personnalisée</li>
+        <li><i class="pi pi-lock"></i> Connexion sécurisée</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="consumer-auth-page__main">
+    <a routerLink="/" class="consumer-auth-page__home">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      Retour à la recherche
+    </a>
+    <router-outlet />
+  </main>
+</div>

@@ -5,7 +5,17 @@ import {
   DietaryOption,
   EventType,
 } from '@trouvermontraiteur/models';
+import {
+  filterCaterersByRadius,
+  sortCaterersByDistanceFrom,
+  type MapViewport,
+} from '@trouvermontraiteur/map-base';
 import { MOCK_CATERERS } from './mock-caterers';
+
+export type { MapViewport };
+
+/** Max caterers returned for a map-area search (radius + center). */
+export const SEARCH_RESULTS_LIMIT = 20;
 
 export type SearchSort =
   | 'relevance'
@@ -35,6 +45,32 @@ export class CatererService {
     return this.caterers.find((c) => c.slug === slug);
   }
 
+  /** Caterers within the map viewport circle (center + screen-proportional radius). */
+  filterByMapViewport(caterers: Caterer[], viewport: MapViewport): Caterer[] {
+    return filterCaterersByRadius(
+      caterers,
+      viewport.center,
+      viewport.radiusMeters,
+    );
+  }
+
+  /**
+   * Caterers in the map viewport, ordered by distance (relevance) or sort, capped at `limit`.
+   */
+  searchInMapArea(
+    caterers: Caterer[],
+    viewport: MapViewport,
+    sort: SearchSort,
+    limit = SEARCH_RESULTS_LIMIT,
+  ): Caterer[] {
+    const inView = this.filterByMapViewport(caterers, viewport);
+    const ordered =
+      sort === 'relevance'
+        ? sortCaterersByDistanceFrom(inView, viewport.center)
+        : this.sort(inView, sort);
+    return ordered.slice(0, limit);
+  }
+
   filter(filters: CatererFilters): Caterer[] {
     const q = filters.query.trim().toLowerCase();
 
@@ -53,7 +89,12 @@ export class CatererService {
       }
 
       if (filters.eventDate) {
-        if (caterer.unavailableDates.includes(filters.eventDate)) {
+        const explicit = caterer.availableDates.length > 0;
+        if (explicit) {
+          if (!caterer.availableDates.includes(filters.eventDate)) {
+            return false;
+          }
+        } else if (caterer.unavailableDates.includes(filters.eventDate)) {
           return false;
         }
       }

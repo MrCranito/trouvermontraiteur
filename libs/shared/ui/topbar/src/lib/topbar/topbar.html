@@ -1,0 +1,61 @@
+<header class="tmt-topbar">
+  <a
+    [routerLink]="homeLink()"
+    class="tmt-topbar__brand"
+    aria-label="Trouver mon traiteur — accueil"
+  >
+    <img
+      class="tmt-topbar__logo"
+      src="/images/logo.svg"
+      alt=""
+      width="40"
+      height="40"
+      decoding="async"
+    />
+    <span class="tmt-topbar__brand-text">Trouver mon traiteur</span>
+  </a>
+
+  <nav class="tmt-topbar__actions" aria-label="Compte et espace professionnel">
+    <a [href]="dashboardUrl()" class="tmt-topbar__cta">
+      <p-button
+        label="Espace Pro"
+        icon="pi pi-briefcase"
+        styleClass="tmt-topbar__btn tmt-topbar__btn--pro"
+      />
+    </a>
+
+    @if (isAuthenticated()) {
+      <p-menu #accountMenuPopup [model]="accountMenuItems()" [popup]="true" />
+      <button
+        type="button"
+        class="tmt-topbar__avatar-btn"
+        aria-label="Mon compte"
+        aria-haspopup="menu"
+        (click)="accountMenuPopup.toggle($event)"
+      >
+        @if (avatarUrl(); as url) {
+          <img [src]="url" alt="" class="tmt-topbar__avatar-img" />
+        } @else {
+          <i class="pi pi-user" aria-hidden="true"></i>
+        }
+      </button>
+    } @else if (loginHref()) {
+      <a [routerLink]="loginHref()!" class="tmt-topbar__cta">
+        <p-button
+          label="Connexion / inscription"
+          [outlined]="true"
+          severity="secondary"
+          styleClass="tmt-topbar__btn"
+        />
+      </a>
+    } @else {
+      <p-button
+        label="Connexion / inscription"
+        [outlined]="true"
+        severity="secondary"
+        styleClass="tmt-topbar__btn"
+        (onClick)="loginClick.emit($event)"
+      />
+    }
+  </nav>
+</header>

@@ -1,0 +1,120 @@
+.photo-gallery {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.92);
+  color: #fff;
+}
+
+.photo-gallery__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+}
+
+.photo-gallery__counter {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.photo-gallery__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.photo-gallery__body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0 0.5rem 1.5rem;
+
+  @media (max-width: 743px) {
+    padding-bottom: 4.5rem;
+  }
+}
+
+.photo-gallery__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-height: 100%;
+  margin: 0;
+
+  img {
+    max-width: min(100%, 72rem);
+    max-height: calc(100vh - 8rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 0.35rem;
+  }
+
+  figcaption {
+    margin-top: 0.85rem;
+    padding: 0 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-align: center;
+  }
+}
+
+.photo-gallery__nav {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #fff;
+  }
+
+  @media (max-width: 743px) {
+    position: absolute;
+    bottom: 1.5rem;
+    z-index: 1;
+
+    &--prev {
+      left: 1rem;
+    }
+
+    &--next {
+      right: 1rem;
+    }
+  }
+}

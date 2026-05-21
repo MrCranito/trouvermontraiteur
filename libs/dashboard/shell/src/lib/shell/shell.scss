@@ -96,6 +96,21 @@
   }
 }
 
+.dash-shell__nav-badge {
+  margin-left: auto;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #c4622d;
+  color: #faf6ef;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .dash-shell__profile-card {
   margin-top: auto;
   display: flex;

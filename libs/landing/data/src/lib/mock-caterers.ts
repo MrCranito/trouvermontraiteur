@@ -1,7 +1,8 @@
 import { Caterer } from '@trouvermontraiteur/models';
+import { MOCK_CATERERS_FRANCE } from './mock-caterers-france';
 import { mockRealisations } from './mock-realisations';
 
-export const MOCK_CATERERS: Caterer[] = [
+const MOCK_CATERERS_PARIS: Caterer[] = [
   {
     id: '1',
     slug: 'maison-du-terroir',
@@ -15,6 +16,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['mariage', 'anniversaire', 'cocktail', 'entreprise'],
     dietary: ['vegetarien', 'sans_gluten'],
     unavailableDates: ['2026-06-15', '2026-12-24', '2026-12-31'],
+    availableDates: [],
     location: {
       lat: 48.8566,
       lng: 2.3522,
@@ -66,6 +68,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['anniversaire', 'cocktail', 'entreprise', 'famille'],
     dietary: ['vegetarien', 'vegan'],
     unavailableDates: ['2026-07-14', '2026-08-15'],
+    availableDates: [],
     location: {
       lat: 48.8738,
       lng: 2.295,
@@ -109,6 +112,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['mariage', 'cocktail', 'anniversaire'],
     dietary: ['vegetarien', 'halal', 'sans_gluten'],
     unavailableDates: ['2026-05-25', '2026-12-31'],
+    availableDates: [],
     location: {
       lat: 48.8499,
       lng: 2.3809,
@@ -160,6 +164,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['cocktail', 'entreprise', 'mariage'],
     dietary: ['vegetarien'],
     unavailableDates: ['2026-12-24', '2026-12-25'],
+    availableDates: [],
     location: {
       lat: 48.8606,
       lng: 2.3376,
@@ -203,6 +208,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['mariage', 'anniversaire', 'famille'],
     dietary: ['vegetarien', 'sans_lactose'],
     unavailableDates: ['2026-02-14', '2026-12-24'],
+    availableDates: [],
     location: {
       lat: 48.8422,
       lng: 2.3212,
@@ -247,6 +253,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['entreprise', 'anniversaire', 'cocktail'],
     dietary: ['halal'],
     unavailableDates: ['2026-07-04', '2026-12-31'],
+    availableDates: [],
     location: {
       lat: 48.8925,
       lng: 2.238,
@@ -290,6 +297,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['brunch', 'famille', 'anniversaire'],
     dietary: ['vegetarien', 'vegan', 'sans_gluten'],
     unavailableDates: ['2026-01-01', '2026-05-01'],
+    availableDates: [],
     location: {
       lat: 48.8333,
       lng: 2.3667,
@@ -333,6 +341,7 @@ export const MOCK_CATERERS: Caterer[] = [
     eventTypes: ['cocktail', 'mariage', 'entreprise'],
     dietary: ['vegan', 'sans_gluten'],
     unavailableDates: ['2026-12-31', '2026-06-21'],
+    availableDates: [],
     location: {
       lat: 48.8799,
       lng: 2.3185,
@@ -364,4 +373,9 @@ export const MOCK_CATERERS: Caterer[] = [
       },
     ],
   },
+];
+
+export const MOCK_CATERERS: Caterer[] = [
+  ...MOCK_CATERERS_PARIS,
+  ...MOCK_CATERERS_FRANCE,
 ];

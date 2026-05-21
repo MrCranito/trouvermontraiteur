@@ -89,6 +89,10 @@
     width: 100%;
     justify-content: center;
   }
+
+  ::ng-deep .auth-google-btn .p-button-icon {
+    color: unset;
+  }
 }
 
 .auth-card__divider {

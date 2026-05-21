@@ -1,0 +1,48 @@
+<div class="dash-dispo">
+  <header class="dash-dispo__head">
+    <div>
+      <p class="dash-dispo__eyebrow">Planning</p>
+      <h1>Disponibilités</h1>
+      <p class="dash-dispo__lead">
+        Cliquez sur les jours où vous acceptez des réservations. Les clients verront
+        ces dates sur votre fiche publique.
+      </p>
+    </div>
+    <div class="dash-dispo__head-actions">
+      <p-button
+        label="Week-ends (120 j.)"
+        icon="pi pi-calendar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="selectWeekends()"
+      />
+      <p-button
+        label="Tout effacer (futur)"
+        severity="secondary"
+        [text]="true"
+        (onClick)="clearFuture()"
+      />
+      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="save()" />
+    </div>
+  </header>
+
+  @if (saved()) {
+    <p-message severity="success" text="Disponibilités enregistrées." />
+  }
+
+  <section class="dash-dispo__calendar" aria-label="Calendrier de disponibilités">
+    <tmt-availability-calendar
+      [availableDates]="draftDates()"
+      [monthsToShow]="2"
+      (availableDatesChange)="onDatesChange($event)"
+    />
+  </section>
+
+  <p class="dash-dispo__hint">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    {{ draftDates().length }} jour{{ draftDates().length > 1 ? 's' : '' }} marqué{{
+      draftDates().length > 1 ? 's' : ''
+    }}
+    comme disponible{{ draftDates().length > 1 ? 's' : '' }}.
+  </p>
+</div>

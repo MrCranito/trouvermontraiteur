@@ -8,23 +8,19 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
-import { providePrimeNG } from 'primeng/config';
-import { TmtPreset } from '@trouvermontraiteur/theme';
-import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { provideTmtPrimeNG } from '@trouvermontraiteur/theme';
+import { DASHBOARD_APP_URL, PUBLIC_APP_URL } from '@trouvermontraiteur/data';
 import { SEARCH_APP_URL } from '@trouvermontraiteur/home';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: PUBLIC_APP_URL, useValue: environment.searchAppUrl },
+    { provide: DASHBOARD_APP_URL, useValue: environment.dashboardAppUrl },
     { provide: SEARCH_APP_URL, useValue: environment.searchAppUrl },
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
-    providePrimeNG({
-      theme: {
-        preset: TmtPreset,
-      },
-    }),
+    provideTmtPrimeNG(),
   ],
 };

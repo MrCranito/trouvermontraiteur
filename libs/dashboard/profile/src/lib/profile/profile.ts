@@ -21,7 +21,6 @@ import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { FormsModule } from '@angular/forms';
 import { Message } from 'primeng/message';
-
 @Component({
   selector: 'tmt-dashboard-profile',
   imports: [
@@ -66,7 +65,6 @@ export class DashboardProfile {
   protected categories = signal<CatererCategory[]>([]);
   protected eventTypes = signal<EventType[]>([]);
   protected dietary = signal<DietaryOption[]>([]);
-  protected unavailableDatesText = signal('');
   protected menuItems = signal<MenuItem[]>([]);
 
   protected readonly completeness = computed(() =>
@@ -89,7 +87,6 @@ export class DashboardProfile {
     this.categories.set([...c.categories]);
     this.eventTypes.set([...c.eventTypes]);
     this.dietary.set([...c.dietary]);
-    this.unavailableDatesText.set(c.unavailableDates.join(', '));
     this.menuItems.set(structuredClone(c.menu));
     this.saved.set(false);
   }
@@ -154,10 +151,6 @@ export class DashboardProfile {
 
   protected save(): void {
     const current = this.profileService.getProfile();
-    const dates = this.unavailableDatesText()
-      .split(/[,;\s]+/)
-      .map((d) => d.trim())
-      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d));
 
     this.profileService.replaceProfile({
       ...current,
@@ -167,7 +160,6 @@ export class DashboardProfile {
       categories: this.categories(),
       eventTypes: this.eventTypes(),
       dietary: this.dietary(),
-      unavailableDates: dates,
       minOrder: this.minOrder() ?? undefined,
       deliveryRadiusKm: this.deliveryRadiusKm() ?? undefined,
       menu: this.menuItems(),

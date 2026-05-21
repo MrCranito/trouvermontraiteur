@@ -1,0 +1,134 @@
+<div class="dash-profile-layout">
+  <tmt-profile-nav />
+
+  <header class="dash-profile-layout__head">
+    <div>
+      <p class="dash-profile-layout__eyebrow">Mise en page</p>
+      <h2>Disposition de votre fiche publique</h2>
+      <p class="dash-profile-layout__lead">
+        Choisissez un modèle prédéfini ou réorganisez les sections par
+        glisser-déposer. L’ordre s’applique sur la page détail de l’application
+        (même navigateur).
+      </p>
+    </div>
+    <div class="dash-profile-layout__head-actions">
+      <p-button
+        label="Réinitialiser"
+        icon="pi pi-refresh"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="resetToClassic()"
+      />
+      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="save()" />
+    </div>
+  </header>
+
+  @if (saved()) {
+    <p-message severity="success" text="Disposition enregistrée." />
+  }
+
+  <p class="dash-profile-layout__current">
+    Modèle actif :
+    <strong>{{ templateName() }}</strong>
+    @if (custom()) {
+      <span class="dash-profile-layout__badge">Personnalisé</span>
+    }
+  </p>
+
+  <section class="dash-profile-layout__presets" aria-labelledby="presets-title">
+    <h3 id="presets-title">Modèles prédéfinis</h3>
+    <ul class="dash-profile-layout__preset-grid">
+      @for (preset of presets; track preset.id) {
+        <li>
+          <button
+            type="button"
+            class="dash-profile-layout__preset"
+            [class.dash-profile-layout__preset--active]="
+              templateId() === preset.id && !custom()
+            "
+            (click)="selectPreset(preset)"
+          >
+            <strong>{{ preset.name }}</strong>
+            <p>{{ preset.description }}</p>
+            <span class="dash-profile-layout__preset-order">
+              @for (sectionId of preset.layout.sections; track sectionId) {
+                <span>{{ sectionLabels[sectionId] }}</span>
+              }
+            </span>
+          </button>
+        </li>
+      }
+      <li>
+        <button
+          type="button"
+          class="dash-profile-layout__preset dash-profile-layout__preset--custom"
+          [class.dash-profile-layout__preset--active]="custom()"
+          (click)="startCustomLayout()"
+        >
+          <strong>Personnalisé</strong>
+          <p>Réorganisez librement les sections ci-dessous.</p>
+          <span class="dash-profile-layout__preset-order">
+            <i class="pi pi-arrows-alt" aria-hidden="true"></i>
+            Glisser-déposer
+          </span>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <section
+    class="dash-profile-layout__editor"
+    aria-labelledby="sections-title"
+  >
+    <header class="dash-profile-layout__editor-head">
+      <div>
+        <h3 id="sections-title">Ordre des sections</h3>
+        <p>Glissez les lignes pour modifier l’affichage sur votre fiche.</p>
+      </div>
+    </header>
+
+    <ul class="dash-profile-layout__section-list">
+      @for (sectionId of sections(); track sectionId; let i = $index) {
+        <li
+          class="dash-profile-layout__section-item"
+          draggable="true"
+          (dragstart)="onDragStart(i)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, i)"
+          (dragend)="onDragEnd()"
+        >
+          <span class="dash-profile-layout__drag" aria-hidden="true">
+            <i class="pi pi-bars"></i>
+          </span>
+          <div class="dash-profile-layout__section-meta">
+            <strong>{{ sectionLabels[sectionId] }}</strong>
+            <p>{{ sectionDescriptions[sectionId] }}</p>
+          </div>
+          <span class="dash-profile-layout__index">{{ i + 1 }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section
+    class="dash-profile-layout__preview"
+    aria-labelledby="preview-title"
+  >
+    <h3 id="preview-title">Aperçu de l’ordre</h3>
+    <ol class="dash-profile-layout__preview-list">
+      <li class="dash-profile-layout__preview-fixed">
+        <span>En-tête</span>
+        <small>Toujours en haut (titre, ville, note)</small>
+      </li>
+      @for (sectionId of sections(); track sectionId) {
+        <li>
+          <span>{{ sectionLabels[sectionId] }}</span>
+        </li>
+      }
+      <li class="dash-profile-layout__preview-fixed">
+        <span>Encart contact</span>
+        <small>Colonne latérale (devis, avis)</small>
+      </li>
+    </ol>
+  </section>
+</div>

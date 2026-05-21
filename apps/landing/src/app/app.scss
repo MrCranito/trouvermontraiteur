@@ -5,88 +5,11 @@
   background: var(--p-content-background);
 }
 
-.landing-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 0.75rem 1.25rem;
-  min-height: 4rem;
-  background: #faf6ef;
-  border-bottom: 1px solid rgba(42, 34, 25, 0.1);
-  box-shadow:
-    0 1px 0 rgba(250, 246, 239, 0.9),
-    0 4px 20px rgba(42, 34, 25, 0.06);
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      #c4622d 20%,
-      #d4a853 50%,
-      #5c7a5e 80%,
-      transparent 100%
-    );
-    opacity: 0.55;
-    pointer-events: none;
-  }
-}
-
-.landing-header__brand {
-  min-width: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--p-primary-color);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #a85124;
-  }
-}
-
-.landing-header__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.landing-header ::ng-deep {
-  .landing-header__btn.p-button {
-    white-space: nowrap;
-    font-size: 0.9rem;
-    padding: 0.55rem 1rem;
-    border-radius: 999px;
-  }
-
-  .landing-header__btn--pro.p-button {
-    background: #c4622d;
-    border-color: #c4622d;
-
-    &:hover {
-      background: #a85124;
-      border-color: #a85124;
-    }
-  }
-}
-
 .landing-main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding-top: var(--tmt-topbar-height, 4rem);
 }
 
 .landing-footer {

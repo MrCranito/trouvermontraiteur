@@ -1,11 +1,11 @@
 <div class="dash-profile">
   <header class="dash-profile__head">
     <div>
-      <p class="dash-profile__eyebrow">Mon profil</p>
+      <p class="dash-profile__eyebrow">Personnalisation</p>
       <h2>Gérer ma fiche sur l'application</h2>
       <p class="dash-profile__lead">
-        Les modifications sont enregistrées localement (démo) et reflétées dans
-        l'aperçu public de l'app.
+        Les modifications sont enregistrées localement (démo) et visibles sur
+        l'application publique.
       </p>
     </div>
     <div class="dash-profile__head-actions">
@@ -177,21 +177,6 @@
             }
           </ul>
         </div>
-      </div>
-    </section>
-
-    <section class="dash-profile__section" aria-labelledby="profile-availability">
-      <h3 id="profile-availability">Disponibilités</h3>
-      <div class="dash-profile__field dash-profile__field--full">
-        <label for="profile-dates">Dates indisponibles (AAAA-MM-JJ, séparées par des virgules)</label>
-        <input
-          pInputText
-          id="profile-dates"
-          [ngModel]="unavailableDatesText()"
-          (ngModelChange)="unavailableDatesText.set($event)"
-          name="unavailableDates"
-          placeholder="2026-12-24, 2026-12-31"
-        />
       </div>
     </section>
 

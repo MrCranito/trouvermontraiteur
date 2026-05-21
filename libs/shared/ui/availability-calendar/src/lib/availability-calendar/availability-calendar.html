@@ -1,0 +1,89 @@
+<div
+  class="avail-cal"
+  [class.avail-cal--readonly]="readonly()"
+  [attr.aria-readonly]="readonly()"
+>
+  <div
+    class="avail-cal__nav"
+    [attr.aria-label]="'Navigation : ' + navLabel()"
+  >
+    <button
+      type="button"
+      class="avail-cal__nav-btn"
+      aria-label="Mois précédent"
+      [disabled]="!canGoPrev()"
+      (click)="goPrevMonth()"
+    >
+      <i class="pi pi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="avail-cal__nav-btn"
+      aria-label="Mois suivant"
+      (click)="goNextMonth()"
+    >
+      <i class="pi pi-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div
+    class="avail-cal__months"
+    [class.avail-cal__months--multi]="monthsToShow() > 1"
+  >
+    @for (month of monthViews(); track month.year + '-' + month.month) {
+      <div class="avail-cal__month">
+        <h3 class="avail-cal__month-title">{{ month.label }}</h3>
+        <div class="avail-cal__weekdays" aria-hidden="true">
+          @for (label of weekdayLabels; track label) {
+            <span>{{ label }}</span>
+          }
+        </div>
+        <div
+          class="avail-cal__grid"
+          role="grid"
+          [attr.aria-label]="'Calendrier ' + month.label"
+        >
+          @for (week of month.weeks; track $index) {
+            @for (day of week; track day.iso) {
+              @if (readonly()) {
+                <span
+                  class="avail-cal__day"
+                  role="gridcell"
+                  [class.avail-cal__day--outside]="!day.inMonth"
+                  [class.avail-cal__day--past]="day.isPast"
+                  [class.avail-cal__day--available]="day.isAvailable"
+                  [class.avail-cal__day--today]="day.isToday"
+                  [attr.aria-label]="dayAriaLabel(day.iso, day.inMonth, day.isPast, day.isAvailable)"
+                >
+                  {{ day.inMonth ? day.day : '' }}
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  class="avail-cal__day"
+                  role="gridcell"
+                  [class.avail-cal__day--outside]="!day.inMonth"
+                  [class.avail-cal__day--past]="day.isPast"
+                  [class.avail-cal__day--available]="day.isAvailable"
+                  [class.avail-cal__day--today]="day.isToday"
+                  [disabled]="!day.inMonth || day.isPast"
+                  [attr.aria-label]="dayAriaLabel(day.iso, day.inMonth, day.isPast, day.isAvailable)"
+                  [attr.aria-pressed]="day.isAvailable"
+                  (click)="onDayClick(day.iso, day.inMonth, day.isPast)"
+                >
+                  {{ day.inMonth ? day.day : '' }}
+                </button>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="avail-cal__legend" aria-hidden="true">
+    <span class="avail-cal__legend-item avail-cal__legend-item--available">Disponible</span>
+    <span class="avail-cal__legend-item avail-cal__legend-item--unavailable">Indisponible</span>
+    <span class="avail-cal__legend-item avail-cal__legend-item--past">Passé</span>
+  </div>
+</div>

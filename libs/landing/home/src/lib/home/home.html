@@ -132,12 +132,13 @@
           }
         </ul>
         <div class="home__pro-actions">
-          <p-button
-            label="Créer mon compte professionnel"
-            icon="pi pi-user-plus"
-            size="large"
-            routerLink="/inscription-pro"
-          />
+          <a [href]="dashboardUrl('/auth/inscription')" class="home__pro-cta">
+            <p-button
+              label="Créer mon compte professionnel"
+              icon="pi pi-user-plus"
+              size="large"
+            />
+          </a>
           <span class="home__pro-note">Inscription gratuite · sans engagement</span>
         </div>
       </div>

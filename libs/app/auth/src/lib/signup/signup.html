@@ -1,0 +1,85 @@
+<article class="auth-card">
+  <p class="auth-card__eyebrow">Mon compte</p>
+  <h2>Créer un compte</h2>
+  <p class="auth-card__lead">
+    Inscrivez-vous gratuitement pour organiser votre événement plus sereinement.
+  </p>
+
+  @if (error()) {
+    <p class="auth-card__error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="auth-card__success" role="status">{{ success() }}</p>
+  }
+
+  <form class="auth-card__form" (submit)="onSubmit($event)">
+    <div class="auth-field">
+      <label for="signup-email">E-mail</label>
+      <input
+        pInputText
+        id="signup-email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        autocomplete="email"
+        required
+        placeholder="vous@exemple.fr"
+      />
+    </div>
+    <div class="auth-field">
+      <label for="signup-password">Mot de passe</label>
+      <p-password
+        inputId="signup-password"
+        name="password"
+        [(ngModel)]="password"
+        [toggleMask]="true"
+        autocomplete="new-password"
+        required
+        placeholder="8 caractères minimum"
+      />
+    </div>
+    <div class="auth-field">
+      <label for="signup-confirm">Confirmer le mot de passe</label>
+      <p-password
+        inputId="signup-confirm"
+        name="confirmPassword"
+        [(ngModel)]="confirmPassword"
+        [feedback]="false"
+        [toggleMask]="true"
+        autocomplete="new-password"
+        required
+        placeholder="••••••••"
+      />
+    </div>
+
+    <div class="auth-card__actions">
+      <p-button
+        type="submit"
+        label="Créer mon compte"
+        icon="pi pi-user-plus"
+        [loading]="loading()"
+        [disabled]="loading()"
+      />
+      <span class="auth-card__divider">ou</span>
+      <p-button
+        type="button"
+        label="S'inscrire avec Google"
+        styleClass="auth-google-btn"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="loading()"
+        [disabled]="loading()"
+        (onClick)="onGoogle()"
+      >
+        <ng-template pTemplate="icon">
+          <tmt-google-icon />
+        </ng-template>
+      </p-button>
+    </div>
+  </form>
+
+  <p class="auth-card__footer">
+    Déjà inscrit ?
+    <a routerLink="/auth/connexion">Se connecter</a>
+  </p>
+</article>

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CatererAuthService } from '../caterer-auth.service';
+import { WRONG_PORTAL_ERROR_CODE } from '../auth.errors';
 
 @Component({
   selector: 'tmt-auth-callback',
@@ -28,6 +29,11 @@ export class AuthCallback implements OnInit {
 
     if (err) {
       this.error.set(CatererAuthService.messageForError(err));
+      if (err.message === WRONG_PORTAL_ERROR_CODE) {
+        await this.router.navigate(['/auth/connexion'], {
+          queryParams: { error: WRONG_PORTAL_ERROR_CODE },
+        });
+      }
       return;
     }
 

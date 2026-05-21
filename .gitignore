@@ -48,3 +48,7 @@ Thumbs.db
 __screenshots__/
 
 vitest.config.*.timestamp*
+
+# Local env (copy from .env/*.example.ts)
+.env/environment.ts
+.env/environment.prod.ts

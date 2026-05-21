@@ -1,6 +1,10 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { CatererProfileService, APP_PREVIEW_URL } from '@trouvermontraiteur/dashboard-data';
+import {
+  APP_PREVIEW_URL,
+  CatererDevisService,
+  CatererProfileService,
+} from '@trouvermontraiteur/dashboard-data';
 import { CatererAuthService } from '@trouvermontraiteur/dashboard-auth';
 import { Button } from 'primeng/button';
 
@@ -12,12 +16,9 @@ import { Button } from 'primeng/button';
 })
 export class DashboardShell {
   private readonly profileService = inject(CatererProfileService);
+  private readonly devisService = inject(CatererDevisService);
   private readonly auth = inject(CatererAuthService);
   private readonly appPreviewUrl = inject(APP_PREVIEW_URL);
-
-  protected readonly userEmail = computed(
-    () => this.auth.user()?.email ?? '',
-  );
 
   protected readonly caterer = this.profileService.profileSignal;
   protected readonly completeness = computed(() =>
@@ -29,11 +30,27 @@ export class DashboardShell {
     return `${base}/traiteurs/${this.caterer().slug}`;
   });
 
-  protected readonly navItems = [
+  protected readonly newDevisCount = this.devisService.newCount;
+
+  protected readonly navItems: {
+    label: string;
+    icon: string;
+    route: string;
+    badge?: boolean;
+  }[] = [
     { label: "Vue d'ensemble", icon: 'pi pi-chart-bar', route: '/apercu' },
-    { label: 'Mon profil', icon: 'pi pi-id-card', route: '/profil' },
-    { label: 'E-mail du compte', icon: 'pi pi-envelope', route: '/auth/changer-email' },
-  ] as const;
+    { label: 'Devis', icon: 'pi pi-file-edit', route: '/devis', badge: true },
+    {
+      label: 'Disponibilités',
+      icon: 'pi pi-calendar',
+      route: '/disponibilites',
+    },
+    {
+      label: 'Personnalisation',
+      icon: 'pi pi-id-card',
+      route: '/profil',
+    },
+  ];
 
   protected signOut(): void {
     void this.auth.signOut();

@@ -1,0 +1,116 @@
+<p-dialog
+  header="Demande de devis"
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(36rem, 94vw)' }"
+  styleClass="quote-request-dialog"
+  (onHide)="close()"
+>
+  @if (success()) {
+    <div class="quote-request-dialog__success">
+      <p-message
+        severity="success"
+        text="Votre demande a été envoyée. Le traiteur vous répondra par e-mail."
+      />
+      <p class="quote-request-dialog__success-lead">
+        Retrouvez le suivi de cette demande dans votre espace personnel.
+      </p>
+      <footer class="quote-request-dialog__actions quote-request-dialog__actions--end">
+        <p-button label="Fermer" [text]="true" severity="secondary" (onClick)="close()" />
+        <p-button label="Voir mes devis" icon="pi pi-file-edit" routerLink="/devis" (onClick)="close()" />
+      </footer>
+    </div>
+  } @else {
+    <form class="quote-request-dialog__form" (ngSubmit)="submit()">
+      <p class="quote-request-dialog__intro">
+        Vous contactez <strong>{{ caterer().name }}</strong> pour un devis personnalisé.
+      </p>
+
+      @if (error()) {
+        <p-message severity="error" [text]="error()" />
+      }
+
+      <div class="quote-request-dialog__field">
+        <label for="quote-event-type">Type d'événement</label>
+        <p-select
+          inputId="quote-event-type"
+          [options]="eventOptions"
+          [(ngModel)]="eventType"
+          name="eventType"
+          optionLabel="label"
+          optionValue="key"
+          placeholder="Choisir un type"
+          styleClass="quote-request-dialog__select"
+        />
+      </div>
+
+      <div class="quote-request-dialog__row">
+        <div class="quote-request-dialog__field">
+          <label for="quote-event-date">Date de l'événement</label>
+          <input
+            pInputText
+            type="date"
+            id="quote-event-date"
+            name="eventDate"
+            [(ngModel)]="eventDate"
+            [min]="minEventDate"
+          />
+        </div>
+        <div class="quote-request-dialog__field">
+          <label for="quote-guests">Nombre de convives</label>
+          <p-inputNumber
+            inputId="quote-guests"
+            [(ngModel)]="guestCount"
+            name="guestCount"
+            [min]="1"
+            [max]="5000"
+            [showButtons]="true"
+            placeholder="Ex. 50"
+            styleClass="quote-request-dialog__guests"
+          />
+        </div>
+      </div>
+
+      <div class="quote-request-dialog__field">
+        <label for="quote-budget">Budget indicatif (optionnel)</label>
+        <input
+          pInputText
+          id="quote-budget"
+          name="budgetHint"
+          [(ngModel)]="budgetHint"
+          placeholder="Ex. 80 € / personne"
+        />
+      </div>
+
+      <div class="quote-request-dialog__field">
+        <label for="quote-message">Votre message</label>
+        <textarea
+          pTextarea
+          id="quote-message"
+          name="message"
+          rows="6"
+          class="quote-request-dialog__textarea"
+          placeholder="Décrivez votre événement : format, contraintes alimentaires, horaires, lieu de livraison…"
+          [(ngModel)]="message"
+        ></textarea>
+      </div>
+
+      <footer class="quote-request-dialog__actions quote-request-dialog__actions--end">
+        <p-button
+          type="button"
+          label="Annuler"
+          [text]="true"
+          severity="secondary"
+          (onClick)="close()"
+        />
+        <p-button
+          type="submit"
+          label="Envoyer la demande"
+          icon="pi pi-send"
+        />
+      </footer>
+    </form>
+  }
+</p-dialog>

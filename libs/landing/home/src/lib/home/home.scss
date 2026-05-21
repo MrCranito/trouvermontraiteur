@@ -569,6 +569,11 @@
   align-items: flex-start;
   gap: 0.65rem;
 
+  .home__pro-cta {
+    display: inline-flex;
+    text-decoration: none;
+  }
+
   ::ng-deep .p-button {
     padding: 0.85rem 1.6rem;
     font-weight: 600;

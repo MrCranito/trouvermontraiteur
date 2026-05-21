@@ -1,22 +1,22 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
-import { PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { buildAppUrl, DASHBOARD_APP_URL, PUBLIC_APP_URL } from '@trouvermontraiteur/data';
 
 @Component({
   selector: 'tmt-home',
-  imports: [Button, RouterLink],
+  imports: [Button],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
-  private readonly searchAppUrl = inject(PUBLIC_APP_URL) ?? '';
+  private readonly searchAppBase = inject(PUBLIC_APP_URL);
+  private readonly dashboardAppBase = inject(DASHBOARD_APP_URL);
 
   protected searchUrl(query?: Record<string, string>): string {
     const qs = query
       ? new URLSearchParams(query).toString()
       : '';
-    const base = this.searchAppUrl.replace(/\/$/, '') || '';
+    const base = buildAppUrl(this.searchAppBase);
 
     if (base.startsWith('http://') || base.startsWith('https://')) {
       const url = new URL(base);
@@ -26,8 +26,11 @@ export class Home {
       return url.toString();
     }
 
-    const path = base || '/';
-    return qs ? `${path}?${qs}` : path;
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  protected dashboardUrl(path = ''): string {
+    return buildAppUrl(this.dashboardAppBase, path);
   }
 
   protected readonly stats = [

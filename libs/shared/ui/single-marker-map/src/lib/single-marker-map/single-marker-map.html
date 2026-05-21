@@ -1,0 +1,68 @@
+<div
+  class="caterer-map"
+  [class.caterer-map--pan-disabled]="!interactive()"
+  role="application"
+  aria-label="Carte du traiteur"
+>
+  <div class="caterer-map__canvas">
+    @if (apiReady()) {
+      <div class="caterer-map__zoom" aria-label="Zoom de la carte">
+        <button
+          type="button"
+          class="caterer-map__zoom-btn"
+          aria-label="Zoomer"
+          (click)="zoomIn()"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          class="caterer-map__zoom-btn"
+          aria-label="Dézoomer"
+          (click)="zoomOut()"
+        >
+          −
+        </button>
+      </div>
+      <google-map
+        class="caterer-map__google-map"
+        [center]="center()"
+        [zoom]="zoom()"
+        [options]="mapOptions()"
+        width="100%"
+        height="100%"
+      >
+        <map-marker
+          [position]="markerPosition(caterer())"
+          [options]="markerOptions(caterer())"
+        />
+      </google-map>
+    } @else if (loadFailed()) {
+      <div class="caterer-map__placeholder" role="status">
+        <i class="pi pi-map" aria-hidden="true"></i>
+        <p>
+          @if (mapsKeyMissing) {
+            Ajoutez votre clé Google Maps dans
+            <code>.env/environment.ts</code>
+            (<code>googleMapsApiKey</code>).
+          } @else {
+            Impossible de charger Google Maps. Vérifiez la clé API et les APIs
+            activées (Maps JavaScript API).
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="caterer-map__placeholder caterer-map__placeholder--loading" aria-busy="true">
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+        <p>Chargement de la carte…</p>
+      </div>
+    }
+  </div>
+
+  @if (showHint() && apiReady()) {
+    <p class="caterer-map__hint">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Carte Google Maps — emplacement du traiteur
+    </p>
+  }
+</div>

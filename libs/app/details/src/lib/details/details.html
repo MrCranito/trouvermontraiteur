@@ -1,119 +1,153 @@
 @if (caterer(); as c) {
-<div class="detail-page">
-  <header class="detail-page__hero">
-    <div class="detail-page__hero-inner">
-      <h1>{{ c.name }}</h1>
-      <p class="detail-page__lead">
-        <i class="pi pi-map-marker" aria-hidden="true"></i>
-        {{ c.location.city }} · {{ c.rating }} · {{ c.reviewCount }} avis
-      </p>
+<article class="listing">
+  <div class="listing__container">
+    <div class="listing__top-actions">
+      <p-button
+        label="Partager"
+        icon="pi pi-upload"
+        [text]="true"
+        styleClass="listing__action-btn"
+        (onClick)="shareListing()"
+      />
+      <p-button
+        [label]="isFavorite() ? 'Enregistré' : 'Enregistrer'"
+        [icon]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+        [text]="true"
+        styleClass="listing__action-btn"
+        [class.listing__action-btn--saved]="isFavorite()"
+        (onClick)="toggleSave()"
+      />
+      @if (shareHintVisible()) {
+      <span class="listing__share-hint" role="status">Lien copié</span>
+      }
     </div>
-  </header>
 
-  <div class="detail-page__body">
-    <div class="detail-page__main">
-      <figure class="detail-page__cover-wrap">
-        <img class="detail-page__cover" [src]="c.imageUrl" [alt]="c.name" />
-      </figure>
+    @if (mosaicPhotos().length > 0) {
+    <div
+      class="listing__photos"
+      [class]="'listing__photos--count-' + mosaicCount()"
+    >
+      @for (photo of mosaicPhotos(); track photo.id; let i = $index) {
+      <button
+        type="button"
+        class="listing__photo"
+        [class.listing__photo--hero]="i === 0"
+        (click)="openGallery(i)"
+        [attr.aria-label]="'Voir la photo ' + (i + 1)"
+      >
+        <img [src]="photo.imageUrl" [alt]="photo.caption" loading="eager" />
+      </button>
+      }
+    </div>
+    }
 
-      <section
-        class="detail-page__section"
-        aria-labelledby="detail-about-title"
-      >
-        <header class="detail-page__section-header">
-          <p class="detail-page__section-eyebrow">Présentation</p>
-          <h2 id="detail-about-title">À propos</h2>
-        </header>
-        <div class="detail-page__card">
-          <p class="detail-page__description">{{ c.description }}</p>
-        </div>
-      </section>
+    <tmt-listing-photo-gallery
+      [visible]="galleryVisible()"
+      (visibleChange)="galleryVisible.set($event)"
+      [photos]="allPhotos()"
+      [startIndex]="galleryStartIndex()"
+    />
 
-      @if (c.realisations.length > 0) {
-      <section
-        class="detail-page__section"
-        aria-labelledby="detail-gallery-title"
-      >
-        <header class="detail-page__section-header">
-          <p class="detail-page__section-eyebrow">Portfolio</p>
-          <h2 id="detail-gallery-title">Réalisations</h2>
-          <p class="detail-page__section-lead">
-            Quelques événements récents organisés par ce traiteur.
-          </p>
-        </header>
-        <div class="detail-page__card detail-page__card--gallery">
-          <div class="detail-page__slider-wrap">
-            <button
-              type="button"
-              class="detail-page__slider-nav detail-page__slider-nav--prev"
-              aria-label="Photo précédente"
-              (click)="scrollGallery(-1)"
-            >
-              <i class="pi pi-chevron-left" aria-hidden="true"></i>
-            </button>
-            <div
-              #gallerySlider
-              class="detail-page__slider"
-              tabindex="0"
-              aria-label="Galerie des réalisations"
-            >
-              @for (photo of c.realisations; track photo.id) {
-              <figure class="detail-page__slide">
-                <img
-                  [src]="photo.imageUrl"
-                  [alt]="photo.caption"
-                  loading="lazy"
-                  draggable="false"
-                />
-                <figcaption>{{ photo.caption }}</figcaption>
-              </figure>
-              }
-            </div>
-            <button
-              type="button"
-              class="detail-page__slider-nav detail-page__slider-nav--next"
-              aria-label="Photo suivante"
-              (click)="scrollGallery(1)"
-            >
-              <i class="pi pi-chevron-right" aria-hidden="true"></i>
-            </button>
-          </div>
-          <p class="detail-page__slider-hint">
-            <i class="pi pi-arrows-h" aria-hidden="true"></i>
-            Faites défiler pour voir plus de photos
-          </p>
-        </div>
-      </section>
-      } @if (c.eventTypes.length > 0 || c.dietary.length > 0) {
-      <section
-        class="detail-page__section"
-        aria-labelledby="detail-prestations-title"
-      >
-        <header class="detail-page__section-header">
-          <p class="detail-page__section-eyebrow">Prestations</p>
-          <h2 id="detail-prestations-title">Événements & régimes</h2>
-        </header>
-        <div class="detail-page__card detail-page__card--chips">
+    <header class="listing__head">
+      <h1 class="listing__title">{{ c.name }}</h1>
+      <p class="listing__meta">
+        <span class="listing__meta-item">
+          <i class="pi pi-star-fill" aria-hidden="true"></i>
+          <strong>{{ c.rating }}</strong>
+          · {{ c.reviewCount }} avis
+        </span>
+        <span class="listing__meta-dot" aria-hidden="true">·</span>
+        <span class="listing__meta-item">
+          <i class="pi pi-map-marker" aria-hidden="true"></i>
+          {{ c.location.city }}
+        </span>
+      </p>
+    </header>
+
+    <hr class="listing__rule" />
+
+    <ul class="listing__highlights" aria-label="Points clés">
+      @if (c.eventTypes.length > 0) {
+      <li>
+        <i class="pi pi-calendar" aria-hidden="true"></i>
+        <span>
+          <strong>{{ c.eventTypes.length }}</strong>
+          type{{ c.eventTypes.length > 1 ? 's' : '' }} d'événement
+        </span>
+      </li>
+      } @if (c.minOrder) {
+      <li>
+        <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+        <span>
+          Commande min.
+          <strong>{{ formatPrice(c.minOrder) }}</strong>
+        </span>
+      </li>
+      } @if (c.deliveryRadiusKm) {
+      <li>
+        <i class="pi pi-truck" aria-hidden="true"></i>
+        <span>
+          Livraison jusqu'à
+          <strong>{{ c.deliveryRadiusKm }} km</strong>
+        </span>
+      </li>
+      } @if (c.menu.length > 0) {
+      <li>
+        <i class="pi pi-book" aria-hidden="true"></i>
+        <span>
+          <strong>{{ c.menu.length }}</strong>
+          prestation{{ c.menu.length > 1 ? 's' : '' }} au menu
+        </span>
+      </li>
+      }
+    </ul>
+
+    <hr class="listing__rule" />
+
+    <div class="listing__layout">
+      <div class="listing__main">
+        @for (sectionId of contentSections(); track sectionId) { @switch
+        (sectionId) { @case ('about') {
+        <section class="listing__block" aria-labelledby="listing-about-title">
+          <h2 id="listing-about-title">À propos de ce traiteur</h2>
+          <p class="listing__description">{{ c.description }}</p>
+        </section>
+        } @case ('availability') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-availability-title"
+        >
+          <h2 id="listing-availability-title">Disponibilités</h2>
+          <tmt-availability-calendar
+            [availableDates]="displayAvailableDates()"
+            [readonly]="true"
+            [monthsToShow]="2"
+          />
+        </section>
+        } @case ('prestations') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-prestations-title"
+        >
+          <h2 id="listing-prestations-title">Ce que propose ce traiteur</h2>
           @if (c.eventTypes.length > 0) {
-          <div class="detail-page__chip-group">
+          <div class="listing__chip-block">
             <h3>Types d'événement</h3>
-            <ul class="detail-page__chips">
+            <ul class="listing__chips">
               @for (event of c.eventTypes; track event) {
               <li>
-                <span class="detail-page__chip detail-page__chip--event"
-                  >{{ eventLabels[event] }}</span
-                >
+                <span class="listing__chip">{{ eventLabels[event] }}</span>
               </li>
               }
             </ul>
           </div>
           } @if (c.dietary.length > 0) {
-          <div class="detail-page__chip-group">
-            <h3>Régimes proposés</h3>
-            <ul class="detail-page__chips">
+          <div class="listing__chip-block">
+            <h3>Régimes & allergies</h3>
+            <ul class="listing__chips">
               @for (option of c.dietary; track option) {
               <li>
-                <span class="detail-page__chip detail-page__chip--dietary"
+                <span class="listing__chip listing__chip--muted"
                   >{{ dietaryLabels[option] }}</span
                 >
               </li>
@@ -121,21 +155,12 @@
             </ul>
           </div>
           }
-        </div>
-      </section>
-      }
-
-      <section class="detail-page__section" aria-labelledby="detail-menu-title">
-        <header class="detail-page__section-header">
-          <p class="detail-page__section-eyebrow">Carte</p>
-          <h2 id="detail-menu-title">Menu & prestations</h2>
-          <p class="detail-page__section-lead">
-            Parcourez les formules et tarifs proposés par ce traiteur.
-          </p>
-        </header>
-        <div class="detail-page__card detail-page__card--menu">
+        </section>
+        } @case ('menu') {
+        <section class="listing__block" aria-labelledby="listing-menu-title">
+          <h2 id="listing-menu-title">Menu & tarifs</h2>
           <p-accordion
-            class="detail-page__menu-accordion"
+            class="listing__menu-accordion"
             [multiple]="true"
             expandIcon="pi pi-chevron-down"
             collapseIcon="pi pi-chevron-down"
@@ -144,14 +169,14 @@
             <p-accordionpanel [value]="group.category">
               <p-accordionheader>{{ group.label }}</p-accordionheader>
               <p-accordioncontent>
-                <ul class="detail-page__menu-list">
+                <ul class="listing__menu-list">
                   @for (item of group.items; track item.id) {
-                  <li class="detail-page__menu-item">
-                    <div class="detail-page__menu-item-body">
+                  <li class="listing__menu-item">
+                    <div class="listing__menu-item-body">
                       <strong>{{ item.name }}</strong>
                       <p>{{ item.description }}</p>
                     </div>
-                    <span class="detail-page__menu-price"
+                    <span class="listing__menu-price"
                       >{{ formatPrice(item.price) }}</span
                     >
                   </li>
@@ -161,102 +186,81 @@
             </p-accordionpanel>
             }
           </p-accordion>
-        </div>
-      </section>
-
-      <section
-        class="detail-page__section"
-        aria-labelledby="detail-location-title"
-      >
-        <header class="detail-page__section-header">
-          <p class="detail-page__section-eyebrow">Localisation</p>
-          <h2 id="detail-location-title">Où nous trouver</h2>
-          <p class="detail-page__section-lead">
+        </section>
+        } @case ('location') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-location-title"
+        >
+          <h2 id="listing-location-title">Où se situe le traiteur</h2>
+          <p class="listing__location-line">
             {{ c.location.address }}, {{ c.location.city }}
           </p>
-        </header>
-        <div class="detail-page__card detail-page__card--map">
-          <tmt-caterer-map
-            class="detail-page__map"
-            [caterers]="mapCaterers()"
-            [selectedId]="c.id"
-            [interactive]="false"
-            [showHint]="false"
-          />
-          <a
-            class="detail-page__maps-link"
-            [href]="mapsUrl(c.location)"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <i class="pi pi-external-link" aria-hidden="true"></i>
-            Ouvrir dans Google Maps
-          </a>
-        </div>
-      </section>
-    </div>
+          <div class="listing__map-wrap">
+            <tmt-single-marker-map
+              class="listing__map"
+              [caterer]="c"
+              [interactive]="false"
+              [showHint]="false"
+            />
+          </div>
+        </section>
+        } } }
+      </div>
 
-    <aside class="detail-page__aside" aria-label="Informations et contact">
-      <div class="detail-page__aside-card">
-        <div class="detail-page__rating-wrap">
-          <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5" />
-          <p class="detail-page__rating-text">
-            <strong>{{ c.rating }}</strong> / 5 · {{ c.reviewCount }} avis
+      <aside class="listing__book" aria-label="Réserver ce traiteur">
+        <div class="listing__book-card">
+          @if (priceFrom(); as from) {
+          <p class="listing__book-price">
+            <span class="listing__book-price-label">À partir de</span>
+            <span class="listing__book-price-value"
+              >{{ formatPrice(from) }}</span
+            >
+            <span class="listing__book-price-unit">/ pers.</span>
           </p>
-        </div>
-
-        <ul class="detail-page__tags">
-          @for (cat of c.categories; track cat) {
-          <li>
-            <p-tag [value]="categoryLabels[cat]" severity="secondary" />
-          </li>
           }
-        </ul>
-
-        <ul class="detail-page__facts">
-          <li>
-            <i class="pi pi-map-marker" aria-hidden="true"></i>
-            <span>{{ c.location.address }}, {{ c.location.city }}</span>
-          </li>
-          @if (c.minOrder) {
-          <li>
-            <i class="pi pi-shopping-bag" aria-hidden="true"></i>
-            <span>Commande minimum : {{ formatPrice(c.minOrder) }}</span>
-          </li>
-          } @if (c.deliveryRadiusKm) {
-          <li>
-            <i class="pi pi-truck" aria-hidden="true"></i>
-            <span>Rayon de livraison : {{ c.deliveryRadiusKm }} km</span>
-          </li>
-          }
-        </ul>
-
-        <div class="detail-page__aside-actions">
+          <div class="listing__book-rating">
+            <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5" />
+            <span>{{ c.rating }} · {{ c.reviewCount }} avis</span>
+          </div>
           <p-button
             label="Demander un devis"
             icon="pi pi-envelope"
-            size="large"
-            styleClass="detail-page__cta-primary"
+            styleClass="listing__book-cta"
+            (onClick)="openQuoteDialog()"
           />
-          <p-button
-            label="Voir d'autres traiteurs"
-            [outlined]="true"
-            severity="secondary"
-            icon="pi pi-search"
-            routerLink="/"
-            styleClass="detail-page__cta-secondary"
-          />
+          <ul class="listing__book-facts">
+            <li>
+              <i class="pi pi-map-marker" aria-hidden="true"></i>
+              {{ c.location.address }}, {{ c.location.city }}
+            </li>
+            @if (c.minOrder) {
+            <li>
+              <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+              Commande minimum : {{ formatPrice(c.minOrder) }}
+            </li>
+            } @if (c.deliveryRadiusKm) {
+            <li>
+              <i class="pi pi-truck" aria-hidden="true"></i>
+              Rayon {{ c.deliveryRadiusKm }} km
+            </li>
+            }
+          </ul>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </div>
+
+    <tmt-quote-request-dialog
+      [visible]="quoteDialogVisible()"
+      (visibleChange)="quoteDialogVisible.set($event)"
+      [caterer]="c"
+    />
   </div>
-</div>
+</article>
 } @else {
-<div class="detail-page detail-page--empty">
-  <div class="detail-page__empty">
-    <span class="detail-page__empty-icon" aria-hidden="true">
-      <i class="pi pi-exclamation-circle"></i>
-    </span>
+<div class="listing listing--empty">
+  <div class="listing__empty">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
     <h1>Traiteur introuvable</h1>
     <p>Ce traiteur n'existe pas ou n'est plus disponible.</p>
     <p-button
