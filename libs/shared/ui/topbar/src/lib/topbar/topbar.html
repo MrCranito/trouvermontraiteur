@@ -2,7 +2,7 @@
   <a
     [routerLink]="homeLink()"
     class="tmt-topbar__brand"
-    aria-label="Trouver mon traiteur — accueil"
+    aria-label="Trouver mon artisan — accueil"
   >
     <img
       class="tmt-topbar__logo"
@@ -12,10 +12,11 @@
       height="40"
       decoding="async"
     />
-    <span class="tmt-topbar__brand-text">Trouver mon traiteur</span>
+    <span class="tmt-topbar__brand-text">Trouver mon artisan</span>
   </a>
 
   <nav class="tmt-topbar__actions" aria-label="Compte et espace professionnel">
+    <ng-content select="[topbarTools]" />
     <a [href]="dashboardUrl()" class="tmt-topbar__cta">
       <p-button
         label="Espace Pro"

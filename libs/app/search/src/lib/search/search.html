@@ -2,12 +2,10 @@
   <section class="search-explore__list" aria-label="Résultats de recherche">
     <header class="search-explore__list-head">
       <div class="search-explore__count">
-        <h2>
-          @if (listLoading()) { Recherche en cours… } @else if (resultCount() >
-          0) { {{ resultCount() }} traiteur{{ resultCount() > 1 ? 's' : '' }} }
-          @else { Aucun traiteur }
-        </h2>
-        <p>Autour de votre zone de recherche</p>
+        <h2>{{ resultsTitle().heading }}</h2>
+        @if (resultsTitle().subtitle) {
+          <p>{{ resultsTitle().subtitle }}</p>
+        }
       </div>
 
       <div class="search-explore__toolbar">
@@ -40,39 +38,43 @@
       </div>
     </header>
 
+    @if (resultCount() === 0 && hasActiveFilters() && !listLoading()) {
+      <div class="search-explore__clear-filters-bar">
+        <p-button
+          label="Supprimer tous les filtres"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="search-explore__clear-filters-btn"
+          (onClick)="clearAllFilters()"
+        />
+      </div>
+    }
+
     <div class="search-explore__list-scroll" [attr.aria-busy]="listLoading()">
       @if (listLoading()) {
       <p class="search-explore__list-loading-sr" role="status">
-        Chargement des traiteurs
+        Chargement des artisans
       </p>
       @for (_ of skeletonItems; track $index) {
       <tmt-search-listing-skeleton />
-      } } @else if (resultCount() === 0) {
-      <div class="search-explore__empty">
-        <i class="pi pi-search" aria-hidden="true"></i>
-        <h3>Aucun résultat</h3>
-        <p>
-          Essayez d’élargir votre zone sur la carte ou de modifier vos critères.
-        </p>
-      </div>
-      } @else { @for (caterer of results(); track caterer.id) {
+      } } @else { @for (craftsman of results(); track craftsman.id) {
       <tmt-search-listing
-        [caterer]="caterer"
-        [active]="highlightedId() === caterer.id"
-        (mouseenter)="onListingHover(caterer.id)"
+        [craftsman]="craftsman"
+        [active]="highlightedId() === craftsman.id"
+        (mouseenter)="onListingHover(craftsman.id)"
         (mouseleave)="onListingHover(null)"
       />
       } }
     </div>
   </section>
 
-  <aside class="search-explore__map-pane" aria-label="Carte des traiteurs">
+  <aside class="search-explore__map-pane" aria-label="Carte des artisans">
     @if (mapLoading()) {
     <div
       class="search-explore__map-loading"
       role="status"
       aria-live="polite"
-      aria-label="Chargement des traiteurs"
+      aria-label="Chargement des artisans"
     >
       <span class="search-explore__map-loading-dots" aria-hidden="true">
         <span></span>
@@ -83,9 +85,10 @@
     }
     <tmt-multiple-markers-map
       class="search-explore__map"
-      [caterers]="results()"
-      [fitTargets]="mapCaterers()"
+      [craftsmen]="results()"
+      [fitTargets]="mapCraftsmen()"
       [autoFit]="mapAutoFit()"
+      [mapFocus]="mapFocus()"
       [selectedId]="highlightedId()"
       [showHint]="false"
       (mapMoveStart)="onMapMoveStart()"
@@ -100,5 +103,6 @@
   [visible]="filtersVisible()"
   (visibleChange)="filtersVisible.set($event)"
   [filters]="currentFilters()"
+  [loading]="listLoading()"
   (apply)="onFiltersApply($event)"
 />

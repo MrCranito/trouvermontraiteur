@@ -1,0 +1,782 @@
+@if (pageLoading()) {
+<tmt-listing-details-skeleton />
+} @else if (craftsman(); as c) {
+@if (editMode() && completeness().score < 100) {
+<aside class="listing__alert listing__alert--outside" role="status">
+  <i class="pi pi-info-circle" aria-hidden="true"></i>
+  <div>
+    <strong>Votre page ne peut pas être publier.</strong>
+    <p>
+      Ajouter les éléments obligatoires pour pouvoir publier votre page et
+      avoir de la visibilité lors des résultats de recherche des utilisateurs.
+    </p>
+  </div>
+</aside>
+}
+<article class="listing" [class.listing--edit]="editMode()">
+  <div class="listing__container">
+    <div class="listing__top-actions">
+      @if (editMode()) {       @if (saved()) {
+      <p-message
+        severity="success"
+        [text]="isProfilePublished() ? 'Profil publié.' : 'Modifications enregistrées.'"
+        styleClass="listing__saved-msg"
+      />
+      }
+      <p-button
+        label="Réinitialiser"
+        icon="pi pi-refresh"
+        [text]="true"
+        styleClass="listing__action-btn"
+        (onClick)="loadDraftFromStore()"
+      />
+      <p-button
+        label="Publier"
+        icon="pi pi-check"
+        styleClass="listing__action-btn listing__action-btn--primary"
+        [disabled]="!canPublish() || publishing()"
+        [loading]="publishing()"
+        (onClick)="publishEdits()"
+      />
+      } @else {
+      <p-button
+        label="Partager"
+        icon="pi pi-upload"
+        [text]="true"
+        styleClass="listing__action-btn"
+        (onClick)="shareListing()"
+      />
+      <p-button
+        [label]="isFavorite() ? 'Enregistré' : 'Enregistrer'"
+        [icon]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+        [text]="true"
+        styleClass="listing__action-btn"
+        [class.listing__action-btn--saved]="isFavorite()"
+        (onClick)="toggleSave()"
+      />
+      @if (shareHintVisible()) {
+      <span class="listing__share-hint" role="status">Lien copié</span>
+      } }
+    </div>
+
+    <div
+      class="listing__photos"
+      [class.listing__photos--single]="mosaicCount() === 1"
+      [ngClass]="'listing__photos--count-' + (mosaicCount() || 1)"
+    >
+      @for (photo of mosaicPhotos(); track photo.id; let i = $index) { @if
+      (editMode()) {
+      <div class="listing__photo" [class.listing__photo--hero]="i === 0">
+        <img [src]="photo.imageUrl" [alt]="photo.caption" loading="eager" />
+      </div>
+      } @else {
+      <button
+        type="button"
+        class="listing__photo"
+        [class.listing__photo--hero]="i === 0"
+        (click)="openGallery(i)"
+        [attr.aria-label]="'Voir la photo ' + (i + 1)"
+      >
+        <img [src]="photo.imageUrl" [alt]="photo.caption" loading="eager" />
+      </button>
+      } } @empty { @if (editMode()) {
+      <input
+        id="listing-cover-file"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        class="listing__file-input"
+        (change)="onCoverFileSelected($event)"
+      />
+      <button
+        type="button"
+        class="listing__photo listing__photo--hero listing__photo--empty"
+        (click)="triggerCoverFilePicker()"
+        aria-label="Ajouter une photo de couverture"
+      >
+        <i class="pi pi-upload" aria-hidden="true"></i>
+        <span>Ajouter une photo de couverture</span>
+      </button>
+      } }
+    </div>
+
+    @if (editMode()) {
+    <section
+      class="listing__block listing__block--photos-edit"
+      aria-labelledby="listing-photos-edit-title"
+    >
+      <h2 id="listing-photos-edit-title">Photos de la fiche</h2>
+      <div class="listing__photos-edit-list">
+        <input
+          #realisationsFileInput
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          class="listing__file-input"
+          multiple
+          (change)="onRealisationFilesSelected($event)"
+        />
+        <div class="listing__photos-edit-head">
+          <h3>Réalisations</h3>
+          <p-button
+            type="button"
+            label="Ajouter des photos"
+            icon="pi pi-upload"
+            [outlined]="true"
+            size="small"
+            (onClick)="realisationsFileInput.click()"
+          />
+        </div>
+        @if (realisations().length === 0) {
+        <p class="listing__empty-hint">
+          Importez une ou plusieurs images (JPG, PNG, WebP).
+        </p>
+        }
+        <ul class="listing__photos-edit-items">
+          @for (item of realisations(); track item.id) {
+          <li class="listing__photos-edit-item">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              class="listing__file-input"
+              [id]="'listing-realisation-file-' + item.id"
+              (change)="onReplaceRealisationPhoto(item.id, $event)"
+            />
+            <button
+              type="button"
+              class="listing__photos-edit-thumb"
+              [attr.aria-label]="'Remplacer la photo ' + item.caption"
+              (click)="triggerRealisationFilePicker(item.id)"
+            >
+              @if (item.imageUrl) {
+              <img [src]="item.imageUrl" [alt]="item.caption" />
+              } @else {
+              <span class="listing__photos-edit-placeholder" aria-hidden="true">
+                <i class="pi pi-image"></i>
+              </span>
+              }
+            </button>
+            <div class="listing__photos-edit-fields">
+              <label
+                class="listing__edit-label"
+                [for]="'listing-realisation-caption-' + item.id"
+                >Légende</label
+              >
+              <input
+                pInputText
+                class="listing__input"
+                [id]="'listing-realisation-caption-' + item.id"
+                [ngModel]="item.caption"
+                (ngModelChange)="updateRealisationCaption(item.id, $event)"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Décrivez cette réalisation"
+              />
+              <p-button
+                type="button"
+                label="Remplacer la photo"
+                icon="pi pi-upload"
+                [text]="true"
+                size="small"
+                (onClick)="triggerRealisationFilePicker(item.id)"
+              />
+            </div>
+            <p-button
+              type="button"
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              (onClick)="removeRealisation(item.id)"
+              aria-label="Supprimer la photo"
+            />
+          </li>
+          }
+        </ul>
+      </div>
+    </section>
+    } @else {
+    <tmt-listing-photo-gallery
+      [visible]="galleryVisible()"
+      (visibleChange)="galleryVisible.set($event)"
+      [photos]="allPhotos()"
+      [startIndex]="galleryStartIndex()"
+    />
+    }
+
+    <header class="listing__head">
+      @if (editMode()) {
+      <div class="listing__title-edit">
+        <span class="listing__edit-label">Nom affiché</span>
+        <h1 class="listing__title">{{ name() }}</h1>
+        <p-button
+          type="button"
+          label="Modifier le nom"
+          icon="pi pi-pencil"
+          [outlined]="true"
+          size="small"
+          styleClass="listing__block-edit-btn"
+          (onClick)="openNameDialog()"
+        />
+      </div>
+      } @else {
+      <h1 class="listing__title">{{ c.name }}</h1>
+      }
+      <p class="listing__meta" [class.listing__meta--edit]="editMode()">
+        <span class="listing__meta-item">
+          <i class="pi pi-star-fill" aria-hidden="true"></i>
+          <strong>{{ c.rating }}</strong>
+          · {{ c.reviewCount }} avis
+        </span>
+        @if (!editMode()) {
+        <span class="listing__meta-dot" aria-hidden="true">·</span>
+        }
+        <span
+          class="listing__meta-item"
+          [class.listing__meta-item--edit]="editMode()"
+        >
+          <i class="pi pi-map-marker" aria-hidden="true"></i>
+          @if (editMode()) { {{ address() }}, {{ city() }} } @else {
+          {{ c.location.city }} }
+        </span>
+      </p>
+    </header>
+
+    <hr class="listing__rule" />
+
+    <div class="listing__layout">
+      <div class="listing__main">
+        @for (sectionId of contentSections(); track sectionId) { @switch
+        (sectionId) { @case ('about') {
+        <section class="listing__block" aria-labelledby="listing-about-title">
+          <h2 id="listing-about-title">
+            @if (editMode()) { À propos de votre activité } @else { À propos de
+            cet artisan }
+          </h2>
+          @if (editMode()) {
+          <div class="listing__description-edit">
+            <p class="listing__description">
+              {{ description().trim() || 'Aucune description pour le moment.' }}
+            </p>
+            <p-button
+              type="button"
+              label="Modifier la description"
+              icon="pi pi-pencil"
+              [outlined]="true"
+              size="small"
+              styleClass="listing__block-edit-btn"
+              (onClick)="openDescriptionDialog()"
+            />
+          </div>
+          } @else if (c.description.trim()) {
+          <p class="listing__description">{{ c.description }}</p>
+          } @else {
+          <p class="listing__description listing__description--empty">
+            Aucune description pour le moment.
+          </p>
+          }
+        </section>
+        } @case ('availability') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-availability-title"
+        >
+          <div class="listing__block-head">
+            <h2 id="listing-availability-title">Disponibilités</h2>
+            @if (editMode()) {
+            <p-button
+              type="button"
+              label="Éditer"
+              icon="pi pi-pencil"
+              [outlined]="true"
+              size="small"
+              styleClass="listing__block-edit-btn"
+              (onClick)="openAvailabilityDialog()"
+            />
+            }
+          </div>
+          @if (editMode()) {
+          <p class="listing__availability-lead">
+            Aperçu de votre calendrier public. Ouvrez « Éditer », puis «
+            Enregistrer » dans la fenêtre pour sauvegarder vos dates.
+          </p>
+          }
+          <tmt-availability-calendar
+            [availableDates]="displayAvailableDates()"
+            [readonly]="true"
+            [monthsToShow]="2"
+          />
+        </section>
+        } @case ('prestations') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-prestations-title"
+        >
+          <h2 id="listing-prestations-title">
+            @if (editMode()) { Ce que vous proposez } @else { Ce que propose cet
+            artisan }
+          </h2>
+          @if (editMode()) {
+          <p-accordion
+            class="listing__edit-accordion"
+            [multiple]="true"
+            expandIcon="pi pi-chevron-down"
+            collapseIcon="pi pi-chevron-up"
+          >
+            <p-accordionpanel value="trades">
+              <p-accordionheader>
+                <span class="listing__accordion-title">Métiers</span>
+                @if (trades().length > 0) {
+                <span class="listing__accordion-meta"
+                  >{{ trades().length }} sélectionné{{ trades().length > 1 ? 's'
+                  : '' }}</span
+                >
+                }
+              </p-accordionheader>
+              <p-accordioncontent>
+                <p-accordion
+                  class="listing__trades-accordion"
+                  [multiple]="true"
+                  expandIcon="pi pi-chevron-down"
+                  collapseIcon="pi pi-chevron-up"
+                >
+                  @for (family of tradeFamilies; track family.id) {
+                  <p-accordionpanel [value]="family.id">
+                    <p-accordionheader>
+                      <span class="listing__accordion-title"
+                        >{{ family.label }}</span
+                      >
+                      @if (selectedTradesInFamily(family) > 0) {
+                      <span class="listing__accordion-meta"
+                        >{{ selectedTradesInFamily(family) }}</span
+                      >
+                      }
+                    </p-accordionheader>
+                    <p-accordioncontent>
+                      <ul class="listing__chips">
+                        @for (trade of family.trades; track trade.id) {
+                        <li>
+                          <label
+                            class="listing__chip listing__chip--toggle"
+                            [class.listing__chip--active]="
+                                          isTradeChecked(trade.id)
+                                        "
+                          >
+                            <p-checkbox
+                              [binary]="true"
+                              [ngModel]="isTradeChecked(trade.id)"
+                              (ngModelChange)="toggleTrade(trade.id, $event)"
+                              [ngModelOptions]="{ standalone: true }"
+                            />
+                            {{ trade.label }}
+                          </label>
+                        </li>
+                        }
+                      </ul>
+                    </p-accordioncontent>
+                  </p-accordionpanel>
+                  }
+                </p-accordion>
+              </p-accordioncontent>
+            </p-accordionpanel>
+
+            <p-accordionpanel value="projects">
+              <p-accordionheader>
+                <span class="listing__accordion-title">Types de projet</span>
+                @if (projectTypes().length > 0) {
+                <span class="listing__accordion-meta"
+                  >{{ projectTypes().length }} sélectionné{{
+                  projectTypes().length > 1 ? 's' : '' }}</span
+                >
+                }
+              </p-accordionheader>
+              <p-accordioncontent>
+                <ul class="listing__chips">
+                  @for (opt of projectOptions; track opt.key) {
+                  <li>
+                    <label
+                      class="listing__chip listing__chip--toggle"
+                      [class.listing__chip--active]="isProjectChecked(opt.key)"
+                    >
+                      <p-checkbox
+                        [binary]="true"
+                        [ngModel]="isProjectChecked(opt.key)"
+                        (ngModelChange)="toggleProject(opt.key, $event)"
+                        [ngModelOptions]="{ standalone: true }"
+                      />
+                      {{ opt.label }}
+                    </label>
+                  </li>
+                  }
+                </ul>
+              </p-accordioncontent>
+            </p-accordionpanel>
+
+            <p-accordionpanel value="options">
+              <p-accordionheader>
+                <span class="listing__accordion-title">Options de service</span>
+                @if (serviceOptions().length > 0) {
+                <span class="listing__accordion-meta"
+                  >{{ serviceOptions().length }} sélectionnée{{
+                  serviceOptions().length > 1 ? 's' : '' }}</span
+                >
+                }
+              </p-accordionheader>
+              <p-accordioncontent>
+                <ul class="listing__chips">
+                  @for (opt of serviceOptionChoices; track opt.key) {
+                  <li>
+                    <label
+                      class="listing__chip listing__chip--toggle listing__chip--muted"
+                      [class.listing__chip--active]="
+                                  isServiceOptionChecked(opt.key)
+                                "
+                    >
+                      <p-checkbox
+                        [binary]="true"
+                        [ngModel]="isServiceOptionChecked(opt.key)"
+                        (ngModelChange)="toggleServiceOption(opt.key, $event)"
+                        [ngModelOptions]="{ standalone: true }"
+                      />
+                      {{ opt.label }}
+                    </label>
+                  </li>
+                  }
+                </ul>
+              </p-accordioncontent>
+            </p-accordionpanel>
+          </p-accordion>
+          } @else { @if (c.projectTypes.length > 0) {
+          <div class="listing__chip-block">
+            <h3>Types de projet</h3>
+            <ul class="listing__chips">
+              @for (project of c.projectTypes; track project) {
+              <li>
+                <span class="listing__chip">{{ projectLabels[project] }}</span>
+              </li>
+              }
+            </ul>
+          </div>
+          } @if (c.serviceOptions.length > 0) {
+          <div class="listing__chip-block">
+            <h3>Options de service</h3>
+            <ul class="listing__chips">
+              @for (option of c.serviceOptions; track option) {
+              <li>
+                <span class="listing__chip listing__chip--muted"
+                  >{{ serviceOptionLabels[option] }}</span
+                >
+              </li>
+              }
+            </ul>
+          </div>
+          } }
+        </section>
+        } @case ('menu') {
+        <section
+          class="listing__block listing__block--rates"
+          aria-labelledby="listing-rates-title"
+        >
+          <div class="listing__block-head">
+            <h2 id="listing-rates-title">Tarif &amp; Prestations</h2>
+            @if (editMode()) {
+            <p-button
+              type="button"
+              label="Ajouter une prestation"
+              icon="pi pi-plus"
+              [outlined]="true"
+              size="small"
+              (onClick)="addServiceItem()"
+            />
+            }
+          </div>
+          <p class="listing__rates-lead">
+            @if (editMode()) { Tarifs indicatifs affichés sur votre fiche
+            publique. } @else { Tarifs indicatifs — le devis final dépend de
+            votre projet et de la visite sur place. }
+          </p>
+          @if (serviceDisplayGroups().length === 0 && editMode()) {
+          <p class="listing__empty-hint">Ajoutez au moins une prestation.</p>
+          } @else {
+          <div class="listing__rates">
+            @for (group of serviceDisplayGroups(); track group.key) {
+            <article class="listing__rates-group">
+              @if (!editMode()) {
+              <header class="listing__rates-group-head">
+                <span class="listing__rates-group-badge" aria-hidden="true">
+                  {{ group.items.length }}
+                </span>
+                <div class="listing__rates-group-titles">
+                  <h3>{{ group.label }}</h3>
+                  <p>
+                    {{ group.items.length }} prestation{{ group.items.length > 1
+                    ? 's' : '' }}
+                  </p>
+                </div>
+              </header>
+              }
+              <ul class="listing__rates-list">
+                @for (item of group.items; track item.id) {
+                <li
+                  class="listing__rates-item"
+                  [class.listing__rates-item--edit]="editMode()"
+                >
+                  @if (editMode()) {
+                  <div class="listing__rates-item-main">
+                    <input
+                      pInputText
+                      class="listing__input listing__input--name"
+                      [ngModel]="item.name"
+                      (ngModelChange)="
+                                      updateServiceItem(item.id, 'name', $event)
+                                    "
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Nom"
+                    />
+                    <input
+                      pInputText
+                      class="listing__input"
+                      [ngModel]="item.description"
+                      (ngModelChange)="
+                                      updateServiceItem(
+                                        item.id,
+                                        'description',
+                                        $event
+                                      )
+                                    "
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Description"
+                    />
+                    <p-select
+                      [options]="categoryOptions()"
+                      [ngModel]="item.category"
+                      (ngModelChange)="
+                                      updateServiceItem(item.id, 'category', $event)
+                                    "
+                      [ngModelOptions]="{ standalone: true }"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Métier"
+                      styleClass="listing__category-select"
+                    />
+                  </div>
+                  <div class="listing__rates-item-actions">
+                    <p-inputnumber
+                      [ngModel]="item.price"
+                      (ngModelChange)="
+                                      updateServiceItem(item.id, 'price', $event)
+                                    "
+                      [ngModelOptions]="{ standalone: true }"
+                      [min]="0"
+                      mode="currency"
+                      currency="EUR"
+                      locale="fr-FR"
+                    />
+                    <p-button
+                      type="button"
+                      icon="pi pi-trash"
+                      severity="danger"
+                      [text]="true"
+                      (onClick)="removeServiceItem(item.id)"
+                      aria-label="Supprimer"
+                    />
+                  </div>
+                  } @else {
+                  <div class="listing__rates-item-main">
+                    <span class="listing__rates-item-name"
+                      >{{ item.name }}</span
+                    >
+                    @if (item.description) {
+                    <p class="listing__rates-item-desc">
+                      {{ item.description }}
+                    </p>
+                    }
+                  </div>
+                  <span class="listing__rates-item-price"
+                    >{{ formatPrice(item.price) }}</span
+                  >
+                  }
+                </li>
+                }
+              </ul>
+            </article>
+            }
+          </div>
+          }
+        </section>
+        } @case ('location') {
+        <section
+          class="listing__block"
+          aria-labelledby="listing-location-title"
+        >
+          <h2 id="listing-location-title">
+            @if (editMode()) { Où vous exercez } @else { Où se situe l'artisan }
+          </h2>
+          @if (editMode()) {
+          <div class="listing__location-fields">
+            <div class="listing__field">
+              <label for="listing-address">Adresse</label>
+              <input
+                pInputText
+                id="listing-address"
+                class="listing__input"
+                [ngModel]="address()"
+                (ngModelChange)="address.set($event); markDirty()"
+                name="address"
+              />
+            </div>
+            <div class="listing__field">
+              <label for="listing-city">Ville</label>
+              <input
+                pInputText
+                id="listing-city"
+                class="listing__input"
+                [ngModel]="city()"
+                (ngModelChange)="city.set($event); markDirty()"
+                name="city"
+              />
+            </div>
+          </div>
+          } @else {
+          <p class="listing__location-line">
+            {{ c.location.address }}, {{ c.location.city }}
+          </p>
+          }
+          <div class="listing__map-wrap">
+            <tmt-single-marker-map
+              class="listing__map"
+              [craftsman]="c"
+              [interactive]="false"
+              [showHint]="false"
+            />
+          </div>
+        </section>
+        } } }
+      </div>
+
+      @if (!editMode()) {
+      <aside class="listing__book" aria-label="Réserver cet artisan">
+        <div class="listing__book-card">
+          @if (priceFrom(); as from) {
+          <p class="listing__book-price">
+            <span class="listing__book-price-label">Tarifs à partir de</span>
+            <span class="listing__book-price-value"
+              >{{ formatPrice(from) }}</span
+            >
+          </p>
+          }
+          <div class="listing__book-rating">
+            <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5" />
+            <span>{{ c.rating }} · {{ c.reviewCount }} avis</span>
+          </div>
+          <p-button
+            label="Demander un devis"
+            icon="pi pi-envelope"
+            styleClass="listing__book-cta"
+            (onClick)="openQuoteDialog()"
+          />
+          <ul class="listing__book-facts">
+            <li>
+              <i class="pi pi-map-marker" aria-hidden="true"></i>
+              {{ c.location.address }}, {{ c.location.city }}
+            </li>
+            @if (c.minOrder) {
+            <li>
+              <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+              Commande minimum : {{ formatPrice(c.minOrder) }}
+            </li>
+            }
+          </ul>
+        </div>
+      </aside>
+      }
+    </div>
+
+    @if (editMode() && editNameDialogVisible()) {
+    <div class="listing__inline-modal">
+      <div class="listing__inline-modal-backdrop" (click)="closeNameDialog()"></div>
+      <div class="listing__inline-modal-card" role="dialog" aria-modal="true">
+        <h3>Modifier le nom affiché</h3>
+        <input
+          pInputText
+          [ngModel]="draftName()"
+          (ngModelChange)="draftName.set($event)"
+          placeholder="Nom affiché"
+        />
+        <div class="listing__inline-modal-actions">
+          <p-button
+            type="button"
+            label="Annuler"
+            [text]="true"
+            (onClick)="closeNameDialog()"
+          />
+          <p-button
+            type="button"
+            label="Enregistrer"
+            (onClick)="saveNameDialog()"
+          />
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (editMode() && editDescriptionDialogVisible()) {
+    <div class="listing__inline-modal">
+      <div
+        class="listing__inline-modal-backdrop"
+        (click)="closeDescriptionDialog()"
+      ></div>
+      <div class="listing__inline-modal-card" role="dialog" aria-modal="true">
+        <h3>Modifier la description</h3>
+        <textarea
+          pTextarea
+          rows="6"
+          [ngModel]="draftDescription()"
+          (ngModelChange)="draftDescription.set($event)"
+          placeholder="Décrivez votre activité"
+        ></textarea>
+        <div class="listing__inline-modal-actions">
+          <p-button
+            type="button"
+            label="Annuler"
+            [text]="true"
+            (onClick)="closeDescriptionDialog()"
+          />
+          <p-button
+            type="button"
+            label="Enregistrer"
+            (onClick)="saveDescriptionDialog()"
+          />
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (editMode()) {
+    <tmt-availability-edit-dialog
+      [visible]="availabilityDialogVisible()"
+      (visibleChange)="availabilityDialogVisible.set($event)"
+      [availableDates]="displayAvailableDates()"
+      (saved)="onAvailabilitySaved($event)"
+    />
+    } @if (!editMode()) {
+    <tmt-quote-request-dialog
+      [visible]="quoteDialogVisible()"
+      (visibleChange)="quoteDialogVisible.set($event)"
+      [craftsman]="c"
+    />
+    }
+  </div>
+</article>
+} @else {
+<div class="listing listing--empty">
+  <div class="listing__empty">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <h1>Artisan introuvable</h1>
+    <p>Cet artisan n'existe pas ou n'est plus disponible.</p>
+    @if (!editMode()) {
+    <p-button
+      label="Retour à la recherche"
+      icon="pi pi-arrow-left"
+      routerLink="/explorer"
+    />
+    }
+  </div>
+</div>
+}

@@ -1,4 +1,4 @@
-import { Caterer } from '@trouvermontraiteur/models';
+import { Craftsman } from '@trouvermontraiteur/models';
 
 /** Local calendar date as yyyy-MM-dd (no timezone shift). */
 export function toIsoDateLocal(date: Date): string {
@@ -32,12 +32,12 @@ export interface CalendarDayCell {
   isToday: boolean;
 }
 
-/** Whether the caterer accepts bookings on this date. */
-export function isCatererAvailableOn(caterer: Caterer, iso: string): boolean {
-  if (caterer.availableDates.length > 0) {
-    return caterer.availableDates.includes(iso);
+/** Whether the craftsman accepts bookings on this date. */
+export function isCraftsmanAvailableOn(craftsman: Craftsman, iso: string): boolean {
+  if (craftsman.availableDates.length > 0) {
+    return craftsman.availableDates.includes(iso);
   }
-  return !caterer.unavailableDates.includes(iso);
+  return !craftsman.unavailableDates.includes(iso);
 }
 
 export function buildMonthGrid(

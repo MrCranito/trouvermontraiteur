@@ -1,14 +1,14 @@
 <a
   class="map-marker-popup"
-  [routerLink]="['/traiteurs', caterer().slug]"
+  [routerLink]="['/artisans', craftsman().slug]"
   (click)="$event.stopPropagation()"
 >
   <div class="map-marker-popup__media">
-    <img [src]="caterer().imageUrl" [alt]="caterer().name" loading="lazy" />
+    <img [src]="craftsman().imageUrl" [alt]="craftsman().name" loading="lazy" />
   </div>
   <div class="map-marker-popup__body">
     <div class="map-marker-popup__head">
-      <h3 class="map-marker-popup__name">{{ caterer().name }}</h3>
+      <h3 class="map-marker-popup__name">{{ craftsman().name }}</h3>
       <span class="map-marker-popup__rating">
         <i class="pi pi-star-fill" aria-hidden="true"></i>
         {{ ratingLabel() }}
@@ -16,13 +16,13 @@
     </div>
     <p class="map-marker-popup__location">
       <i class="pi pi-map-marker" aria-hidden="true"></i>
-      {{ caterer().location.city }}
+      {{ craftsman().location.city }}
     </p>
-    @if (visibleEventTypes().length > 0) {
-    <ul class="map-marker-popup__chips" aria-label="Types d'événement">
-      @for (event of visibleEventTypes(); track event) {
+    @if (visibleProjectTypes().length > 0) {
+    <ul class="map-marker-popup__chips" aria-label="Types de projet">
+      @for (project of visibleProjectTypes(); track project) {
       <li>
-        <span class="map-marker-popup__chip">{{ eventLabels[event] }}</span>
+        <span class="map-marker-popup__chip">{{ projectLabels[project] }}</span>
       </li>
       }
     </ul>

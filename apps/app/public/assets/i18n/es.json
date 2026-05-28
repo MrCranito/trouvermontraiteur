@@ -1,0 +1,29 @@
+{
+  "lang": {
+    "switcherLabel": "Idioma",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español"
+  },
+  "categories": {
+    "batiments": "Edificios",
+    "reparation": "Reparación",
+    "mobilite": "Movilidad",
+    "alimentation": "Alimentación",
+    "beaute": "Belleza",
+    "mode": "Moda",
+    "decoration": "Decoración",
+    "jardin": "Jardín",
+    "audiovisuel": "Audiovisual"
+  },
+  "discover": {
+    "categories": "Categorías",
+    "categoriesSelected": "Oficios de la categoría seleccionada",
+    "allCategories": "Todas las categorías",
+    "noTradeFilter": "Sin filtro de oficio",
+    "tradesCount": "{{count}} oficios",
+    "chooseCategory": "Elegir una categoría",
+    "chooseTrade": "Elegir un oficio",
+    "allTradesInCategory": "Todos los oficios — {{category}}"
+  }
+}

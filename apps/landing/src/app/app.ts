@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { buildAppUrl, DASHBOARD_APP_URL, PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import { TmtFooter } from '@trouvermontraiteur/footer';
 import { TmtTopbar } from '@trouvermontraiteur/topbar';
 
 @Component({
-  imports: [RouterModule, TmtTopbar],
+  imports: [RouterModule, TmtTopbar, TmtFooter],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -15,15 +16,6 @@ export class App {
 
   protected readonly searchAppUrl = buildAppUrl(this.searchAppBase);
   protected readonly dashboardAppUrl = buildAppUrl(this.dashboardAppBase);
-  protected readonly currentYear = new Date().getFullYear();
-
-  protected readonly legalLinks = [
-    { label: 'Mentions légales' },
-    { label: 'Politique de confidentialité' },
-    { label: "Conditions générales d'utilisation" },
-    { label: 'Politique cookies' },
-  ] as const;
-
   protected onPlaceholderLink(event: Event): void {
     event.preventDefault();
   }

@@ -13,6 +13,7 @@ export {
 } from '@trouvermontraiteur/models';
 export { AUTH_REDIRECT_BASE } from './lib/auth-redirect.token';
 export { authGuard } from './lib/auth.guard';
+export { requireAuthGuard } from './lib/require-auth.guard';
 export { authGuestGuard } from './lib/auth-guest.guard';
 export { AuthLayout } from './lib/auth-layout/auth-layout';
 export { Login } from './lib/login/login';

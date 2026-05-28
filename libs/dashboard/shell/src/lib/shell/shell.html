@@ -3,13 +3,13 @@
     <a routerLink="/apercu" class="dash-shell__brand">
       <span class="dash-shell__brand-mark" aria-hidden="true">T</span>
       <span class="dash-shell__brand-text">
-        <strong>Trouver mon traiteur</strong>
+        <strong>Trouver mon artisan</strong>
         <small>Espace pro</small>
       </span>
     </a>
 
     <nav class="dash-shell__nav">
-      @for (item of navItems; track item.route) {
+      @for (item of navItems(); track item.route) {
         <a
           [routerLink]="item.route"
           routerLinkActive="dash-shell__nav-link--active"
@@ -24,56 +24,41 @@
       }
     </nav>
 
-    <div class="dash-shell__profile-card">
-      <img
-        class="dash-shell__avatar"
-        [src]="caterer().imageUrl"
-        [alt]="caterer().name"
+    <div class="dash-shell__sidebar-bottom">
+      <p-button
+        label="Déconnexion"
+        icon="pi pi-sign-out"
+        styleClass="dash-shell__sign-out"
+        [text]="true"
+        (onClick)="signOut()"
       />
-      <div class="dash-shell__profile-meta">
-        <strong>{{ caterer().name }}</strong>
-        <span>{{ caterer().location.city }}</span>
-        <span class="dash-shell__rating">
-          <i class="pi pi-star-fill" aria-hidden="true"></i>
-          {{ caterer().rating }} · {{ caterer().reviewCount }} avis
-        </span>
-      </div>
+      @if (caterer(); as profile) {
+        <div class="dash-shell__profile-card">
+          <img
+            class="dash-shell__avatar"
+            [src]="profile.imageUrl"
+            [alt]="profile.name"
+          />
+          <div class="dash-shell__profile-meta">
+            <strong>{{ profile.name }}</strong>
+            <span>{{ profile.location.city }}</span>
+            <span class="dash-shell__rating">
+              <i class="pi pi-star-fill" aria-hidden="true"></i>
+              {{ profile.rating }} · {{ profile.reviewCount }} avis
+            </span>
+          </div>
+        </div>
+      }
     </div>
   </aside>
 
   <div class="dash-shell__workspace">
     <header class="dash-shell__header">
       <div class="dash-shell__header-text">
-        <p class="dash-shell__eyebrow">Espace traiteur</p>
-        <h1>{{ caterer().name }}</h1>
-      </div>
-      <div class="dash-shell__header-actions">
-        <div
-          class="dash-shell__completeness"
-          role="status"
-          [attr.aria-label]="'Profil complété à ' + completeness().score + ' pour cent'"
-        >
-          <span class="dash-shell__completeness-label">Profil</span>
-          <span class="dash-shell__completeness-value">{{ completeness().score }}%</span>
-          <span class="dash-shell__completeness-bar" aria-hidden="true">
-            <span [style.width.%]="completeness().score"></span>
-          </span>
-        </div>
-        <a [href]="previewUrl()" target="_blank" rel="noopener noreferrer">
-          <p-button
-            label="Voir sur l'app"
-            icon="pi pi-external-link"
-            [outlined]="true"
-            severity="secondary"
-          />
-        </a>
-        <p-button
-          label="Déconnexion"
-          icon="pi pi-sign-out"
-          severity="secondary"
-          [text]="true"
-          (onClick)="signOut()"
-        />
+        <p class="dash-shell__eyebrow">Espace artisan</p>
+        @if (caterer(); as profile) {
+          <h1>{{ profile.name }}</h1>
+        }
       </div>
     </header>
 

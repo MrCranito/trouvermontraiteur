@@ -8,9 +8,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { GoogleMap, MapMarker } from '@angular/google-maps';
-import { Caterer } from '@trouvermontraiteur/models';
+import { Craftsman } from '@trouvermontraiteur/models';
 import {
-  buildCatererMapOptions,
+  buildCraftsmanMapOptions,
   GoogleMapsLoaderService,
   homeMarkerIcon,
   PARIS_CENTER,
@@ -27,7 +27,7 @@ export class SingleMarkerMap {
 
   protected readonly mapsKeyMissing = !this.mapsLoader.isConfigured();
 
-  readonly caterer = input.required<Caterer>();
+  readonly craftsman = input.required<Craftsman>();
   readonly interactive = input(true);
   readonly showHint = input(true);
 
@@ -39,7 +39,7 @@ export class SingleMarkerMap {
   protected readonly zoom = signal(14);
 
   protected readonly mapOptions = computed((): google.maps.MapOptions =>
-    buildCatererMapOptions(this.interactive()),
+    buildCraftsmanMapOptions(this.interactive()),
   );
 
   constructor() {
@@ -54,7 +54,7 @@ export class SingleMarkerMap {
       .catch(() => this.loadFailed.set(true));
 
     effect(() => {
-      const c = this.caterer();
+      const c = this.craftsman();
       const ready = this.apiReady();
       const mapRef = this.mapRef();
       if (!ready || !mapRef) {
@@ -68,7 +68,7 @@ export class SingleMarkerMap {
         }
         map.setOptions(this.mapOptions());
         google.maps.event.trigger(map, 'resize');
-        this.fitToCaterer(c, map);
+        this.fitToCraftsman(c, map);
       });
     });
 
@@ -82,19 +82,19 @@ export class SingleMarkerMap {
     });
   }
 
-  protected markerOptions(caterer: Caterer): google.maps.MarkerOptions {
+  protected markerOptions(craftsman: Craftsman): google.maps.MarkerOptions {
     return {
       clickable: this.interactive(),
       zIndex: 1,
-      title: caterer.name,
+      title: craftsman.name,
       icon: homeMarkerIcon(true),
     };
   }
 
-  protected markerPosition(caterer: Caterer): google.maps.LatLngLiteral {
+  protected markerPosition(craftsman: Craftsman): google.maps.LatLngLiteral {
     return {
-      lat: caterer.location.lat,
-      lng: caterer.location.lng,
+      lat: craftsman.location.lat,
+      lng: craftsman.location.lng,
     };
   }
 
@@ -117,8 +117,8 @@ export class SingleMarkerMap {
     this.zoom.set(next);
   }
 
-  private fitToCaterer(caterer: Caterer, map: google.maps.Map): void {
-    const { lat, lng } = caterer.location;
+  private fitToCraftsman(craftsman: Craftsman, map: google.maps.Map): void {
+    const { lat, lng } = craftsman.location;
     const position = { lat, lng };
     map.setCenter(position);
     map.setZoom(14);

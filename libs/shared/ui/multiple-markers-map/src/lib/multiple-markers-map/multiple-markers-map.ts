@@ -9,13 +9,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { GoogleMap, MapInfoWindow, MapMarker } from '@angular/google-maps';
-import { Caterer } from '@trouvermontraiteur/models';
+import { Craftsman } from '@trouvermontraiteur/models';
 import {
-  buildCatererMapOptions,
-  catererRatingMarkerIcon,
+  buildCraftsmanMapOptions,
+  craftsmanRatingMarkerIcon,
   getMapViewport,
   GoogleMapsLoaderService,
   PARIS_CENTER,
+  type MapFocus,
   type MapViewport,
 } from '@trouvermontraiteur/map-base';
 import { MapMarkerPopup } from '../map-marker-popup/map-marker-popup';
@@ -32,14 +33,16 @@ export class MultipleMarkersMap {
   protected readonly mapsKeyMissing = !this.mapsLoader.isConfigured();
 
   /** Markers drawn on the map. */
-  readonly caterers = input.required<Caterer[]>();
-  /** Bounds used when `autoFit` is true; defaults to `caterers`. */
-  readonly fitTargets = input<Caterer[] | null>(null);
+  readonly craftsmen = input.required<Craftsman[]>();
+  /** Bounds used when `autoFit` is true; defaults to `craftsmen`. */
+  readonly fitTargets = input<Craftsman[] | null>(null);
   readonly selectedId = input<string | null>(null);
   readonly interactive = input(true);
   readonly showHint = input(true);
-  /** When true, fits bounds to caterers (e.g. after filter change). */
+  /** When true, fits bounds to craftsmen (e.g. after filter change). */
   readonly autoFit = input(true);
+  /** When set, centers the map on this point (e.g. selected city). */
+  readonly mapFocus = input<MapFocus | null>(null);
   readonly catererSelect = output<string>();
   readonly catererClear = output<void>();
   readonly viewportChange = output<MapViewport>();
@@ -53,13 +56,20 @@ export class MultipleMarkersMap {
   private programmaticMove = false;
   private ignoreNextMapClickClose = false;
 
-  protected readonly popupCaterer = signal<Caterer | null>(null);
+  protected readonly popupCraftsman = signal<Craftsman | null>(null);
 
-  protected readonly popupWindowOptions: google.maps.InfoWindowOptions = {
-    pixelOffset: new google.maps.Size(0, 28),
-    maxWidth: 320,
-    disableAutoPan: true,
-  };
+  protected readonly popupWindowOptions = computed(
+    (): google.maps.InfoWindowOptions => {
+      const base: google.maps.InfoWindowOptions = {
+        maxWidth: 320,
+        disableAutoPan: true,
+      };
+      if (this.apiReady() && typeof google !== 'undefined' && google.maps) {
+        base.pixelOffset = new google.maps.Size(0, 28);
+      }
+      return base;
+    },
+  );
 
   protected readonly apiReady = signal(false);
   protected readonly loadFailed = signal(false);
@@ -67,7 +77,7 @@ export class MultipleMarkersMap {
   protected readonly zoom = signal(6);
 
   protected readonly mapOptions = computed(
-    (): google.maps.MapOptions => buildCatererMapOptions(this.interactive()),
+    (): google.maps.MapOptions => buildCraftsmanMapOptions(this.interactive()),
   );
 
   constructor() {
@@ -82,9 +92,10 @@ export class MultipleMarkersMap {
       .catch(() => this.loadFailed.set(true));
 
     effect(() => {
-      const fitList = this.fitTargets() ?? this.caterers();
+      const fitList = this.fitTargets() ?? this.craftsmen();
       const ready = this.apiReady();
       const shouldFit = this.autoFit();
+      const focus = this.mapFocus();
       const mapRef = this.mapRef();
       if (!ready || !mapRef) {
         return;
@@ -97,10 +108,29 @@ export class MultipleMarkersMap {
         }
         map.setOptions(this.mapOptions());
         google.maps.event.trigger(map, 'resize');
-        if (shouldFit) {
-          this.fitMapToCaterers(fitList, map);
+        if (focus) {
+          this.focusMapOn(focus, map);
+        } else if (shouldFit) {
+          this.fitMapToCraftsmen(fitList, map);
         }
         this.bindViewportListener(map);
+        this.emitViewport(map);
+      });
+    });
+
+    effect(() => {
+      const focus = this.mapFocus();
+      const ready = this.apiReady();
+      const mapRef = this.mapRef();
+      if (!focus || !ready || !mapRef?.googleMap) {
+        return;
+      }
+      queueMicrotask(() => {
+        const map = mapRef.googleMap;
+        if (!map) {
+          return;
+        }
+        this.focusMapOn(focus, map);
         this.emitViewport(map);
       });
     });
@@ -126,21 +156,21 @@ export class MultipleMarkersMap {
     });
 
     effect(() => {
-      const popup = this.popupCaterer();
+      const popup = this.popupCraftsman();
       if (!popup) {
         return;
       }
-      const visible = new Set(this.caterers().map((c) => c.id));
+      const visible = new Set(this.craftsmen().map((c) => c.id));
       if (!visible.has(popup.id)) {
         this.closePopup();
       }
     });
   }
 
-  protected markerOptions(caterer: Caterer): google.maps.MarkerOptions {
+  protected markerOptions(caterer: Craftsman): google.maps.MarkerOptions {
     const active =
       this.selectedId() === caterer.id ||
-      this.popupCaterer()?.id === caterer.id;
+      this.popupCraftsman()?.id === caterer.id;
     const note = Number.isInteger(caterer.rating)
       ? String(caterer.rating)
       : caterer.rating.toFixed(1);
@@ -148,18 +178,18 @@ export class MultipleMarkersMap {
       clickable: this.interactive(),
       zIndex: active ? 200 : Math.round(caterer.rating * 10),
       title: `${caterer.name} — ${note}`,
-      icon: catererRatingMarkerIcon(caterer.rating, active),
+      icon: craftsmanRatingMarkerIcon(caterer.rating, active),
     };
   }
 
-  protected markerPosition(caterer: Caterer): google.maps.LatLngLiteral {
+  protected markerPosition(caterer: Craftsman): google.maps.LatLngLiteral {
     return {
       lat: caterer.location.lat,
       lng: caterer.location.lng,
     };
   }
 
-  protected onMarkerClick(caterer: Caterer, marker: MapMarker): void {
+  protected onMarkerClick(caterer: Craftsman, marker: MapMarker): void {
     if (!this.interactive()) {
       return;
     }
@@ -169,12 +199,12 @@ export class MultipleMarkersMap {
       this.ignoreNextMapClickClose = false;
     });
 
-    if (this.popupCaterer()?.id === caterer.id) {
+    if (this.popupCraftsman()?.id === caterer.id) {
       this.closePopup();
       return;
     }
 
-    this.popupCaterer.set(caterer);
+    this.popupCraftsman.set(caterer);
     this.catererSelect.emit(caterer.id);
     queueMicrotask(() => this.infoWindowRef()?.open(marker));
   }
@@ -184,8 +214,8 @@ export class MultipleMarkersMap {
   }
 
   private closePopup(): void {
-    const wasOpen = this.popupCaterer() !== null;
-    this.popupCaterer.set(null);
+    const wasOpen = this.popupCraftsman() !== null;
+    this.popupCraftsman.set(null);
     this.infoWindowRef()?.close();
     if (wasOpen) {
       this.catererClear.emit();
@@ -264,7 +294,17 @@ export class MultipleMarkersMap {
     }
   }
 
-  private fitMapToCaterers(list: Caterer[], map: google.maps.Map): void {
+  private focusMapOn(focus: MapFocus, map: google.maps.Map): void {
+    this.programmaticMove = true;
+    const position = { lat: focus.lat, lng: focus.lng };
+    const zoom = focus.zoom ?? 11;
+    map.setCenter(position);
+    map.setZoom(zoom);
+    this.center.set(position);
+    this.zoom.set(zoom);
+  }
+
+  private fitMapToCraftsmen(list: Craftsman[], map: google.maps.Map): void {
     this.programmaticMove = true;
 
     if (list.length === 0) {

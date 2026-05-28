@@ -67,7 +67,7 @@ export class Signup {
       return;
     }
 
-    await this.router.navigate(['/apercu']);
+    await this.router.navigate(['/setup-business']);
   }
 
   protected async onGoogle(): Promise<void> {

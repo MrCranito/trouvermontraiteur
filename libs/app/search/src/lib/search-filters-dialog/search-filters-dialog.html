@@ -7,127 +7,154 @@
   [style]="{ width: 'min(44rem, 96vw)' }"
   styleClass="search-filters-dialog"
 >
-  <div class="search-filters-dialog__body">
-    <section class="search-filters-dialog__section" aria-labelledby="filter-query-title">
-      <h3 id="filter-query-title">Recherche</h3>
-      <input
-        pInputText
-        type="search"
-        class="search-filters-dialog__search"
-        placeholder="Nom, ville, spécialité…"
-        [(ngModel)]="draft.query"
-        [ngModelOptions]="{ standalone: true }"
-      />
-    </section>
+  <div class="search-filters-dialog__shell">
+    <div class="search-filters-dialog__body">
+      <section class="search-filters-dialog__section" aria-labelledby="filter-query-title">
+        <h3 id="filter-query-title">Recherche</h3>
+        <input
+          pInputText
+          type="search"
+          class="search-filters-dialog__search"
+          placeholder="Nom, ville, métier…"
+          [ngModel]="draft().query"
+          (ngModelChange)="patchDraft({ query: $event })"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </section>
 
-    <section class="search-filters-dialog__section" aria-labelledby="filter-rating-title">
-      <h3 id="filter-rating-title">Note minimum</h3>
-      <p-select
-        inputId="filter-rating"
-        [options]="ratingOptions"
-        [(ngModel)]="draft.minRating"
-        [ngModelOptions]="{ standalone: true }"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Note minimum"
-        styleClass="search-filters-dialog__select"
-      />
-    </section>
+      <section class="search-filters-dialog__section" aria-labelledby="filter-rating-title">
+        <h3 id="filter-rating-title">Note minimum</h3>
+        <p-select
+          inputId="filter-rating"
+          [options]="ratingOptions"
+          [ngModel]="draft().minRating"
+          (ngModelChange)="patchDraft({ minRating: $event })"
+          [ngModelOptions]="{ standalone: true }"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Note minimum"
+          styleClass="search-filters-dialog__select"
+        />
+      </section>
 
-    <section class="search-filters-dialog__section" aria-labelledby="filter-date-title">
-      <h3 id="filter-date-title">Date de l'événement</h3>
-      <input
-        type="date"
-        class="search-filters-dialog__date"
-        [(ngModel)]="draft.eventDate"
-        [ngModelOptions]="{ standalone: true }"
-      />
-      <p class="search-filters-dialog__hint">
-        Exclut les traiteurs indisponibles à cette date.
-      </p>
-    </section>
+      <section class="search-filters-dialog__section" aria-labelledby="filter-date-title">
+        <h3 id="filter-date-title">Date du projet</h3>
+        <input
+          type="date"
+          class="search-filters-dialog__date"
+          [ngModel]="draft().projectDate"
+          (ngModelChange)="patchDraft({ projectDate: $event })"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <p class="search-filters-dialog__hint">
+          Exclut les artisans indisponibles à cette date.
+        </p>
+      </section>
 
-    <section class="search-filters-dialog__section" aria-labelledby="filter-events-title">
-      <h3 id="filter-events-title">Type d'événement</h3>
-      <ul class="search-filters-dialog__checks">
-        @for (opt of eventOptions; track opt.key) {
-          <li>
-            <label class="search-filters-dialog__check">
-              <p-checkbox
-                [binary]="true"
-                [ngModel]="isEventChecked(opt.key)"
-                (ngModelChange)="toggleEvent(opt.key, $event)"
-                [ngModelOptions]="{ standalone: true }"
-              />
-              {{ opt.label }}
-            </label>
-          </li>
-        }
-      </ul>
-    </section>
+      <section class="search-filters-dialog__section" aria-labelledby="filter-projects-title">
+        <h3 id="filter-projects-title">Type de projet</h3>
+        <ul class="search-filters-dialog__checks">
+          @for (opt of projectOptions; track opt.key) {
+            <li>
+              <label class="search-filters-dialog__check">
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="isProjectChecked(opt.key)"
+                  (ngModelChange)="toggleProject(opt.key, $event)"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+                {{ opt.label }}
+              </label>
+            </li>
+          }
+        </ul>
+      </section>
 
-    <section class="search-filters-dialog__section" aria-labelledby="filter-categories-title">
-      <h3 id="filter-categories-title">Prestations</h3>
-      <ul class="search-filters-dialog__checks">
-        @for (opt of categoryOptions; track opt.key) {
-          <li>
-            <label class="search-filters-dialog__check">
-              <p-checkbox
-                [binary]="true"
-                [ngModel]="isCategoryChecked(opt.key)"
-                (ngModelChange)="toggleCategory(opt.key, $event)"
-                [ngModelOptions]="{ standalone: true }"
-              />
-              {{ opt.label }}
-            </label>
-          </li>
-        }
-      </ul>
-    </section>
+      <section class="search-filters-dialog__section" aria-labelledby="filter-trades-title">
+        <h3 id="filter-trades-title">Métiers</h3>
+        <p-accordion
+          class="search-filters-dialog__trades-accordion"
+          [multiple]="true"
+          expandIcon="pi pi-chevron-down"
+          collapseIcon="pi pi-chevron-down"
+        >
+          @for (family of tradeFamilies; track family.id) {
+            <p-accordionpanel [value]="family.id">
+              <p-accordionheader>{{ family.label }}</p-accordionheader>
+              <p-accordioncontent>
+                <ul class="search-filters-dialog__checks">
+                  @for (trade of family.trades; track trade.id) {
+                    <li>
+                      <label class="search-filters-dialog__check">
+                        <p-checkbox
+                          [binary]="true"
+                          [ngModel]="isTradeChecked(trade.id)"
+                          (ngModelChange)="toggleTrade(trade.id, $event)"
+                          [ngModelOptions]="{ standalone: true }"
+                        />
+                        {{ trade.label }}
+                      </label>
+                    </li>
+                  }
+                </ul>
+              </p-accordioncontent>
+            </p-accordionpanel>
+          }
+        </p-accordion>
+      </section>
 
-    <section class="search-filters-dialog__section" aria-labelledby="filter-dietary-title">
-      <h3 id="filter-dietary-title">Régimes & allergies</h3>
-      <ul class="search-filters-dialog__checks">
-        @for (opt of dietaryOptions; track opt.key) {
-          <li>
-            <label class="search-filters-dialog__check">
-              <p-checkbox
-                [binary]="true"
-                [ngModel]="isDietaryChecked(opt.key)"
-                (ngModelChange)="toggleDietary(opt.key, $event)"
-                [ngModelOptions]="{ standalone: true }"
-              />
-              {{ opt.label }}
-            </label>
-          </li>
-        }
-      </ul>
-    </section>
-  </div>
+      <section class="search-filters-dialog__section" aria-labelledby="filter-options-title">
+        <h3 id="filter-options-title">Options</h3>
+        <ul class="search-filters-dialog__checks">
+          @for (opt of serviceOptionChoices; track opt.key) {
+            <li>
+              <label class="search-filters-dialog__check">
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="isServiceOptionChecked(opt.key)"
+                  (ngModelChange)="toggleServiceOption(opt.key, $event)"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+                {{ opt.label }}
+              </label>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
 
-  <ng-template pTemplate="footer">
-    <div class="search-filters-dialog__footer">
+    <footer class="search-filters-dialog__footer">
       <p-button
         label="Réinitialiser"
         severity="secondary"
         [text]="true"
+        styleClass="search-filters-dialog__reset-btn"
+        [disabled]="showApplyLoading()"
         (onClick)="resetDraft()"
       />
-      <div class="search-filters-dialog__footer-actions">
-        <p-button
-          label="Annuler"
-          severity="secondary"
-          [outlined]="true"
-          [rounded]="true"
-          (onClick)="cancel()"
-        />
-        <p-button
-          label="Appliquer"
-          icon="pi pi-check"
-          [rounded]="true"
-          (onClick)="submit()"
-        />
-      </div>
-    </div>
-  </ng-template>
+      <p-button
+        [rounded]="true"
+        styleClass="search-filters-dialog__apply-btn"
+        [disabled]="showApplyLoading()"
+        [attr.aria-label]="
+          showApplyLoading() ? 'Chargement des artisans' : applyButtonLabel()
+        "
+        (onClick)="submit()"
+      >
+        @if (showApplyLoading()) {
+          @for (key of [dotsAnimationKey()]; track key) {
+            <span class="search-filters-dialog__dots" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          }
+        } @else {
+          <span class="search-filters-dialog__apply-label">{{
+            applyButtonLabel()
+          }}</span>
+        }
+      </p-button>
+    </footer>
+  </div>
 </p-dialog>

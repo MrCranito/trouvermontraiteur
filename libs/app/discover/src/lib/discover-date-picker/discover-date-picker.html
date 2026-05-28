@@ -1,0 +1,132 @@
+<div
+  class="discover-date-picker__backdrop"
+  role="presentation"
+  (click)="onBackdropClick($event)"
+></div>
+
+<div
+  class="discover-date-picker"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Choisir une date"
+  (click)="onPanelClick($event)"
+>
+  <div class="discover-date-picker__mode" role="tablist" aria-label="Type de dates">
+    <button
+      type="button"
+      role="tab"
+      class="discover-date-picker__mode-btn"
+      [class.discover-date-picker__mode-btn--active]="mode() === 'dates'"
+      [attr.aria-selected]="mode() === 'dates'"
+      (click)="setMode('dates')"
+    >
+      Dates
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="discover-date-picker__mode-btn"
+      [class.discover-date-picker__mode-btn--active]="mode() === 'flexible'"
+      [attr.aria-selected]="mode() === 'flexible'"
+      (click)="setMode('flexible')"
+    >
+      Flexible
+    </button>
+  </div>
+
+  @if (mode() === 'dates') {
+    <div class="discover-date-picker__calendars">
+      <button
+        type="button"
+        class="discover-date-picker__nav"
+        aria-label="Mois précédents"
+        [disabled]="!canGoPrev()"
+        (click)="goPrevMonth()"
+      >
+        <i class="pi pi-chevron-left" aria-hidden="true"></i>
+      </button>
+
+      <div class="discover-date-picker__months">
+        @for (month of monthViews(); track month.year + '-' + month.month) {
+          <div class="discover-date-picker__month">
+            <h3 class="discover-date-picker__month-title">{{ month.label }}</h3>
+            <div class="discover-date-picker__weekdays" aria-hidden="true">
+              @for (letter of weekdayLetters; track $index) {
+                <span>{{ letter }}</span>
+              }
+            </div>
+            <div
+              class="discover-date-picker__grid"
+              role="grid"
+              [attr.aria-label]="'Calendrier ' + month.label"
+            >
+              @for (week of month.weeks; track $index) {
+                @for (day of week; track day.iso) {
+                  <button
+                    type="button"
+                    class="discover-date-picker__day"
+                    role="gridcell"
+                    [class.discover-date-picker__day--outside]="!day.inMonth"
+                    [class.discover-date-picker__day--past]="day.inMonth && day.isPast"
+                    [class.discover-date-picker__day--selected]="isSelected(day.iso)"
+                    [disabled]="!day.inMonth || day.isPast"
+                    [attr.aria-label]="
+                      dayAriaLabel(day.iso, day.inMonth, day.isPast, isSelected(day.iso))
+                    "
+                    [attr.aria-pressed]="isSelected(day.iso)"
+                    (click)="onDayClick(day.iso, day.inMonth, day.isPast)"
+                  >
+                    {{ day.inMonth ? day.day : '' }}
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="discover-date-picker__nav"
+        aria-label="Mois suivants"
+        (click)="goNextMonth()"
+      >
+        <i class="pi pi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="discover-date-picker__flex" role="group" aria-label="Flexibilité des dates">
+      @for (opt of flexOptions; track opt.days) {
+        <button
+          type="button"
+          class="discover-date-picker__flex-btn"
+          [class.discover-date-picker__flex-btn--active]="flexDays() === opt.days"
+          [attr.aria-pressed]="flexDays() === opt.days"
+          (click)="selectFlex(opt.days)"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="discover-date-picker__flexible">
+      <p class="discover-date-picker__flexible-lead">
+        Vous n’avez pas encore de date précise ? Indiquez une fourchette.
+      </p>
+      <div class="discover-date-picker__flexible-options" role="group" aria-label="Durée">
+        @for (stay of flexibleStayOptions; track stay.id) {
+          <button type="button" class="discover-date-picker__flexible-btn">
+            {{ stay.label }}
+          </button>
+        }
+      </div>
+      <button
+        type="button"
+        class="discover-date-picker__flexible-calendar"
+        (click)="setMode('dates'); suggestDefaultDate()"
+      >
+        Choisir des dates dans le calendrier
+      </button>
+    </div>
+  }
+</div>

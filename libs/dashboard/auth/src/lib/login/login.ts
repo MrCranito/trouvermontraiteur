@@ -64,6 +64,7 @@ export class Login {
     this.error.set('');
     this.loading.set(true);
     const err = await this.auth.signInWithGoogle();
+
     this.loading.set(false);
     if (err) {
       this.error.set(CatererAuthService.messageForError(err));

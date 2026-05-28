@@ -10,6 +10,25 @@ export interface DailyMetric {
   views: number;
 }
 
+export type ProfileViewsPeriod = 'day' | 'week' | 'month' | 'year';
+
+export const PROFILE_VIEWS_PERIOD_LABELS: Record<
+  ProfileViewsPeriod,
+  string
+> = {
+  day: 'Jour',
+  week: 'Semaine',
+  month: 'Mois',
+  year: 'Année',
+};
+
+export const PROFILE_VIEWS_PERIOD_HINTS: Record<ProfileViewsPeriod, string> = {
+  day: '7 derniers jours',
+  week: '12 dernières semaines',
+  month: '12 derniers mois',
+  year: '5 dernières années',
+};
+
 export interface DashboardActivity {
   id: string;
   icon: string;
@@ -25,7 +44,7 @@ export interface CatererDashboardStats {
   profileClicks: StatTrend;
   contactRequests: StatTrend;
   savedCount: StatTrend;
-  viewsSeries: DailyMetric[];
+  viewsSeriesByPeriod: Record<ProfileViewsPeriod, DailyMetric[]>;
   topKeywords: string[];
   recentActivity: DashboardActivity[];
 }

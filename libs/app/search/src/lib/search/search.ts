@@ -1,13 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CatererService, SearchSort } from '@trouvermontraiteur/data';
 import {
-  CatererCategory,
-  DietaryOption,
-  EventType,
+  AppCraftsmanCatalogService,
+  SearchSort,
+} from '@trouvermontraiteur/app-consumer-data';
+import {
+  lookupFrenchCityByName,
+  preloadFrenchCities,
+} from '@trouvermontraiteur/data';
+import {
+  CraftsmanTrade,
+  ProjectType,
+  ServiceOption,
 } from '@trouvermontraiteur/models';
-import type { MapViewport } from '@trouvermontraiteur/map-base';
+import type { MapFocus, MapViewport } from '@trouvermontraiteur/map-base';
 import { MultipleMarkersMap } from '@trouvermontraiteur/multiple-markers-map';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +22,7 @@ import {
   buildSearchQueryParams,
   parseSearchQueryParams,
 } from '../search-query-params';
+import { buildSearchResultsTitle } from './search-results-title';
 import { SearchListing } from '../search-listing/search-listing';
 import { SearchListingSkeleton } from '../search-listing-skeleton/search-listing-skeleton';
 import {
@@ -51,10 +59,10 @@ export class Search {
 
   protected query = signal('');
   protected minRating = signal(0);
-  protected selectedCategories = signal<CatererCategory[]>([]);
-  protected eventDate = signal('');
-  protected selectedEventTypes = signal<EventType[]>([]);
-  protected selectedDietary = signal<DietaryOption[]>([]);
+  protected selectedTrades = signal<CraftsmanTrade[]>([]);
+  protected projectDate = signal('');
+  protected selectedProjectTypes = signal<ProjectType[]>([]);
+  protected selectedServiceOptions = signal<ServiceOption[]>([]);
   protected sort = signal<SearchSort>('relevance');
   protected mapSelectedId = signal<string | null>(null);
   protected hoveredId = signal<string | null>(null);
@@ -62,8 +70,26 @@ export class Search {
   protected mapViewport = signal<MapViewport | null>(null);
   protected mapAutoFit = signal(true);
   protected mapLoading = signal(false);
+  protected mapLat = signal<number | null>(null);
+  protected mapLng = signal<number | null>(null);
+  /** Ville affichée dans le titre (recherche discover ou filtre lieu). */
+  protected cityDisplayName = signal<string | null>(null);
+  /** Carte déplacée manuellement par l'utilisateur (après chargement initial). */
+  protected userMovedMap = signal(false);
+  private mapTitleUnlocked = false;
+
+  protected readonly mapFocus = computed((): MapFocus | null => {
+    const lat = this.mapLat();
+    const lng = this.mapLng();
+    if (lat === null || lng === null) {
+      return null;
+    }
+    return { lat, lng, zoom: 11 };
+  });
 
   private viewportLoadToken = 0;
+  /** Évite de recentrer la carte après « Supprimer tous les filtres » (sync URL). */
+  private preserveMapOnNextRouteSync = false;
   private static readonly MAP_LOAD_MIN_MS = 320;
   protected static readonly LIST_SKELETON_COUNT = 6;
 
@@ -77,33 +103,44 @@ export class Search {
   );
 
   protected readonly filteredByCriteria = computed(() =>
-    this.catererService.filter({
+    this.craftsmanService.filter({
       query: this.query(),
-      categories: this.selectedCategories(),
+      trades: this.selectedTrades(),
       minRating: this.minRating(),
-      eventDate: this.eventDate(),
-      eventTypes: this.selectedEventTypes(),
-      dietary: this.selectedDietary(),
+      projectDate: this.projectDate(),
+      projectTypes: this.selectedProjectTypes(),
+      serviceOptions: this.selectedServiceOptions(),
     }),
   );
 
-  /** Up to 20 caterers in the map viewport (radius + center). */
+  /** Up to 20 craftsmen in the map viewport (radius + center). */
   protected readonly results = computed(() => {
     const viewport = this.mapViewport();
     if (!viewport) {
       return [];
     }
-    return this.catererService.searchInMapArea(
+    return this.craftsmanService.searchInMapArea(
       this.filteredByCriteria(),
       viewport,
       this.sort(),
     );
   });
 
-  /** All caterers matching filters (for map markers and initial fit). */
-  protected readonly mapCaterers = computed(() => this.filteredByCriteria());
+  /** All craftsmen matching filters (for map markers and initial fit). */
+  protected readonly mapCraftsmen = computed(() => this.filteredByCriteria());
 
   protected readonly resultCount = computed(() => this.results().length);
+
+  protected readonly resultsTitle = computed(() =>
+    buildSearchResultsTitle({
+      count: this.resultCount(),
+      loading: this.listLoading(),
+      userMovedMap: this.userMovedMap(),
+      cityName: this.cityDisplayName(),
+      projectDate: this.projectDate(),
+      trades: this.selectedTrades(),
+    }),
+  );
 
   /** Grid placeholders while the map viewport or results are updating. */
   protected readonly listLoading = computed(
@@ -113,10 +150,10 @@ export class Search {
   protected readonly currentFilters = computed<SearchFilterValues>(() => ({
     query: this.query(),
     minRating: this.minRating(),
-    categories: this.selectedCategories(),
-    eventTypes: this.selectedEventTypes(),
-    dietary: this.selectedDietary(),
-    eventDate: this.eventDate(),
+    trades: this.selectedTrades(),
+    projectTypes: this.selectedProjectTypes(),
+    serviceOptions: this.selectedServiceOptions(),
+    projectDate: this.projectDate(),
   }));
 
   protected readonly activeFilterCount = computed(() => {
@@ -127,16 +164,16 @@ export class Search {
     if (this.minRating() > 0) {
       count++;
     }
-    if (this.eventDate()) {
+    if (this.projectDate()) {
       count++;
     }
-    if (this.selectedCategories().length > 0) {
+    if (this.selectedTrades().length > 0) {
       count++;
     }
-    if (this.selectedEventTypes().length > 0) {
+    if (this.selectedProjectTypes().length > 0) {
       count++;
     }
-    if (this.selectedDietary().length > 0) {
+    if (this.selectedServiceOptions().length > 0) {
       count++;
     }
     return count;
@@ -154,16 +191,59 @@ export class Search {
       : 'Filtres';
   });
 
-  constructor(private readonly catererService: CatererService) {
+  constructor(private readonly craftsmanService: AppCraftsmanCatalogService) {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const state = parseSearchQueryParams(params);
       this.query.set(state.query);
       this.minRating.set(state.minRating);
-      this.selectedCategories.set(state.categories);
-      this.eventDate.set(state.eventDate);
-      this.selectedEventTypes.set(state.eventTypes);
-      this.selectedDietary.set(state.dietary);
+      this.selectedTrades.set(state.trades);
+      this.projectDate.set(state.projectDate);
+      this.selectedProjectTypes.set(state.projectTypes);
+      this.selectedServiceOptions.set(state.serviceOptions);
       this.sort.set(state.sort);
+
+      if (this.preserveMapOnNextRouteSync) {
+        this.preserveMapOnNextRouteSync = false;
+        return;
+      }
+
+      this.userMovedMap.set(false);
+      this.mapTitleUnlocked = false;
+      this.applyMapCoordinates(state.mapLat, state.mapLng, state.query);
+    });
+  }
+
+  private applyMapCoordinates(
+    lat: number | null,
+    lng: number | null,
+    query: string,
+  ): void {
+    const trimmed = query.trim();
+    this.cityDisplayName.set(trimmed || null);
+
+    if (lat !== null && lng !== null) {
+      this.mapLat.set(lat);
+      this.mapLng.set(lng);
+      this.mapAutoFit.set(false);
+      return;
+    }
+
+    this.mapLat.set(null);
+    this.mapLng.set(null);
+    this.mapAutoFit.set(true);
+
+    if (!trimmed) {
+      return;
+    }
+
+    void preloadFrenchCities().then(() => {
+      const city = lookupFrenchCityByName(trimmed);
+      if (city) {
+        this.mapLat.set(city.lat);
+        this.mapLng.set(city.lng);
+        this.mapAutoFit.set(false);
+        this.cityDisplayName.set(city.name);
+      }
     });
   }
 
@@ -176,18 +256,38 @@ export class Search {
     this.filtersVisible.set(true);
   }
 
+  protected readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0);
+
+  protected clearAllFilters(): void {
+    this.query.set('');
+    this.minRating.set(0);
+    this.selectedTrades.set([]);
+    this.selectedProjectTypes.set([]);
+    this.selectedServiceOptions.set([]);
+    this.projectDate.set('');
+    this.cityDisplayName.set(null);
+    this.preserveMapOnNextRouteSync = true;
+    this.syncToUrl();
+  }
+
   protected onFiltersApply(values: SearchFilterValues): void {
+    this.mapLoading.set(true);
+    this.cityDisplayName.set(values.query.trim() || null);
     this.query.set(values.query);
     this.minRating.set(values.minRating);
-    this.selectedCategories.set(values.categories);
-    this.selectedEventTypes.set(values.eventTypes);
-    this.selectedDietary.set(values.dietary);
-    this.eventDate.set(values.eventDate);
+    this.selectedTrades.set(values.trades);
+    this.selectedProjectTypes.set(values.projectTypes);
+    this.selectedServiceOptions.set(values.serviceOptions);
+    this.projectDate.set(values.projectDate);
     this.mapAutoFit.set(true);
+    this.applyMapCoordinates(null, null, values.query);
     this.syncToUrl();
   }
 
   protected onMapMoveStart(): void {
+    if (this.mapTitleUnlocked) {
+      this.userMovedMap.set(true);
+    }
     this.viewportLoadToken++;
     this.mapLoading.set(true);
     this.mapSelectedId.set(null);
@@ -210,7 +310,7 @@ export class Search {
       return;
     }
 
-    this.catererService.searchInMapArea(
+    this.craftsmanService.searchInMapArea(
       this.filteredByCriteria(),
       viewport,
       this.sort(),
@@ -229,6 +329,7 @@ export class Search {
     this.mapViewport.set(viewport);
     this.mapAutoFit.set(false);
     this.mapLoading.set(false);
+    this.mapTitleUnlocked = true;
   }
 
   protected onListingHover(id: string | null): void {
@@ -247,12 +348,14 @@ export class Search {
     const queryParams = buildSearchQueryParams({
       query: this.query(),
       minRating: this.minRating(),
-      categories: this.selectedCategories(),
-      eventDate: this.eventDate(),
-      eventTypes: this.selectedEventTypes(),
-      dietary: this.selectedDietary(),
+      trades: this.selectedTrades(),
+      projectDate: this.projectDate(),
+      projectTypes: this.selectedProjectTypes(),
+      serviceOptions: this.selectedServiceOptions(),
       sort: this.sort(),
       view: 'grid',
+      mapLat: this.mapLat(),
+      mapLng: this.mapLng(),
     });
 
     void this.router.navigate([], {

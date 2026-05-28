@@ -1,0 +1,228 @@
+:host {
+  display: block;
+  margin-top: auto;
+}
+
+.tmt-footer {
+  position: relative;
+  background: #2a2219;
+  color: #faf6ef;
+  overflow: hidden;
+}
+
+.tmt-footer__accent {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #c4622d 18%,
+    #d4a853 42%,
+    #5c7a5e 68%,
+    #c4622d 82%,
+    transparent 100%
+  );
+  opacity: 0.85;
+}
+
+.tmt-footer__inner {
+  position: relative;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2.25rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6rem;
+    right: -4rem;
+    width: 18rem;
+    height: 18rem;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(196, 98, 45, 0.18) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8rem;
+    left: -6rem;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(92, 122, 94, 0.14) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+}
+
+.tmt-footer__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem 1.5rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 900px) {
+    grid-template-columns: 1.35fr repeat(4, 1fr);
+    gap: 2rem 1.25rem;
+  }
+}
+
+.tmt-footer__brand {
+  @media (min-width: 640px) and (max-width: 899px) {
+    grid-column: 1 / -1;
+  }
+}
+
+.tmt-footer__brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  margin-bottom: 0.85rem;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.92;
+
+    .tmt-footer__brand-text {
+      color: #f0c4a8;
+    }
+  }
+}
+
+.tmt-footer__logo {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+  filter: brightness(1.15);
+}
+
+.tmt-footer__brand-text {
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #faf6ef;
+  transition: color 0.2s ease;
+}
+
+.tmt-footer__tagline {
+  margin: 0 0 0.5rem;
+  max-width: 20rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(250, 246, 239, 0.78);
+}
+
+.tmt-footer__made {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(250, 246, 239, 0.45);
+  font-style: italic;
+}
+
+.tmt-footer__heading {
+  margin: 0 0 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(250, 246, 239, 0.5);
+}
+
+.tmt-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+
+  a {
+    display: inline-block;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: rgba(250, 246, 239, 0.86);
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: #faf6ef;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #e8825a;
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+  }
+}
+
+.tmt-footer__bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.15rem 1.5rem 1.35rem;
+  border-top: 1px solid rgba(250, 246, 239, 0.1);
+  text-align: center;
+
+  @media (min-width: 720px) {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.tmt-footer__copyright {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(250, 246, 239, 0.5);
+}
+
+.tmt-footer__bottom-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+
+  a {
+    font-size: 0.78rem;
+    color: rgba(250, 246, 239, 0.55);
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: rgba(250, 246, 239, 0.9);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #e8825a;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+  }
+}
+
+.tmt-footer__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(250, 246, 239, 0.25);
+}

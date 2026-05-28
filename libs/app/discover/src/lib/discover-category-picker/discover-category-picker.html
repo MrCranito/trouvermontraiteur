@@ -1,0 +1,120 @@
+<div
+  class="discover-category-picker__backdrop"
+  role="presentation"
+  (click)="onBackdropClick($event)"
+></div>
+
+<div
+  class="discover-category-picker"
+  role="listbox"
+  [attr.aria-label]="
+    drillCategory()
+      ? ('discover.chooseTrade' | transloco)
+      : ('discover.chooseCategory' | transloco)
+  "
+  (click)="onPanelClick($event)"
+>
+  @if (!drillCategory()) {
+  <p class="discover-category-picker__title">{{ 'discover.categories' | transloco }}</p>
+  <ul class="discover-category-picker__list">
+    <li>
+      <button
+        type="button"
+        class="discover-category-picker__option"
+        role="option"
+        [attr.aria-selected]="!categoryId() && !subCategoryId()"
+        (click)="pickAll()"
+      >
+        <span class="discover-category-picker__icon" aria-hidden="true">
+          <i class="pi pi-th-large"></i>
+        </span>
+        <span class="discover-category-picker__text">
+          <span class="discover-category-picker__name">{{
+            'discover.allCategories' | transloco
+          }}</span>
+          <span class="discover-category-picker__subtitle">{{
+            'discover.noTradeFilter' | transloco
+          }}</span>
+        </span>
+      </button>
+    </li>
+    @for (category of categories(); track category.id) {
+    <li>
+      <button
+        type="button"
+        class="discover-category-picker__option"
+        role="option"
+        [attr.aria-selected]="isCategorySelected(category.id)"
+        (click)="openCategory(category.id)"
+      >
+        <span class="discover-category-picker__icon" aria-hidden="true">
+          <i [class]="categoryIcon(category)"></i>
+        </span>
+        <span class="discover-category-picker__text">
+          <span class="discover-category-picker__name">{{
+            categoryLabel(category)
+          }}</span>
+          <span class="discover-category-picker__subtitle">{{
+            'discover.tradesCount'
+              | transloco
+                : { count: catalog.getSubCategoriesForCategory(category.id).length }
+          }}</span>
+        </span>
+        <i class="pi pi-chevron-right discover-category-picker__chevron" aria-hidden="true"></i>
+      </button>
+    </li>
+    }
+  </ul>
+  } @else {
+  <div class="discover-category-picker__head">
+    <button
+      type="button"
+      class="discover-category-picker__back"
+      (click)="backToCategories()"
+    >
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      {{ 'discover.categories' | transloco }}
+    </button>
+    <p class="discover-category-picker__title">{{ categoryLabel(drillCategory()!) }}</p>
+  </div>
+  <ul class="discover-category-picker__list">
+    <li>
+      <button
+        type="button"
+        class="discover-category-picker__option"
+        role="option"
+        [attr.aria-selected]="isCategorySelected(drillCategory()!.id)"
+        (click)="pickCategoryOnly(drillCategory()!.id)"
+      >
+        <span class="discover-category-picker__icon" aria-hidden="true">
+          <i [class]="categoryIcon(drillCategory()!)"></i>
+        </span>
+        <span class="discover-category-picker__text">
+          <span class="discover-category-picker__name">{{
+            'discover.allTradesInCategory'
+              | transloco
+                : {
+                    category: categoryLabel(drillCategory()!),
+                  }
+          }}</span>
+        </span>
+      </button>
+    </li>
+    @for (subCategory of drillSubCategories(); track subCategory.id) {
+    <li>
+      <button
+        type="button"
+        class="discover-category-picker__option"
+        role="option"
+        [attr.aria-selected]="isSubCategorySelected(subCategory.id)"
+        (click)="pickSubCategory(drillCategory()!.id, subCategory.id)"
+      >
+        <span class="discover-category-picker__text discover-category-picker__text--trade">
+          <span class="discover-category-picker__name">{{ categoryI18n.subCategoryLabel(subCategory) }}</span>
+        </span>
+      </button>
+    </li>
+    }
+  </ul>
+  }
+</div>

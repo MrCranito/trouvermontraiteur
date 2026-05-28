@@ -31,12 +31,18 @@
       ],
       "@trouvermontraiteur/home": ["./libs/landing/home/src/index.ts"],
       "@trouvermontraiteur/search": ["./libs/app/search/src/index.ts"],
-      "@trouvermontraiteur/details": ["./libs/app/details/src/index.ts"],
+      "@trouvermontraiteur/app-discover": [
+        "./libs/app/discover/src/index.ts"
+      ],
+      "@trouvermontraiteur/craftsman-details": [
+        "./libs/shared/ui/craftsman-details/src/index.ts"
+      ],
       "@trouvermontraiteur/app-auth": ["./libs/app/auth/src/index.ts"],
       "@trouvermontraiteur/app-shell": ["./libs/app/shell/src/index.ts"],
       "@trouvermontraiteur/app-consumer-data": [
         "./libs/app/consumer-data/src/index.ts"
       ],
+      "@trouvermontraiteur/app-i18n": ["./libs/app/i18n/src/index.ts"],
       "@trouvermontraiteur/app-favorites": [
         "./libs/app/favorites/src/index.ts"
       ],
@@ -50,13 +56,14 @@
       "@trouvermontraiteur/dashboard-overview": [
         "./libs/dashboard/overview/src/index.ts"
       ],
-      "@trouvermontraiteur/dashboard-profile": [
-        "./libs/dashboard/profile/src/index.ts"
+      "@trouvermontraiteur/dashboard-custom-details": [
+        "./libs/dashboard/custom-details/src/index.ts"
       ],
       "@trouvermontraiteur/dashboard-auth": [
         "./libs/dashboard/auth/src/index.ts"
       ],
       "@trouvermontraiteur/topbar": ["./libs/shared/ui/topbar/src/index.ts"],
+      "@trouvermontraiteur/footer": ["./libs/shared/ui/footer/src/index.ts"],
       "@trouvermontraiteur/dashboard-devis": [
         "./libs/dashboard/devis/src/index.ts"
       ],

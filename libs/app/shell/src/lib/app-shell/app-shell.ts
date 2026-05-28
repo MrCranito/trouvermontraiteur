@@ -1,12 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ConsumerAuthService } from '@trouvermontraiteur/app-auth';
+import { TmtLanguageSwitcher } from '@trouvermontraiteur/app-i18n';
+import { TmtFooter } from '@trouvermontraiteur/footer';
 import { TmtTopbar } from '@trouvermontraiteur/topbar';
 import { environment } from '@env';
 
 @Component({
   selector: 'tmt-app-shell',
-  imports: [RouterOutlet, TmtTopbar],
+  imports: [RouterOutlet, TmtTopbar, TmtFooter, TmtLanguageSwitcher],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

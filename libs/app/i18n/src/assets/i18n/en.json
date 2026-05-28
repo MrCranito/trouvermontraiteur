@@ -1,0 +1,29 @@
+{
+  "lang": {
+    "switcherLabel": "Language",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español"
+  },
+  "categories": {
+    "batiments": "Buildings",
+    "reparation": "Repair",
+    "mobilite": "Mobility",
+    "alimentation": "Food",
+    "beaute": "Beauty",
+    "mode": "Fashion",
+    "decoration": "Decoration",
+    "jardin": "Garden",
+    "audiovisuel": "Audiovisual"
+  },
+  "discover": {
+    "categories": "Categories",
+    "categoriesSelected": "Trades in the selected category",
+    "allCategories": "All categories",
+    "noTradeFilter": "No trade filter",
+    "tradesCount": "{{count}} trades",
+    "chooseCategory": "Choose a category",
+    "chooseTrade": "Choose a trade",
+    "allTradesInCategory": "All trades — {{category}}"
+  }
+}

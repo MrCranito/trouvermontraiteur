@@ -1,5 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import {
+  AppCraftsmanCatalogService,
+  ConsumerUserService,
+} from '@trouvermontraiteur/app-consumer-data';
 
 @Component({
   imports: [RouterModule],
@@ -7,4 +11,9 @@ import { RouterModule } from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {}
+export class App {
+  constructor() {
+    inject(ConsumerUserService);
+    inject(AppCraftsmanCatalogService);
+  }
+}

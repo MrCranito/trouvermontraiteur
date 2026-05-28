@@ -1,12 +1,13 @@
+<div class="consumer-auth-layout">
 <div class="consumer-auth-page">
   <aside class="consumer-auth-page__visual" aria-hidden="true">
     <div class="consumer-auth-page__visual-overlay"></div>
     <div class="consumer-auth-page__visual-content">
       <span class="consumer-auth-page__logo">T</span>
-      <h1>Votre événement,<br />sans stress</h1>
+      <h1>Votre projet,<br />sans stress</h1>
       <p>
-        Créez un compte pour enregistrer vos recherches, contacter des traiteurs
-        et préparer votre réception en toute sérénité.
+        Créez un compte pour enregistrer vos recherches, contacter des artisans
+        et suivre vos demandes de devis en toute sérénité.
       </p>
       <ul class="consumer-auth-page__perks">
         <li><i class="pi pi-heart-fill"></i> Favoris et listes</li>
@@ -23,4 +24,6 @@
     </a>
     <router-outlet />
   </main>
+</div>
+<tmt-footer [dashboardHref]="dashboardUrl" />
 </div>

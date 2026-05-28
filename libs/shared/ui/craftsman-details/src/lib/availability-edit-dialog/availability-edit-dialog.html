@@ -1,0 +1,59 @@
+<p-dialog
+  header="Modifier les disponibilités"
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(52rem, 96vw)' }"
+  styleClass="listing-availability-dialog"
+  (onHide)="cancel()"
+>
+  <div class="listing-availability-dialog__body">
+    <p class="listing-availability-dialog__lead">
+      Cliquez sur un jour pour basculer entre <strong>disponible</strong> et
+      <strong>indisponible</strong>. Les jours passés ne sont pas modifiables.
+    </p>
+
+    <div class="listing-availability-dialog__actions">
+      <p-button
+        label="Week-ends (120 j.)"
+        icon="pi pi-calendar"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="selectWeekends()"
+      />
+      <p-button
+        label="Tout effacer (futur)"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        (onClick)="clearFuture()"
+      />
+    </div>
+
+    <tmt-availability-calendar
+      [availableDates]="draftDates()"
+      [monthsToShow]="2"
+      (availableDatesChange)="onDatesChange($event)"
+    />
+
+    <p class="listing-availability-dialog__hint">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      {{ draftDates().length }} jour{{ draftDates().length > 1 ? 's' : '' }} marqué{{
+        draftDates().length > 1 ? 's' : ''
+      }}
+      comme disponible{{ draftDates().length > 1 ? 's' : '' }}.
+    </p>
+
+    <footer class="listing-availability-dialog__footer">
+      <p-button
+        label="Annuler"
+        severity="secondary"
+        [text]="true"
+        (onClick)="cancel()"
+      />
+      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="save()" />
+    </footer>
+  </div>
+</p-dialog>

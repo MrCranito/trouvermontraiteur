@@ -1,6 +1,7 @@
 export * from './lib/lib.routes';
 export { ConsumerAuthService } from './lib/consumer-auth.service';
 export { AUTH_REDIRECT_BASE } from './lib/auth-redirect.token';
+export { CONSUMER_DASHBOARD_APP_URL } from './lib/dashboard-app-url.token';
 export { authGuard } from './lib/auth.guard';
 export { authGuestGuard } from './lib/auth-guest.guard';
 export { AuthLayout } from './lib/auth-layout/auth-layout';

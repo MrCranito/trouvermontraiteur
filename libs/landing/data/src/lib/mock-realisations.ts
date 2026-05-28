@@ -1,13 +1,16 @@
-import { CatererRealisation } from '@trouvermontraiteur/models';
+import { CraftsmanRealisation } from '@trouvermontraiteur/models';
 
-/** Build placeholder gallery images for mock caterers. */
+/** Build gallery images for mock craftsmen. */
 export function mockRealisations(
   slug: string,
   captions: string[],
-): CatererRealisation[] {
+  imageUrls?: readonly string[],
+): CraftsmanRealisation[] {
   return captions.map((caption, index) => ({
     id: `${slug}-real-${index + 1}`,
-    imageUrl: `https://picsum.photos/seed/${slug}-real-${index + 1}/900/650`,
+    imageUrl:
+      imageUrls?.[index % imageUrls.length] ??
+      `https://picsum.photos/seed/${slug}-real-${index + 1}/900/650`,
     caption,
   }));
 }

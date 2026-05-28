@@ -1,6 +1,37 @@
 import { Component, inject } from '@angular/core';
 import { Button } from 'primeng/button';
-import { buildAppUrl, DASHBOARD_APP_URL, PUBLIC_APP_URL } from '@trouvermontraiteur/data';
+import {
+  buildAppUrl,
+  DASHBOARD_APP_URL,
+  PUBLIC_APP_URL,
+  TRADE_FAMILIES,
+} from '@trouvermontraiteur/data';
+
+const FAMILY_ICONS: Record<string, string> = {
+  batiments: 'pi pi-building',
+  reparation: 'pi pi-wrench',
+  mobilite: 'pi pi-car',
+  alimentation: 'pi pi-shopping-bag',
+  beaute: 'pi pi-sparkles',
+  mode: 'pi pi-tag',
+  decoration: 'pi pi-palette',
+  jardin: 'pi pi-sun',
+  audiovisuel: 'pi pi-camera',
+};
+
+const FAMILY_BLURBS: Record<string, string> = {
+  batiments: 'Gros œuvre, second œuvre et finitions',
+  reparation: 'Dépannage et réparations du quotidien',
+  mobilite: 'Auto, moto, vélo et contrôle technique',
+  alimentation: 'Artisans du goût et de la restauration',
+  beaute: 'Coiffure, bien-être et soins',
+  mode: 'Couture, bijoux et accessoires',
+  decoration: 'Décoration intérieure et arts décoratifs',
+  jardin: 'Espaces verts, fleurs et piscines',
+  audiovisuel: 'Photo et image',
+};
+
+const FAMILY_ACCENTS = ['terracotta', 'gold', 'sage'] as const;
 
 @Component({
   selector: 'tmt-home',
@@ -12,11 +43,9 @@ export class Home {
   private readonly searchAppBase = inject(PUBLIC_APP_URL);
   private readonly dashboardAppBase = inject(DASHBOARD_APP_URL);
 
-  protected searchUrl(query?: Record<string, string>): string {
-    const qs = query
-      ? new URLSearchParams(query).toString()
-      : '';
-    const base = buildAppUrl(this.searchAppBase);
+  protected searchUrl(query?: Record<string, string>, path = ''): string {
+    const qs = query ? new URLSearchParams(query).toString() : '';
+    const base = buildAppUrl(this.searchAppBase, path);
 
     if (base.startsWith('http://') || base.startsWith('https://')) {
       const url = new URL(base);
@@ -29,86 +58,61 @@ export class Home {
     return qs ? `${base}?${qs}` : base;
   }
 
+  protected familySearchUrl(familyId: string): string {
+    const family = TRADE_FAMILIES.find((entry) => entry.id === familyId);
+    if (!family) {
+      return this.searchUrl(undefined, '/explorer');
+    }
+
+    const trades = [...new Set(family.trades.map((trade) => trade.id))].join(
+      ',',
+    );
+    return this.searchUrl({ trades }, '/explorer');
+  }
+
   protected dashboardUrl(path = ''): string {
     return buildAppUrl(this.dashboardAppBase, path);
   }
 
   protected readonly stats = [
-    { value: '8+', label: 'Traiteurs à Paris' },
+    { value: '90+', label: 'Artisans référencés' },
+    { value: '9', label: 'Familles de métiers' },
     { value: '4,7', label: 'Note moyenne' },
-    { value: '6', label: "Types d'événements" },
     { value: '24h', label: 'Réponse estimée' },
   ] as const;
 
-  protected readonly prestations = [
-    {
-      key: 'mariage',
-      label: 'Mariage',
-      icon: 'pi pi-heart',
-      blurb: 'Menus assis, buffets et service traiteur le jour J',
-      accent: 'terracotta',
-    },
-    {
-      key: 'anniversaire',
-      label: 'Anniversaire & fête',
-      icon: 'pi pi-gift',
-      blurb: 'Cocktails, pièces salées et formules conviviales',
-      accent: 'gold',
-    },
-    {
-      key: 'cocktail',
-      label: 'Cocktail & réception',
-      icon: 'pi pi-glass',
-      blurb: 'Bouchées, bar mobile et animations gourmandes',
-      accent: 'sage',
-    },
-    {
-      key: 'entreprise',
-      label: 'Séminaire & entreprise',
-      icon: 'pi pi-briefcase',
-      blurb: 'Petit-déjeuner, déjeuner et pauses café sur site',
-      accent: 'terracotta',
-    },
-    {
-      key: 'brunch',
-      label: 'Brunch',
-      icon: 'pi pi-sun',
-      blurb: 'Formules douces, jus pressés et viennoiseries',
-      accent: 'gold',
-    },
-    {
-      key: 'famille',
-      label: 'Baptême & famille',
-      icon: 'pi pi-users',
-      blurb: 'Buffets partagés et menus adaptés à tous les âges',
-      accent: 'sage',
-    },
-  ] as const;
+  protected readonly tradeCategories = TRADE_FAMILIES.map((family, index) => ({
+    key: family.id,
+    label: family.label,
+    icon: FAMILY_ICONS[family.id] ?? 'pi pi-briefcase',
+    blurb: FAMILY_BLURBS[family.id] ?? family.label,
+    accent: FAMILY_ACCENTS[index % FAMILY_ACCENTS.length],
+  }));
 
   protected readonly benefits = [
     {
       icon: 'pi pi-verified',
-      title: 'Sélection locale',
+      title: 'Artisans locaux',
       description:
-        'Des artisans parisiens choisis pour la qualité de leurs prestations et de leur accueil.',
+        'Des professionnels de tous métiers, sélectionnés pour la qualité de leurs prestations.',
     },
     {
       icon: 'pi pi-sliders-h',
       title: 'Filtres précis',
       description:
-        'Ville, note minimale et catégories — affinez votre recherche en quelques clics.',
+        'Lieu, métier, note et type de projet — affinez votre recherche en quelques clics.',
     },
     {
       icon: 'pi pi-map',
       title: 'Vue carte',
       description:
-        'Visualisez la zone d’intervention et comparez les traiteurs autour de votre lieu.',
+        'Visualisez la zone d’intervention et comparez les artisans autour de chez vous.',
     },
     {
-      icon: 'pi pi-book',
-      title: 'Menus détaillés',
+      icon: 'pi pi-wallet',
+      title: 'Tarifs transparents',
       description:
-        'Tarifs, descriptions et catégories de plats avant de contacter le traiteur.',
+        'Prestations et tarifs indicatifs avant de demander un devis personnalisé.',
     },
   ] as const;
 
@@ -117,7 +121,7 @@ export class Home {
       num: '01',
       icon: 'pi pi-search',
       title: 'Recherchez',
-      description: 'Par ville, note ou type de prestation.',
+      description: 'Par ville, métier ou type de projet.',
     },
     {
       num: '02',
@@ -127,9 +131,9 @@ export class Home {
     },
     {
       num: '03',
-      icon: 'pi pi-calendar',
-      title: 'Réservez',
-      description: 'Consultez le menu et contactez le traiteur.',
+      icon: 'pi pi-envelope',
+      title: 'Contactez',
+      description: 'Consultez le profil et demandez un devis à l’artisan.',
     },
   ] as const;
 
@@ -138,13 +142,13 @@ export class Home {
       icon: 'pi pi-id-card',
       title: 'Profil professionnel',
       description:
-        'Présentez votre carte, vos menus, tarifs et zone d’intervention en un seul endroit.',
+        'Présentez vos prestations, tarifs et zone d’intervention en un seul endroit.',
     },
     {
       icon: 'pi pi-users',
       title: 'Clients qualifiés',
       description:
-        'Touchez des organisateurs qui cherchent activement un traiteur pour leur événement.',
+        'Touchez des particuliers et pros qui cherchent activement un artisan près de chez eux.',
     },
     {
       icon: 'pi pi-bolt',

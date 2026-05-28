@@ -52,6 +52,9 @@
                   [class.avail-cal__day--outside]="!day.inMonth"
                   [class.avail-cal__day--past]="day.isPast"
                   [class.avail-cal__day--available]="day.isAvailable"
+                  [class.avail-cal__day--unavailable]="
+                    day.inMonth && !day.isPast && !day.isAvailable
+                  "
                   [class.avail-cal__day--today]="day.isToday"
                   [attr.aria-label]="dayAriaLabel(day.iso, day.inMonth, day.isPast, day.isAvailable)"
                 >
@@ -65,6 +68,9 @@
                   [class.avail-cal__day--outside]="!day.inMonth"
                   [class.avail-cal__day--past]="day.isPast"
                   [class.avail-cal__day--available]="day.isAvailable"
+                  [class.avail-cal__day--unavailable]="
+                    day.inMonth && !day.isPast && !day.isAvailable
+                  "
                   [class.avail-cal__day--today]="day.isToday"
                   [disabled]="!day.inMonth || day.isPast"
                   [attr.aria-label]="dayAriaLabel(day.iso, day.inMonth, day.isPast, day.isAvailable)"

@@ -1,0 +1,29 @@
+{
+  "lang": {
+    "switcherLabel": "Langue",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español"
+  },
+  "categories": {
+    "batiments": "Bâtiments",
+    "reparation": "Réparation",
+    "mobilite": "Mobilité",
+    "alimentation": "Alimentation",
+    "beaute": "Beauté",
+    "mode": "Mode",
+    "decoration": "Décoration",
+    "jardin": "Jardin",
+    "audiovisuel": "Audiovisuel"
+  },
+  "discover": {
+    "categories": "Catégories",
+    "categoriesSelected": "Métiers de la catégorie sélectionnée",
+    "allCategories": "Toutes catégories",
+    "noTradeFilter": "Sans filtre métier",
+    "tradesCount": "{{count}} métiers",
+    "chooseCategory": "Choisir une catégorie",
+    "chooseTrade": "Choisir un métier",
+    "allTradesInCategory": "Tous les métiers — {{category}}"
+  }
+}

@@ -1,0 +1,15 @@
+<a class="discover-card" [routerLink]="['/artisans', craftsman().slug]">
+  <div class="discover-card__media">
+    <img [src]="craftsman().imageUrl" [alt]="craftsman().name" loading="lazy" />
+  </div>
+  <div class="discover-card__body">
+    <div class="discover-card__row">
+      <h3 class="discover-card__name">{{ craftsman().name }}</h3>
+      <span class="discover-card__rating">
+        <i class="pi pi-star-fill" aria-hidden="true"></i>
+        {{ ratingLabel() }}
+      </span>
+    </div>
+    <p class="discover-card__meta">{{ subtitle() }}</p>
+  </div>
+</a>

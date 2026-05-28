@@ -55,7 +55,7 @@ function starPath(
 }
 
 /** Rounded-square map marker with rating (note) + star on the right. */
-export function catererRatingMarkerIcon(
+export function craftsmanRatingMarkerIcon(
   rating: number,
   active: boolean,
 ): google.maps.Icon {

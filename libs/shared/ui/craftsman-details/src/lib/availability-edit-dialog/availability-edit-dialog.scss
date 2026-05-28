@@ -1,0 +1,62 @@
+:host ::ng-deep .listing-availability-dialog {
+  .p-dialog-header {
+    padding-bottom: 0.5rem;
+  }
+
+  .p-dialog-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #222;
+  }
+
+  .p-dialog-content {
+    padding-top: 0.25rem;
+  }
+}
+
+.listing-availability-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.listing-availability-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(42, 34, 25, 0.08);
+}
+
+.listing-availability-dialog__lead {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #555;
+  line-height: 1.5;
+
+  strong {
+    color: #222;
+    font-weight: 600;
+  }
+}
+
+.listing-availability-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.listing-availability-dialog__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.88rem;
+  color: #717171;
+
+  .pi {
+    color: #c4622d;
+  }
+}

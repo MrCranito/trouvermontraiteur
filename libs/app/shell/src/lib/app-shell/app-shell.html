@@ -4,8 +4,11 @@
     [auth]="authState()"
     loginHref="/auth/connexion"
     (signOut)="signOut()"
-  />
+  >
+    <tmt-language-switcher topbarTools />
+  </tmt-topbar>
   <main class="app-shell__main">
     <router-outlet />
   </main>
+  <tmt-footer [dashboardHref]="dashboardUrl" />
 </div>

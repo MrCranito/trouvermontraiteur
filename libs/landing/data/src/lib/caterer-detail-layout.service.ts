@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
-  Caterer,
+  Craftsman,
   CatererDetailLayout,
   CatererDetailSectionId,
 } from '@trouvermontraiteur/models';
@@ -39,18 +39,24 @@ export class CatererDetailLayoutService {
     return DETAIL_LAYOUT_PRESETS;
   }
 
-  /** Sections to render for a caterer (skips empty optional blocks). */
+  /** Sections to render for a craftsman (skips empty optional blocks). */
   resolveVisibleSections(
-    caterer: Caterer,
+    craftsman: Craftsman,
     layout: CatererDetailLayout,
   ): CatererDetailSectionId[] {
-    return layout.sections.filter((id) => this.isSectionVisible(caterer, id));
+    return layout.sections.filter((id) => this.isSectionVisible(craftsman, id));
   }
 
-  isSectionVisible(caterer: Caterer, sectionId: CatererDetailSectionId): boolean {
+  isSectionVisible(
+    craftsman: Craftsman,
+    sectionId: CatererDetailSectionId,
+  ): boolean {
     switch (sectionId) {
       case 'prestations':
-        return caterer.eventTypes.length > 0 || caterer.dietary.length > 0;
+        return (
+          craftsman.projectTypes.length > 0 ||
+          craftsman.serviceOptions.length > 0
+        );
       default:
         return true;
     }

@@ -18,6 +18,16 @@
           {
             "glob": "**/*",
             "input": "apps/app/public"
+          },
+          {
+            "glob": "french-cities.json",
+            "input": "libs/landing/data/src/assets",
+            "output": "assets"
+          },
+          {
+            "glob": "**/*",
+            "input": "libs/app/i18n/src/assets",
+            "output": "assets"
           }
         ],
         "styles": ["apps/app/src/styles.scss"]

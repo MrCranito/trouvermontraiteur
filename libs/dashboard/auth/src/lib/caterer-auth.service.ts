@@ -23,9 +23,7 @@ export class CatererAuthService {
   private readonly initialized = signal(false);
 
   readonly user = computed<User | null>(() => this.session()?.user ?? null);
-  readonly userType = computed(() =>
-    getUserType(this.user()?.user_metadata),
-  );
+  readonly userType = computed(() => getUserType(this.user()?.user_metadata));
   readonly isConsumer = computed(() =>
     isConsumerUser(this.user()?.user_metadata),
   );
@@ -165,7 +163,10 @@ export class CatererAuthService {
     return null;
   }
 
-  async signInWithEmail(email: string, password: string): Promise<AuthError | null> {
+  async signInWithEmail(
+    email: string,
+    password: string,
+  ): Promise<AuthError | null> {
     const { error } = await this.supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -205,6 +206,7 @@ export class CatererAuthService {
         redirectTo: this.redirectUrl('/auth/callback'),
       },
     });
+
     return error;
   }
 
@@ -215,7 +217,7 @@ export class CatererAuthService {
 
   async signOut(): Promise<void> {
     await this.clearSession();
-    await this.router.navigate(['/auth/connexion']);
+    await this.router.navigate(['/auth/connexion'], { replaceUrl: true });
   }
 
   async sendPasswordResetEmail(email: string): Promise<AuthError | null> {

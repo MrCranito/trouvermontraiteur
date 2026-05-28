@@ -1,0 +1,15 @@
+<label class="tmt-language-switcher" *transloco="let t">
+  <span class="tmt-language-switcher__label visually-hidden">{{
+    t('lang.switcherLabel')
+  }}</span>
+  <select
+    class="tmt-language-switcher__select"
+    [ngModel]="activeLang"
+    (ngModelChange)="onLangChange($event)"
+    [attr.aria-label]="t('lang.switcherLabel')"
+  >
+    @for (lang of languages; track lang) {
+      <option [value]="lang">{{ t('lang.' + lang) }}</option>
+    }
+  </select>
+</label>

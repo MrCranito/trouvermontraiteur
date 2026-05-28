@@ -62,6 +62,6 @@ export class ConsumerQuotesService {
   }
 
   private storageKey(email: string): string {
-    return `tmt:consumer-quotes:v1:${email.trim().toLowerCase()}`;
+    return `tmt:consumer-quotes:v2:${email.trim().toLowerCase()}`;
   }
 }

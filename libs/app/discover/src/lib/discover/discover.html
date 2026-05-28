@@ -1,0 +1,230 @@
+<div class="discover">
+  <section class="discover__hero" aria-label="Rechercher un artisan">
+    <div class="discover__hero-inner">
+      <h1 class="discover__title">Trouvez l’artisan idéal pour votre projet</h1>
+      <p class="discover__lead">
+        Parcourez les artisans près de chez vous, comparez les prestations et
+        explorez la carte.
+      </p>
+
+      <form class="discover__search" (submit)="$event.preventDefault(); onSearchSubmit()">
+        <div
+          class="discover__pill-row"
+          [class.discover__pill-row--overlay-open]="
+            datePickerOpen() || locationPickerOpen() || categoryPickerOpen()
+          "
+        >
+        <div class="discover__pill">
+          <label class="discover__pill-field discover__pill-field--grow">
+            <span class="discover__pill-label">Où</span>
+            <input
+              type="search"
+              class="discover__pill-input"
+              placeholder="Ville, région…"
+              autocomplete="off"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="locationPickerOpen()"
+              [value]="destination()"
+              (focus)="openLocationPicker()"
+              (click)="openLocationPicker($event)"
+              (input)="onDestinationInput($event)"
+            />
+          </label>
+          <span class="discover__pill-divider" aria-hidden="true"></span>
+          <label class="discover__pill-field discover__pill-field--category">
+            <span class="discover__pill-label">Quoi</span>
+            <input
+              type="text"
+              class="discover__pill-input discover__pill-input--category"
+              placeholder="Catégorie, métier…"
+              readonly
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="categoryPickerOpen()"
+              [value]="searchCategoryLabel()"
+              (click)="openCategoryPicker($event)"
+              (keydown.enter)="
+                $event.preventDefault(); openCategoryPicker($event)
+              "
+            />
+          </label>
+          <span class="discover__pill-divider" aria-hidden="true"></span>
+          <label class="discover__pill-field discover__pill-field--date">
+            <span class="discover__pill-label">Quand</span>
+            <span class="discover__pill-date-wrap">
+              <input
+                type="text"
+                class="discover__pill-input discover__pill-input--date-display"
+                placeholder="Quand ?"
+                readonly
+                aria-haspopup="dialog"
+                [attr.aria-expanded]="datePickerOpen()"
+                [value]="projectDateLabel()"
+                (click)="toggleDatePicker($event)"
+                (keydown.enter)="
+                  $event.preventDefault(); toggleDatePicker($event)
+                "
+              />
+            </span>
+          </label>
+          <button type="submit" class="discover__pill-submit">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <span>Rechercher</span>
+          </button>
+        </div>
+        @if (categoryPickerOpen()) {
+          <tmt-discover-category-picker
+            [categoryId]="searchCategoryId()"
+            [subCategoryId]="searchSubCategoryId()"
+            (select)="onCategorySelect($event)"
+            (dismiss)="closeCategoryPicker()"
+          />
+        }
+        @if (locationPickerOpen()) {
+          <tmt-discover-location-picker
+            [query]="destination()"
+            (select)="onLocationSelect($event)"
+            (dismiss)="closeLocationPicker()"
+          />
+        }
+        @if (datePickerOpen()) {
+          <tmt-discover-date-picker
+            [value]="projectDate()"
+            [flexDays]="dateFlexDays()"
+            [mode]="datePickerMode()"
+            (valueChange)="onPickerDateChange($event)"
+            (flexDaysChange)="dateFlexDays.set($event)"
+            (modeChange)="datePickerMode.set($event)"
+            (dismiss)="closeDatePicker()"
+          />
+        }
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <nav
+    class="discover__categories"
+    [attr.aria-label]="categoriesAriaLabelKey() | transloco"
+  >
+    <ul class="discover__category-track">
+      @if (loading()) {
+        @for (item of skeletonCategoryChipItems; track item) {
+          <li>
+            <span
+              class="discover__category-chip discover__category-chip--skeleton"
+              aria-hidden="true"
+            ></span>
+          </li>
+        }
+      } @else {
+      @for (chip of categoryChips(); track trackCategoryChip(chip)) {
+        <li>
+          <button
+            type="button"
+            class="discover__category-chip"
+            [class.discover__category-chip--back]="chip.type === 'back'"
+            [class.discover__category-chip--active]="
+              chip.type === 'back' && selectedCategoryId() === chip.categoryId
+            "
+            (click)="onCategoryChipClick(chip)"
+          >
+            @if (chip.type === 'back') {
+              <i class="pi pi-arrow-left" aria-hidden="true"></i>
+              {{ categoryLabel(chip.categoryId) }}
+            } @else if (chip.type === 'category') {
+              @if (chip.customIcon) {
+                <span [class]="chip.icon" aria-hidden="true"></span>
+              } @else {
+                <i [class]="chip.icon" aria-hidden="true"></i>
+              }
+              {{ categoryLabel(chip.id) }}
+            } @else {
+              {{ chip.label }}
+            }
+          </button>
+        </li>
+      }
+      <li>
+        <button
+          type="button"
+          class="discover__category-chip discover__category-chip--map"
+          (click)="openExplorer()"
+        >
+          <i class="pi pi-map" aria-hidden="true"></i>
+          Carte
+        </button>
+      </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="discover__sections">
+    @if (loading()) {
+      @for (section of skeletonSectionItems; track section) {
+        <section class="discover__section" aria-hidden="true">
+          <header class="discover__section-head">
+            <div class="discover__section-intro">
+              <div class="discover__section-title-row">
+                <span class="discover__skeleton discover__skeleton--section-title"></span>
+              </div>
+              <span class="discover__skeleton discover__skeleton--section-subtitle"></span>
+            </div>
+          </header>
+
+          <ul class="discover__row">
+            @for (item of skeletonRowItems; track item) {
+              <li class="discover__row-item">
+                <div class="discover__row-item-skeleton">
+                  <span class="discover__skeleton discover__skeleton--card-media"></span>
+                  <span class="discover__skeleton discover__skeleton--card-title"></span>
+                  <span class="discover__skeleton discover__skeleton--card-text"></span>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    } @else {
+    @for (section of sections(); track section.id) {
+      <section class="discover__section" [attr.aria-labelledby]="'discover-' + section.id">
+        <header class="discover__section-head">
+          <div class="discover__section-intro">
+            <div class="discover__section-title-row">
+              <h2 [id]="'discover-' + section.id">
+                @if (section.subCategoryId) {
+                  {{ section.title }}
+                } @else {
+                  {{ categoryLabel(section.categoryId) }}
+                }
+              </h2>
+              <button
+                type="button"
+                class="discover__section-arrow"
+                [attr.aria-label]="sectionExplorerLabel(section)"
+                (click)="openSectionExplorer(section)"
+              >
+                <i class="pi pi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <p>
+              @if (section.subCategoryId) {
+                {{ section.subtitle }}
+              } @else {
+                {{ categoryLabel(section.categoryId) }}
+              }
+            </p>
+          </div>
+        </header>
+
+        <ul class="discover__row">
+          @for (craftsman of section.craftsmen; track craftsman.id) {
+            <li class="discover__row-item">
+              <tmt-discover-card [craftsman]="craftsman" />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+    }
+  </div>
+</div>

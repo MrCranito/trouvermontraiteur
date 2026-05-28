@@ -1,0 +1,78 @@
+<section class="setup-business">
+  <div class="setup-business__card">
+    <h1>Complétez votre fiche entreprise</h1>
+    <p>
+      Nous avons besoin de vos informations professionnelles avant d’accéder au
+      tableau de bord.
+    </p>
+
+    @if (error()) {
+      <p-message severity="error" [text]="error()" />
+    }
+
+    <form class="setup-business__form" (submit)="submit($event)">
+      <label>
+        <span>Nom de l’entreprise</span>
+        <input
+          pInputText
+          name="businessName"
+          [(ngModel)]="form.businessName"
+          autocomplete="organization"
+          required
+        />
+      </label>
+
+      <label>
+        <span>Adresse</span>
+        <input
+          pInputText
+          name="address"
+          [(ngModel)]="form.address"
+          autocomplete="street-address"
+          required
+        />
+      </label>
+
+      <label>
+        <span>Code postal</span>
+        <input
+          pInputText
+          name="postalCode"
+          [(ngModel)]="form.postalCode"
+          autocomplete="postal-code"
+          required
+        />
+      </label>
+
+      <label>
+        <span>Ville</span>
+        <input
+          pInputText
+          name="city"
+          [(ngModel)]="form.city"
+          autocomplete="address-level2"
+          required
+        />
+      </label>
+
+      <label>
+        <span>SIRET</span>
+        <input
+          pInputText
+          name="siret"
+          [(ngModel)]="form.siret"
+          inputmode="numeric"
+          pattern="[0-9]{14}"
+          maxlength="14"
+          required
+        />
+      </label>
+
+      <p-button
+        type="submit"
+        label="Enregistrer et continuer"
+        [loading]="loading()"
+      />
+    </form>
+  </div>
+</section>

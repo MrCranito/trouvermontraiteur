@@ -11,8 +11,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ConsumerAuthService } from '@trouvermontraiteur/app-auth';
 import { ConsumerFavoritesService } from '@trouvermontraiteur/app-consumer-data';
-import { EVENT_LABELS } from '@trouvermontraiteur/data';
-import { Caterer } from '@trouvermontraiteur/models';
+import { PROJECT_LABELS } from '@trouvermontraiteur/data';
+import { Craftsman } from '@trouvermontraiteur/models';
 
 interface ListingPhoto {
   id: string;
@@ -34,15 +34,15 @@ export class SearchListing {
   private readonly photoTrackRef =
     viewChild<ElementRef<HTMLElement>>('photoTrack');
 
-  readonly caterer = input.required<Caterer>();
+  readonly craftsman = input.required<Craftsman>();
   readonly active = input(false);
   readonly showFavorite = input(true);
 
-  protected readonly eventLabels = EVENT_LABELS;
+  protected readonly projectLabels = PROJECT_LABELS;
   protected readonly photoIndex = signal(0);
 
   protected readonly photos = computed((): ListingPhoto[] => {
-    const c = this.caterer();
+    const c = this.craftsman();
     return [
       { id: 'cover', imageUrl: c.imageUrl, caption: c.name },
       ...c.realisations.map((r) => ({
@@ -58,12 +58,12 @@ export class SearchListing {
   );
 
   protected readonly isFavorite = computed(() =>
-    this.favorites.isFavorite(this.caterer().id),
+    this.favorites.isFavorite(this.craftsman().id),
   );
 
   constructor() {
     effect(() => {
-      this.caterer().id;
+      this.craftsman().id;
       this.photoIndex.set(0);
       queueMicrotask(() => this.scrollToPhotoIndex(0, 'auto'));
     });
@@ -107,7 +107,7 @@ export class SearchListing {
       return;
     }
 
-    this.favorites.toggle(this.caterer().id);
+    void this.favorites.toggle(this.craftsman().id);
   }
 
   private goToPhoto(index: number): void {

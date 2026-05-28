@@ -2,7 +2,7 @@
   class="caterer-map"
   [class.caterer-map--pan-disabled]="!interactive()"
   role="application"
-  aria-label="Carte du traiteur"
+  aria-label="Carte de l’artisan"
 >
   <div class="caterer-map__canvas">
     @if (apiReady()) {
@@ -33,8 +33,8 @@
         height="100%"
       >
         <map-marker
-          [position]="markerPosition(caterer())"
-          [options]="markerOptions(caterer())"
+          [position]="markerPosition(craftsman())"
+          [options]="markerOptions(craftsman())"
         />
       </google-map>
     } @else if (loadFailed()) {
@@ -62,7 +62,7 @@
   @if (showHint() && apiReady()) {
     <p class="caterer-map__hint">
       <i class="pi pi-info-circle" aria-hidden="true"></i>
-      Carte Google Maps — emplacement du traiteur
+      Carte Google Maps — emplacement de l’artisan
     </p>
   }
 </div>

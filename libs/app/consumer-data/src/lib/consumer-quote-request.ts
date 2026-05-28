@@ -1,14 +1,14 @@
 export type ConsumerQuoteStatus = 'pending' | 'answered' | 'archived';
 
-/** Quote request submitted by a consumer to a caterer. */
+/** Quote request submitted by a consumer to a craftsman. */
 export interface ConsumerQuoteRequest {
   id: string;
-  catererId: string;
-  catererName: string;
-  catererSlug: string;
-  catererImageUrl: string;
+  craftsmanId: string;
+  craftsmanName: string;
+  craftsmanSlug: string;
+  craftsmanImageUrl: string;
   status: ConsumerQuoteStatus;
-  eventType: string;
+  projectTypeLabel: string;
   eventDateLabel: string;
   guestCount: number;
   budgetHint?: string;

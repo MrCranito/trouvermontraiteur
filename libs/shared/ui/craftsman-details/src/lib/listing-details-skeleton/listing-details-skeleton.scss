@@ -1,0 +1,199 @@
+@mixin listing-skeleton-shimmer {
+  background: linear-gradient(110deg, #ebe4d6 8%, #f5efe3 18%, #ebe4d6 33%);
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  background: #fff;
+}
+
+.listing--skeleton {
+  pointer-events: none;
+  background: #fff;
+  color: #222;
+}
+
+.listing__container {
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 4rem;
+
+  @media (min-width: 744px) {
+    padding: 1.5rem 2.5rem 5rem;
+  }
+}
+
+.listing__rule {
+  margin: 1.75rem 0 2rem;
+  border: none;
+  border-top: 1px solid #ebe4d6;
+}
+
+.listing__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: start;
+
+  @media (min-width: 960px) {
+    grid-template-columns: minmax(0, 1fr) 22.5rem;
+    gap: 4rem 5rem;
+  }
+}
+
+.listing__main {
+  min-width: 0;
+}
+
+.listing__top-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.listing-skeleton__action,
+.listing-skeleton__photos,
+.listing-skeleton__title,
+.listing-skeleton__meta,
+.listing-skeleton__heading,
+.listing-skeleton__line,
+.listing-skeleton__calendar,
+.listing-skeleton__price,
+.listing-skeleton__cta,
+.listing-skeleton__fact {
+  display: block;
+  border-radius: 0.4rem;
+  @include listing-skeleton-shimmer;
+}
+
+.listing-skeleton__action {
+  width: 5.5rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+
+  &:last-child {
+    width: 6.25rem;
+    animation-delay: 0.1s;
+  }
+}
+
+.listing-skeleton__photos {
+  width: 100%;
+  height: min(56vw, 26rem);
+  margin-bottom: 1.5rem;
+  border-radius: 0.75rem;
+
+  @media (min-width: 744px) {
+    height: min(36vw, 32rem);
+    border-radius: 0.85rem;
+  }
+}
+
+.listing-skeleton__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+.listing-skeleton__title {
+  width: min(18rem, 72%);
+  height: 2rem;
+  border-radius: 0.45rem;
+}
+
+.listing-skeleton__meta {
+  width: min(14rem, 55%);
+  height: 1rem;
+  animation-delay: 0.12s;
+}
+
+.listing-skeleton__block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 2.5rem;
+}
+
+.listing-skeleton__heading {
+  width: 10rem;
+  height: 1.35rem;
+  margin-bottom: 0.35rem;
+  border-radius: 0.35rem;
+}
+
+.listing-skeleton__line {
+  width: 100%;
+  height: 0.85rem;
+
+  &--short {
+    width: 68%;
+  }
+
+  &--medium {
+    width: 88%;
+  }
+
+  &:nth-of-type(2) {
+    animation-delay: 0.08s;
+  }
+
+  &:nth-of-type(3) {
+    animation-delay: 0.16s;
+  }
+}
+
+.listing-skeleton__calendar {
+  width: 100%;
+  max-width: 22rem;
+  height: 16rem;
+  border-radius: 0.65rem;
+  animation-delay: 0.14s;
+}
+
+.listing-skeleton__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #ebe4d6;
+  border-radius: 0.85rem;
+}
+
+.listing-skeleton__price {
+  width: 45%;
+  height: 1.5rem;
+}
+
+.listing-skeleton__cta {
+  width: 100%;
+  height: 3rem;
+  border-radius: 0.55rem;
+  animation-delay: 0.1s;
+}
+
+.listing-skeleton__fact {
+  width: 92%;
+  height: 0.8rem;
+
+  &--short {
+    width: 70%;
+    animation-delay: 0.18s;
+  }
+}
+
+@keyframes listing-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}

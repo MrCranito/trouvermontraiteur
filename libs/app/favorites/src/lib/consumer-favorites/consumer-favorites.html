@@ -1,25 +1,27 @@
 <div class="consumer-page consumer-favorites">
   <header class="consumer-page__head">
-    <a routerLink="/" class="consumer-page__back">
+    <a routerLink="/explorer" class="consumer-page__back">
       <i class="pi pi-arrow-left" aria-hidden="true"></i>
       Retour à la recherche
     </a>
     <h1>Mes favoris</h1>
-    <p>Les traiteurs que vous avez enregistrés pour les retrouver facilement.</p>
+    <p>Les artisans que vous avez enregistrés pour les retrouver facilement.</p>
   </header>
 
-  @if (caterers().length === 0) {
+  @if (loading()) {
+    <p class="consumer-page__empty">Chargement de vos favoris…</p>
+  } @else if (craftsmen().length === 0) {
     <div class="consumer-page__empty">
       <i class="pi pi-heart" aria-hidden="true"></i>
       <h2>Aucun favori</h2>
-      <p>Parcourez les traiteurs et cliquez sur le cœur pour les ajouter à vos favoris.</p>
-      <p-button label="Rechercher un traiteur" icon="pi pi-search" routerLink="/" />
+      <p>Parcourez les artisans et cliquez sur le cœur pour les ajouter à vos favoris.</p>
+      <p-button label="Rechercher un artisan" icon="pi pi-search" routerLink="/explorer" />
     </div>
   } @else {
     <ul class="consumer-favorites__grid">
-      @for (caterer of caterers(); track caterer.id) {
+      @for (craftsman of craftsmen(); track craftsman.id) {
         <li>
-          <tmt-search-listing [caterer]="caterer" [showFavorite]="true" />
+          <tmt-search-listing [craftsman]="craftsman" [showFavorite]="true" />
         </li>
       }
     </ul>

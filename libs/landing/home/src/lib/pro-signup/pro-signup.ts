@@ -12,7 +12,7 @@ import { Button } from 'primeng/button';
       </a>
       <h1>Inscription professionnelle</h1>
       <p>
-        L'espace traiteur arrive très bientôt. En attendant, contactez-nous pour
+        L'espace artisan arrive très bientôt. En attendant, contactez-nous pour
         rejoindre la plateforme en avant-première.
       </p>
       <p-button label="Retour à l'accueil" icon="pi pi-home" routerLink="/" />

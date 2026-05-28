@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EVENT_LABELS } from '@trouvermontraiteur/data';
-import { Caterer, EventType } from '@trouvermontraiteur/models';
+import { PROJECT_LABELS } from '@trouvermontraiteur/data';
+import { Craftsman, ProjectType } from '@trouvermontraiteur/models';
 
 @Component({
   selector: 'tmt-map-marker-popup',
@@ -10,16 +10,16 @@ import { Caterer, EventType } from '@trouvermontraiteur/models';
   styleUrl: './map-marker-popup.scss',
 })
 export class MapMarkerPopup {
-  readonly caterer = input.required<Caterer>();
+  readonly craftsman = input.required<Craftsman>();
 
-  protected readonly eventLabels = EVENT_LABELS;
+  protected readonly projectLabels = PROJECT_LABELS;
 
-  protected visibleEventTypes(): EventType[] {
-    return this.caterer().eventTypes.slice(0, 2);
+  protected visibleProjectTypes(): ProjectType[] {
+    return this.craftsman().projectTypes.slice(0, 2);
   }
 
   protected ratingLabel(): string {
-    const rating = this.caterer().rating;
+    const rating = this.craftsman().rating;
     return Number.isInteger(rating) ? String(rating) : rating.toFixed(1);
   }
 }

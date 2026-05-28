@@ -1,15 +1,28 @@
 import { Route } from '@angular/router';
-import { authRoutes, authGuard } from '@trouvermontraiteur/dashboard-auth';
+import {
+  authRoutes,
+  authGuard,
+  requireAuthGuard,
+} from '@trouvermontraiteur/dashboard-auth';
 import { DashboardShell } from '@trouvermontraiteur/dashboard-shell';
 import { overviewRoutes } from '@trouvermontraiteur/dashboard-overview';
-import { profileRoutes } from '@trouvermontraiteur/dashboard-profile';
+import { CraftsmanDetails } from '@trouvermontraiteur/craftsman-details';
 import { devisRoutes } from '@trouvermontraiteur/dashboard-devis';
-import { disponibilitesRoutes } from '@trouvermontraiteur/dashboard-availability';
+import {
+  businessProfileCompletedGuard,
+  businessProfileSetupGuard,
+} from './business-profile.guard';
+import { SetupBusiness } from './setup-business/setup-business';
 
 export const appRoutes: Route[] = [
   {
     path: 'auth',
     children: authRoutes,
+  },
+  {
+    path: 'setup-business',
+    component: SetupBusiness,
+    canActivate: [requireAuthGuard, authGuard, businessProfileSetupGuard],
   },
   {
     path: '',
@@ -18,19 +31,28 @@ export const appRoutes: Route[] = [
     children: [
       {
         path: 'apercu',
+        canActivate: [businessProfileCompletedGuard],
         children: overviewRoutes,
       },
       {
+        path: 'custom-details',
+        canActivate: [businessProfileCompletedGuard],
+        component: CraftsmanDetails,
+      },
+      {
         path: 'profil',
-        children: profileRoutes,
+        redirectTo: 'custom-details',
+        pathMatch: 'full',
+      },
+      {
+        path: 'artisans/:slug',
+        redirectTo: 'custom-details',
+        pathMatch: 'full',
       },
       {
         path: 'devis',
+        canActivate: [businessProfileCompletedGuard],
         children: devisRoutes,
-      },
-      {
-        path: 'disponibilites',
-        children: disponibilitesRoutes,
       },
       { path: '', redirectTo: 'apercu', pathMatch: 'full' },
     ],

@@ -1,17 +1,17 @@
 <div class="home">
-  <section class="home__hero" aria-label="Trouver un traiteur près de chez vous">
+  <section class="home__hero" aria-label="Trouver un artisan près de chez vous">
     <div class="home__hero-overlay" aria-hidden="true"></div>
     <div class="home__hero-content">
-      <p class="home__hero-eyebrow">Traiteurs d'exception, près de chez vous</p>
-      <h1 class="home__hero-title">Votre événement mérite le bon artisan</h1>
+      <p class="home__hero-eyebrow">Artisans de tous métiers, près de chez vous</p>
+      <h1 class="home__hero-title">Le bon professionnel pour chaque projet</h1>
       <p class="home__hero-description">
-        Mariages, cocktails, brunchs ou repas d'entreprise&nbsp;: comparez les
-        prestations, parcourez les menus et trouvez le traiteur qui correspond à
-        votre ambiance.
+        Bâtiment, réparation, beauté, jardin ou alimentation&nbsp;: comparez les
+        prestations, parcourez les profils et trouvez l’artisan qui correspond à
+        votre besoin.
       </p>
       <a [href]="searchUrl()" class="home__hero-cta">
         <p-button
-          label="Trouver un traiteur"
+          label="Trouver un artisan"
           icon="pi pi-search"
           size="large"
         />
@@ -30,19 +30,19 @@
     </ul>
   </section>
 
-  <section class="home__categories" aria-labelledby="home-prestations-title">
+  <section class="home__categories" aria-labelledby="home-categories-title">
     <header class="home__section-header">
-      <p class="home__section-eyebrow">Événements</p>
-      <h2 id="home-prestations-title">Pour chaque occasion</h2>
+      <p class="home__section-eyebrow">Métiers</p>
+      <h2 id="home-categories-title">Pour chaque besoin</h2>
       <p class="home__section-lead">
-        Mariage, fête, cocktail ou séminaire — trouvez le traiteur adapté à votre
-        événement.
+        Neuf grandes familles de métiers — du chantier à la réparation, en passant
+        par le jardin et les services à la personne.
       </p>
     </header>
     <div class="home__prestation-grid">
-      @for (item of prestations; track item.key) {
+      @for (item of tradeCategories; track item.key) {
         <a
-          [href]="searchUrl({ events: item.key })"
+          [href]="familySearchUrl(item.key)"
           [class]="'home__prestation home__prestation--' + item.accent"
         >
           <span class="home__prestation-icon" aria-hidden="true">
@@ -60,9 +60,9 @@
   <section class="home__benefits" aria-labelledby="home-benefits-title">
     <header class="home__section-header">
       <p class="home__section-eyebrow">Pourquoi nous</p>
-      <h2 id="home-benefits-title">Une recherche pensée pour vos événements</h2>
+      <h2 id="home-benefits-title">Une recherche pensée pour vos projets</h2>
       <p class="home__section-lead">
-        Moins de stress, plus de clarté — du premier clic jusqu’au traiteur idéal.
+        Moins de stress, plus de clarté — du premier clic jusqu’à l’artisan idéal.
       </p>
     </header>
     <div class="home__benefits-grid">
@@ -83,7 +83,7 @@
       <p class="home__section-eyebrow">Parcours</p>
       <h2 id="home-steps-title">Comment ça marche</h2>
       <p class="home__section-lead">
-        Trois étapes simples pour trouver le traiteur qui fera briller votre événement.
+        Trois étapes simples pour trouver l’artisan adapté à votre projet.
       </p>
     </header>
     <ol class="home__steps-grid">
@@ -113,10 +113,10 @@
     <div class="home__pro-inner">
       <div class="home__pro-content">
         <p class="home__section-eyebrow home__pro-eyebrow">Espace professionnel</p>
-        <h2 id="home-pro-title">Vous êtes traiteur&nbsp;? Développez votre activité</h2>
+        <h2 id="home-pro-title">Vous êtes artisan&nbsp;? Développez votre activité</h2>
         <p class="home__pro-lead">
-          Rejoignez Trouver mon traiteur et présentez vos prestations aux
-          organisateurs d'événements qui recherchent un artisan près de chez eux.
+          Rejoignez Trouver mon artisan et présentez vos prestations aux clients
+          qui recherchent un professionnel qualifié près de chez eux.
         </p>
         <ul class="home__pro-perks">
           @for (perk of proPerks; track perk.title) {

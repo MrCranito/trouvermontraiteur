@@ -1,14 +1,14 @@
 import { ParamMap } from '@angular/router';
 import {
-  ALL_CATEGORIES,
-  ALL_DIETARY_OPTIONS,
-  ALL_EVENT_TYPES,
+  ALL_PROJECT_TYPES,
+  ALL_SERVICE_OPTIONS,
+  normalizeCraftsmanTrade,
   SearchSort,
 } from '@trouvermontraiteur/data';
 import {
-  CatererCategory,
-  DietaryOption,
-  EventType,
+  CraftsmanTrade,
+  ProjectType,
+  ServiceOption,
 } from '@trouvermontraiteur/models';
 
 export type SearchViewMode = 'grid' | 'map';
@@ -16,17 +16,45 @@ export type SearchViewMode = 'grid' | 'map';
 export interface SearchFiltersState {
   query: string;
   minRating: number;
-  categories: CatererCategory[];
-  eventDate: string;
-  eventTypes: EventType[];
-  dietary: DietaryOption[];
+  trades: CraftsmanTrade[];
+  projectDate: string;
+  projectTypes: ProjectType[];
+  serviceOptions: ServiceOption[];
   sort: SearchSort;
   view: SearchViewMode;
+  mapLat: number | null;
+  mapLng: number | null;
 }
 
-const VALID_CATEGORIES = new Set<string>(ALL_CATEGORIES);
-const VALID_EVENTS = new Set<string>(ALL_EVENT_TYPES);
-const VALID_DIETARY = new Set<string>(ALL_DIETARY_OPTIONS);
+function parseCoordParam(value: string | null): number | null {
+  if (value === null || value === '') {
+    return null;
+  }
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseTradesParam(value: string | null): CraftsmanTrade[] {
+  if (!value) {
+    return [];
+  }
+  const seen = new Set<CraftsmanTrade>();
+  const trades: CraftsmanTrade[] = [];
+  for (const raw of value.split(',')) {
+    const token = raw.trim();
+    if (!token) {
+      continue;
+    }
+    const normalized = normalizeCraftsmanTrade(token);
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      trades.push(normalized);
+    }
+  }
+  return trades;
+}
+const VALID_PROJECTS = new Set<string>(ALL_PROJECT_TYPES);
+const VALID_OPTIONS = new Set<string>(ALL_SERVICE_OPTIONS);
 const VALID_SORT = new Set<string>([
   'relevance',
   'rating',
@@ -58,21 +86,18 @@ export function parseSearchQueryParams(params: ParamMap): SearchFiltersState {
       ? parsedRating
       : 0;
 
-  const categories = parseListParam<CatererCategory>(
-    params.get('categories'),
-    VALID_CATEGORIES,
+  const trades = parseTradesParam(params.get('trades'));
+  const projectTypes = parseListParam<ProjectType>(
+    params.get('projects'),
+    VALID_PROJECTS,
   );
-  const eventTypes = parseListParam<EventType>(
-    params.get('events'),
-    VALID_EVENTS,
-  );
-  const dietary = parseListParam<DietaryOption>(
-    params.get('dietary'),
-    VALID_DIETARY,
+  const serviceOptions = parseListParam<ServiceOption>(
+    params.get('options'),
+    VALID_OPTIONS,
   );
 
   const dateParam = params.get('date') ?? '';
-  const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : '';
+  const projectDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : '';
 
   const sortParam = params.get('sort');
   const sort: SearchSort =
@@ -80,15 +105,20 @@ export function parseSearchQueryParams(params: ParamMap): SearchFiltersState {
 
   const view: SearchViewMode = params.get('view') === 'map' ? 'map' : 'grid';
 
+  const mapLat = parseCoordParam(params.get('lat'));
+  const mapLng = parseCoordParam(params.get('lng'));
+
   return {
     query,
     minRating,
-    categories,
-    eventDate,
-    eventTypes,
-    dietary,
+    trades,
+    projectDate,
+    projectTypes,
+    serviceOptions,
     sort,
     view,
+    mapLat,
+    mapLng,
   };
 }
 
@@ -98,12 +128,15 @@ export function buildSearchQueryParams(
   return {
     q: state.query.trim() || null,
     rating: state.minRating > 0 ? String(state.minRating) : null,
-    categories:
-      state.categories.length > 0 ? state.categories.join(',') : null,
-    date: state.eventDate || null,
-    events: state.eventTypes.length > 0 ? state.eventTypes.join(',') : null,
-    dietary: state.dietary.length > 0 ? state.dietary.join(',') : null,
+    trades: state.trades.length > 0 ? state.trades.join(',') : null,
+    date: state.projectDate || null,
+    projects:
+      state.projectTypes.length > 0 ? state.projectTypes.join(',') : null,
+    options:
+      state.serviceOptions.length > 0 ? state.serviceOptions.join(',') : null,
     sort: state.sort !== 'relevance' ? state.sort : null,
     view: state.view !== 'grid' ? state.view : null,
+    lat: state.mapLat !== null ? String(state.mapLat) : null,
+    lng: state.mapLng !== null ? String(state.mapLng) : null,
   };
 }

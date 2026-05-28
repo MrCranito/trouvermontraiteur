@@ -1,0 +1,48 @@
+.setup-business {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  background: #faf7f3;
+}
+
+.setup-business__card {
+  width: min(100%, 36rem);
+  background: #fff;
+  border: 1px solid #ece6dc;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 7%);
+
+  h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+  }
+
+  p {
+    margin: 0 0 1rem;
+    color: #6e6e6e;
+  }
+}
+
+.setup-business__form {
+  display: grid;
+  gap: 0.9rem;
+
+  label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+}
+
+:host ::ng-deep .setup-business__form .p-inputtext {
+  width: 100%;
+}
+
+:host ::ng-deep .setup-business__form .p-button {
+  margin-top: 0.4rem;
+  justify-content: center;
+}

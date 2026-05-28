@@ -1,6 +1,6 @@
 <article
   class="search-listing"
-  [id]="'listing-' + caterer().id"
+  [id]="'listing-' + craftsman().id"
   [class.search-listing--active]="active()"
 >
   @if (showFavorite()) {
@@ -26,8 +26,8 @@
   <div class="search-listing__frame">
     <a
       class="search-listing__media-link"
-      [routerLink]="['/traiteurs', caterer().slug]"
-      [attr.aria-label]="'Voir ' + caterer().name"
+      [routerLink]="['/artisans', craftsman().slug]"
+      [attr.aria-label]="'Voir ' + craftsman().name"
     >
       <div class="search-listing__media">
         <div
@@ -73,26 +73,26 @@
     }
   </div>
 
-  <a class="search-listing__link" [routerLink]="['/traiteurs', caterer().slug]">
+  <a class="search-listing__link" [routerLink]="['/artisans', craftsman().slug]">
     <div class="search-listing__body">
       <div class="search-listing__head">
-        <h3>{{ caterer().name }}</h3>
+        <h3>{{ craftsman().name }}</h3>
         <span class="search-listing__rating">
           <i class="pi pi-star-fill" aria-hidden="true"></i>
-          {{ caterer().rating }}
+          {{ craftsman().rating }}
         </span>
       </div>
 
       <p class="search-listing__location">
         <i class="pi pi-map-marker" aria-hidden="true"></i>
-        {{ caterer().location.city }}
+        {{ craftsman().location.city }}
       </p>
 
-      @if (caterer().eventTypes.length > 0) {
-        <ul class="search-listing__chips" aria-label="Types d'événement">
-          @for (event of caterer().eventTypes; track event) {
+      @if (craftsman().projectTypes.length > 0) {
+        <ul class="search-listing__chips" aria-label="Types de projet">
+          @for (project of craftsman().projectTypes; track project) {
             <li>
-              <span class="search-listing__chip">{{ eventLabels[event] }}</span>
+              <span class="search-listing__chip">{{ projectLabels[project] }}</span>
             </li>
           }
         </ul>

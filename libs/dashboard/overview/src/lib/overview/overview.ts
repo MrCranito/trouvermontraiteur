@@ -1,16 +1,29 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import {
   CatererProfileService,
   CatererStatsService,
+  PROFILE_VIEWS_PERIOD_HINTS,
+  PROFILE_VIEWS_PERIOD_LABELS,
+  ProfileViewsPeriod,
   StatTrend,
 } from '@trouvermontraiteur/dashboard-data';
-import { Button } from 'primeng/button';
+import { colors } from '@trouvermontraiteur/theme';
+import { UIChart } from 'primeng/chart';
+import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
+
+const PROFILE_VIEWS_PERIODS: ProfileViewsPeriod[] = [
+  'day',
+  'week',
+  'month',
+  'year',
+];
 
 @Component({
   selector: 'tmt-dashboard-overview',
-  imports: [RouterLink, Button, Tag],
+  imports: [RouterLink, FormsModule, Tag, UIChart, Select],
   templateUrl: './overview.html',
   styleUrl: './overview.scss',
 })
@@ -24,9 +37,103 @@ export class DashboardOverview {
     this.profileService.getCompleteness(),
   );
 
-  protected readonly maxViews = computed(() =>
-    Math.max(...this.stats.viewsSeries.map((d) => d.views), 1),
+  protected readonly viewsPeriods = PROFILE_VIEWS_PERIODS;
+  protected readonly viewsPeriodOptions = this.viewsPeriods.map((period) => ({
+    label: PROFILE_VIEWS_PERIOD_LABELS[period],
+    value: period,
+  }));
+  protected readonly selectedViewsPeriod = signal<ProfileViewsPeriod>('day');
+
+  protected readonly viewsSeries = computed(
+    () =>
+      this.stats.viewsSeriesByPeriod[this.selectedViewsPeriod()],
   );
+
+  protected readonly viewsChartTitle = computed(() => {
+    const hint = PROFILE_VIEWS_PERIOD_HINTS[this.selectedViewsPeriod()];
+    return `Vues du profil (${hint})`;
+  });
+
+  protected readonly viewsChartData = computed(() => {
+    const series = this.viewsSeries();
+    return {
+      labels: series.map((d) => d.label),
+      datasets: [
+        {
+          label: 'Vues du profil',
+          data: series.map((d) => d.views),
+          borderColor: colors.terracotta,
+          backgroundColor: 'rgba(196, 98, 45, 0.1)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: this.selectedViewsPeriod() === 'year' ? 4 : 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: colors.terracotta,
+          pointBorderColor: '#fffdfb',
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: colors.terracottaLight,
+          pointHoverBorderColor: '#fffdfb',
+        },
+      ],
+    };
+  });
+
+  protected readonly viewsChartOptions = computed(() => ({
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: colors.charcoal,
+        titleColor: colors.cream,
+        bodyColor: colors.cream,
+        padding: 12,
+        cornerRadius: 10,
+        displayColors: false,
+        callbacks: {
+          label: (ctx: { parsed: { y: number } }) =>
+            `${new Intl.NumberFormat('fr-FR').format(ctx.parsed.y)} vues`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          color: colors.muted,
+          font: { size: 11, weight: '500' as const },
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit:
+            this.selectedViewsPeriod() === 'month' ? 12 : undefined,
+        },
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(42, 34, 25, 0.06)',
+          drawTicks: false,
+        },
+        border: { display: false },
+        ticks: {
+          color: colors.muted,
+          font: { size: 11 },
+          padding: 8,
+          precision: 0,
+          callback: (value: string | number) =>
+            new Intl.NumberFormat('fr-FR', {
+              notation: 'compact',
+              compactDisplay: 'short',
+            }).format(Number(value)),
+        },
+      },
+    },
+  }));
 
   protected readonly statCards = computed(() => {
     const s = this.stats;
@@ -77,11 +184,15 @@ export class DashboardOverview {
         label: 'Note publique',
         icon: 'pi pi-star-fill',
         accent: 'sage',
-        trend: { value: c.rating, delta: 0 },
-        hint: `${c.reviewCount} avis sur l'app`,
+        trend: { value: c?.rating ?? 0, delta: 0 },
+        hint: `${c?.reviewCount ?? 0} avis sur l'app`,
       },
     ] as const;
   });
+
+  protected selectViewsPeriod(period: ProfileViewsPeriod): void {
+    this.selectedViewsPeriod.set(period);
+  }
 
   protected formatTrend(trend: StatTrend, isRating = false): string {
     if (isRating) {

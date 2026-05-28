@@ -3,8 +3,9 @@ import { authGuard, authRoutes } from '@trouvermontraiteur/app-auth';
 import { AppShell } from '@trouvermontraiteur/app-shell';
 import { favoritesRoutes } from '@trouvermontraiteur/app-favorites';
 import { myDevisRoutes } from '@trouvermontraiteur/app-my-devis';
+import { Discover } from '@trouvermontraiteur/app-discover';
 import { Search } from '@trouvermontraiteur/search';
-import { detailsRoutes } from '@trouvermontraiteur/details';
+import { craftsmanDetailsRoutes } from '@trouvermontraiteur/craftsman-details';
 
 export const appRoutes: Route[] = [
   {
@@ -17,18 +18,23 @@ export const appRoutes: Route[] = [
     children: [
       {
         path: '',
-        component: Search,
+        component: Discover,
         data: { showBackLink: false },
       },
       {
+        path: 'explorer',
+        component: Search,
+        data: { showBackLink: true },
+      },
+      {
         path: 'search',
-        redirectTo: '',
+        redirectTo: 'explorer',
         pathMatch: 'full',
       },
       {
         path: 'recherche',
-        redirectTo: '',
-        pathMatch: 'prefix',
+        redirectTo: 'explorer',
+        pathMatch: 'full',
       },
       {
         path: 'favoris',
@@ -41,8 +47,8 @@ export const appRoutes: Route[] = [
         children: myDevisRoutes,
       },
       {
-        path: 'traiteurs/:slug',
-        children: detailsRoutes,
+        path: 'artisans/:slug',
+        children: craftsmanDetailsRoutes,
       },
     ],
   },

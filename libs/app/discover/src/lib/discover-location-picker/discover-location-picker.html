@@ -1,0 +1,56 @@
+<div
+  class="discover-location-picker__backdrop"
+  role="presentation"
+  (click)="onBackdropClick($event)"
+></div>
+
+<div
+  class="discover-location-picker"
+  role="listbox"
+  aria-label="Choisir une destination"
+  (click)="onPanelClick($event)"
+>
+  <p class="discover-location-picker__title">
+    @if (hasQuery()) {
+      Résultats
+    } @else {
+      Destinations suggérées
+    }
+  </p>
+
+  <ul class="discover-location-picker__list">
+    @for (location of filteredLocations(); track location.id) {
+      <li>
+        <button
+          type="button"
+          class="discover-location-picker__option"
+          role="option"
+          [attr.aria-selected]="query() === location.name"
+          (click)="pick(location)"
+        >
+          <span class="discover-location-picker__icon" aria-hidden="true">
+            <i class="pi pi-map-marker"></i>
+          </span>
+          <span class="discover-location-picker__text">
+            <span class="discover-location-picker__name">{{ location.name }}</span>
+            <span class="discover-location-picker__subtitle">{{
+              location.subtitle
+            }}</span>
+          </span>
+        </button>
+      </li>
+    } @empty {
+      <li class="discover-location-picker__empty" role="status">
+        @if (hasQuery() && !canSearch()) {
+          Saisissez au moins 2 caractères
+        } @else if (hasQuery() && loadState() === 'loading') {
+          Chargement des villes…
+        } @else if (hasQuery() && loadState() === 'error') {
+          Impossible de charger la liste des villes
+        } @else if (hasQuery() && loadState() === 'ready') {
+          Aucune destination pour « {{ debouncedQuery() }} »
+        }
+      </li>
+    }
+  </ul>
+</div>
