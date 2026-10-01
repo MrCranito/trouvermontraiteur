@@ -52,6 +52,14 @@
       </button>
     </div>
 
+    @if (craftsman().certified) {
+      <tmt-certified-badge
+        class="map-marker-popup__certified-chip"
+        variant="overlay"
+        label="Certifié"
+      />
+    }
+
     @if (hasMultiplePhotos()) {
       @if (photoIndex() > 0) {
         <button
@@ -78,7 +86,12 @@
 
   <a class="map-marker-popup__body" [routerLink]="['/artisans', craftsman().id]">
     <div class="map-marker-popup__head">
-      <h3 class="map-marker-popup__name">{{ craftsman().name }}</h3>
+      <h3 class="map-marker-popup__name">
+        <span>{{ craftsman().name }}</span>
+        @if (craftsman().certified) {
+          <tmt-certified-badge [size]="14" />
+        }
+      </h3>
       <span class="map-marker-popup__rating">
         <i class="pi pi-star-fill" aria-hidden="true"></i>
         {{ ratingLabel() }}

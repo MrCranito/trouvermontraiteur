@@ -37,6 +37,9 @@
       "@trouvermontraiteur/craftsman-details": [
         "./libs/shared/ui/craftsman-details/src/index.ts"
       ],
+      "@trouvermontraiteur/certified-badge": [
+        "./libs/shared/ui/certified-badge/src/index.ts"
+      ],
       "@trouvermontraiteur/app-auth": ["./libs/app/auth/src/index.ts"],
       "@trouvermontraiteur/app-shell": ["./libs/app/shell/src/index.ts"],
       "@trouvermontraiteur/app-consumer-data": [

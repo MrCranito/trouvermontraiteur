@@ -101,6 +101,13 @@
         <img src="/images/empty_image.png" [alt]="c.name" />
       </div>
       } }
+      @if (!editMode() && c.certified) {
+      <tmt-certified-badge
+        class="listing__certified-chip"
+        variant="overlay"
+        label="Certifié"
+      />
+      }
     </div>
 
     @if (editMode()) {
@@ -211,11 +218,7 @@
         <h1 class="listing__title">
           {{ name() }}
           @if (c.certified) {
-          <i
-            class="pi pi-verified listing__certified"
-            role="img"
-            aria-label="Profil certifié"
-          ></i>
+          <tmt-certified-badge class="listing__certified" [size]="22" />
           }
         </h1>
         <p-button
@@ -232,11 +235,7 @@
       <h1 class="listing__title">
         {{ c.name }}
         @if (c.certified) {
-        <i
-          class="pi pi-verified listing__certified"
-          role="img"
-          aria-label="Profil certifié"
-        ></i>
+        <tmt-certified-badge class="listing__certified" [size]="22" />
         }
       </h1>
       }

@@ -29,6 +29,7 @@ import {
   type TradeFamily,
 } from '@trouvermontraiteur/data';
 import { AvailabilityCalendar } from '@trouvermontraiteur/availability-calendar';
+import { CertifiedBadge } from '@trouvermontraiteur/certified-badge';
 import {
   Craftsman,
   CraftsmanLocation,
@@ -85,6 +86,7 @@ export interface ListingPhoto {
     QuoteRequestDialog,
     AvailabilityEditDialog,
     ListingPhotoGallery,
+    CertifiedBadge,
     InputText,
     Textarea,
     InputNumber,
