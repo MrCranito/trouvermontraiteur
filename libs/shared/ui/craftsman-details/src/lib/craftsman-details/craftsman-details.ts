@@ -1,19 +1,26 @@
 import { NgClass } from '@angular/common';
-import { Component, computed, inject, Injector, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { CraftsmanService as CraftsmanApiService } from '@trouvermontraiteur/api';
 import { ConsumerAuthService } from '@trouvermontraiteur/app-auth';
 import {
-  AppCraftsmanCatalogService,
   ConsumerFavoritesService,
+  FavoriteLoginPromptService,
 } from '@trouvermontraiteur/app-consumer-data';
-import { map } from 'rxjs';
+import { distinctUntilChanged, map, merge, type Observable } from 'rxjs';
 import {
   ALL_PROJECT_TYPES,
   ALL_SERVICE_OPTIONS,
   ALL_TRADES,
   buildDefaultAvailableDates,
-  CraftsmanService,
   CatererDetailLayoutService,
   PROJECT_LABELS,
   SERVICE_OPTION_LABELS,
@@ -92,10 +99,7 @@ export class CraftsmanDetails {
   private readonly injector = inject(Injector);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly craftsmanService = inject(CraftsmanService);
-  private readonly catalog = inject(AppCraftsmanCatalogService, {
-    optional: true,
-  });
+  private readonly craftsmanApi = inject(CraftsmanApiService);
   private readonly layoutService = inject(CatererDetailLayoutService);
   private readonly editStore = inject(CRAFTSMAN_DETAILS_EDIT_STORE, {
     optional: true,
@@ -133,36 +137,39 @@ export class CraftsmanDetails {
   protected readonly draftName = signal('');
   protected readonly draftDescription = signal('');
 
-  /** Slug sur la route parente `artisans/:slug` (enfant à path `''`). */
-  private readonly slug = toSignal(
-    this.route.paramMap.pipe(
-      map((p) => {
-        const direct = p.get('slug');
-        if (direct) {
-          return direct;
-        }
-        let parent = this.route.parent;
-        while (parent) {
-          const fromParent = parent.snapshot.paramMap.get('slug');
-          if (fromParent) {
-            return fromParent;
-          }
-          parent = parent.parent;
-        }
-        return '';
-      }),
+  /** Id on the parent route `artisans/:id` (child path `''`). */
+  private readonly craftsmanId = toSignal(
+    merge(...this.routeParamMaps()).pipe(
+      map(() => this.resolveCraftsmanId()),
+      distinctUntilChanged(),
     ),
-    { initialValue: this.resolveSlugFromRouteTree() },
+    { initialValue: this.resolveCraftsmanId() },
   );
 
-  private resolveSlugFromRouteTree(): string {
-    let r: ActivatedRoute | null = this.route;
-    while (r) {
-      const slug = r.snapshot.paramMap.get('slug');
-      if (slug) {
-        return slug;
+  private readonly loadedCraftsman = signal<Craftsman | null>(null);
+  private readonly loadingCraftsman = signal(
+    !this.editStore && this.resolveCraftsmanId().length > 0,
+  );
+  private loadRequest = 0;
+
+  private routeParamMaps(): Observable<ParamMap>[] {
+    const maps: Observable<ParamMap>[] = [];
+    let current: ActivatedRoute | null = this.route;
+    while (current) {
+      maps.push(current.paramMap);
+      current = current.parent;
+    }
+    return maps;
+  }
+
+  private resolveCraftsmanId(): string {
+    let current: ActivatedRoute | null = this.route;
+    while (current) {
+      const id = current.snapshot.paramMap.get('id');
+      if (id) {
+        return id;
       }
-      r = r.parent;
+      current = current.parent;
     }
     return '';
   }
@@ -193,6 +200,38 @@ export class CraftsmanDetails {
   constructor() {
     if (this.editStore) {
       this.loadDraftFromStore();
+      return;
+    }
+
+    effect(() => {
+      void this.loadCraftsman(this.craftsmanId());
+    });
+  }
+
+  private async loadCraftsman(id: string): Promise<void> {
+    const request = ++this.loadRequest;
+    if (!id) {
+      this.loadedCraftsman.set(null);
+      this.loadingCraftsman.set(false);
+      return;
+    }
+
+    this.loadingCraftsman.set(true);
+    try {
+      const craftsman = await this.craftsmanApi.getById(id);
+      if (request !== this.loadRequest) {
+        return;
+      }
+      this.loadedCraftsman.set(craftsman);
+    } catch {
+      if (request !== this.loadRequest) {
+        return;
+      }
+      this.loadedCraftsman.set(null);
+    } finally {
+      if (request === this.loadRequest) {
+        this.loadingCraftsman.set(false);
+      }
     }
   }
 
@@ -249,18 +288,15 @@ export class CraftsmanDetails {
     if (this.editMode()) {
       return this.previewCraftsman();
     }
-    return (
-      this.catalog?.getBySlug(this.slug()) ??
-      this.craftsmanService.getBySlug(this.slug())
-    );
+    return this.loadedCraftsman();
   });
 
-  /** Catalogue API loading (consumer app); dashboard edit mode skips skeleton. */
+  /** Single-craftsman fetch; dashboard edit mode skips the skeleton. */
   protected readonly pageLoading = computed(() => {
     if (this.editMode()) {
       return false;
     }
-    return this.catalog ? !this.catalog.isReady() : false;
+    return this.loadingCraftsman();
   });
 
   protected readonly orderedSections = computed((): CatererDetailSectionId[] => {
@@ -276,7 +312,11 @@ export class CraftsmanDetails {
     if (this.editMode()) {
       return ['about', 'availability', 'prestations', 'menu', 'location'];
     }
-    return this.orderedSections().filter((id) => id !== 'cover');
+    const sections = this.orderedSections().filter((id) => id !== 'cover');
+    if (this.craftsman()?.certified) {
+      return sections;
+    }
+    return sections.filter((id) => id !== 'availability' && id !== 'menu');
   });
 
   private static readonly MOSAIC_MAX_PHOTOS = 6;
@@ -703,9 +743,7 @@ export class CraftsmanDetails {
       return;
     }
     if (!consumerAuth.isAuthenticated()) {
-      void this.router.navigate(['/auth/connexion'], {
-        queryParams: { returnUrl: this.router.url },
-      });
+      this.injector.get(FavoriteLoginPromptService, null)?.open();
       return;
     }
     void consumerFavorites.toggle(c.id);

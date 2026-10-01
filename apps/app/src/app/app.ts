@@ -1,9 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import {
-  AppCraftsmanCatalogService,
-  ConsumerUserService,
-} from '@trouvermontraiteur/app-consumer-data';
+import { ConsumerUserService } from '@trouvermontraiteur/app-consumer-data';
 
 @Component({
   imports: [RouterModule],
@@ -14,6 +11,5 @@ import {
 export class App {
   constructor() {
     inject(ConsumerUserService);
-    inject(AppCraftsmanCatalogService);
   }
 }

@@ -1,0 +1,40 @@
+<p-dialog
+  header="Favoris"
+  [visible]="prompt.visible()"
+  (visibleChange)="prompt.visible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: 'min(26rem, 92vw)' }"
+  styleClass="favorite-login-dialog"
+>
+  <div class="favorite-login-dialog__body">
+    <span class="favorite-login-dialog__heart" aria-hidden="true">
+      <i class="pi pi-heart-fill"></i>
+    </span>
+    <h2>Gardez vos coups de cœur</h2>
+    <p>
+      Connectez-vous pour enregistrer des artisans et les retrouver dans vos
+      favoris, prêts pour votre prochain événement.
+    </p>
+  </div>
+  <div class="favorite-login-dialog__actions">
+    <a
+      class="favorite-login-dialog__login"
+      [routerLink]="loginLink()"
+      [queryParams]="{ returnUrl: returnUrl() }"
+      (click)="close()"
+    >
+      Se connecter
+    </a>
+    <a
+      class="favorite-login-dialog__signup"
+      [routerLink]="signupLink()"
+      [queryParams]="{ returnUrl: returnUrl() }"
+      (click)="close()"
+    >
+      Créer un compte
+    </a>
+  </div>
+</p-dialog>

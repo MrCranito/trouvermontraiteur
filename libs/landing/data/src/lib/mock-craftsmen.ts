@@ -1472,6 +1472,8 @@ function buildCraftsman(
     imageUrl: getFamilyCoverImage(familyId, cityIndex),
     rating: seed.rating,
     reviewCount: seed.reviewCount,
+    certified: false,
+    proUser: null,
     subCategoryIds: [],
     trades: [seed.trade],
     projectTypes: seed.projectTypes,

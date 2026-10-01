@@ -52,3 +52,15 @@ vitest.config.*.timestamp*
 # Local env (copy from .env/*.example.ts)
 .env/environment.ts
 .env/environment.prod.ts
+
+# Scraped Google Places dumps (local only)
+/traiteurs_toulouse/
+/photo_video_toulouse/
+/decoration_toulouse/
+/location_mobilier_toulouse/
+/organisation_toulouse/
+/gateau_patisserie_toulouse/
+/musique_dj_toulouse/
+/beaute_mode_toulouse/
+/technique_audiovisuel_toulouse/
+/animation_toulouse/

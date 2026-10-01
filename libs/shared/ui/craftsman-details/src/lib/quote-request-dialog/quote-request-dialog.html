@@ -4,113 +4,276 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: 'min(36rem, 94vw)' }"
-  styleClass="quote-request-dialog"
+  [closable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: 'min(640px, calc(100vw - 2rem))' }"
+  [styleClass]="dialogClass"
   (onHide)="close()"
 >
-  @if (success()) {
-    <div class="quote-request-dialog__success">
-      <p-message
-        severity="success"
-        text="Votre demande a été envoyée. L’artisan vous répondra par e-mail."
-      />
-      <p class="quote-request-dialog__success-lead">
-        Retrouvez le suivi de cette demande dans votre espace personnel.
-      </p>
-      <footer class="quote-request-dialog__actions quote-request-dialog__actions--end">
-        <p-button label="Fermer" [text]="true" severity="secondary" (onClick)="close()" />
-        <p-button label="Voir mes devis" icon="pi pi-file-edit" routerLink="/devis" (onClick)="close()" />
-      </footer>
-    </div>
-  } @else {
-    <form class="quote-request-dialog__form" (ngSubmit)="submit()">
-      <p class="quote-request-dialog__intro">
-        Vous contactez <strong>{{ craftsman().name }}</strong> pour un devis personnalisé.
-      </p>
-
-      @if (error()) {
-        <p-message severity="error" [text]="error()" />
-      }
-
-      <div class="quote-request-dialog__field">
-        <label for="quote-project-type">Type de projet</label>
-        <p-select
-          inputId="quote-project-type"
-          [options]="projectOptions"
-          [(ngModel)]="projectType"
-          name="projectType"
-          optionLabel="label"
-          optionValue="key"
-          placeholder="Choisir un type"
-          styleClass="quote-request-dialog__select"
-        />
-      </div>
-
-      <div class="quote-request-dialog__row">
-        <div class="quote-request-dialog__field">
-          <label for="quote-project-date">Date souhaitée</label>
-          <input
-            pInputText
-            type="date"
-            id="quote-project-date"
-            name="projectDate"
-            [(ngModel)]="projectDate"
-            [min]="minProjectDate"
-          />
-        </div>
-        <div class="quote-request-dialog__field">
-          <label for="quote-guests">Surface / personnes</label>
-          <p-inputNumber
-            inputId="quote-guests"
-            [(ngModel)]="guestCount"
-            name="guestCount"
-            [min]="1"
-            [max]="5000"
-            [showButtons]="true"
-            placeholder="Ex. 50"
-            styleClass="quote-request-dialog__guests"
-          />
-        </div>
-      </div>
-
-      <div class="quote-request-dialog__field">
-        <label for="quote-budget">Budget indicatif (optionnel)</label>
-        <input
-          pInputText
-          id="quote-budget"
-          name="budgetHint"
-          [(ngModel)]="budgetHint"
-          placeholder="Ex. 5 000 € TTC"
-        />
-      </div>
-
-      <div class="quote-request-dialog__field">
-        <label for="quote-message">Votre message</label>
-        <textarea
-          pTextarea
-          id="quote-message"
-          name="message"
-          rows="6"
-          class="quote-request-dialog__textarea"
-          placeholder="Décrivez votre projet : travaux, contraintes, horaires, accès au chantier…"
-          [(ngModel)]="message"
-        ></textarea>
-      </div>
-
-      <footer class="quote-request-dialog__actions quote-request-dialog__actions--end">
-        <p-button
+  <ng-template #header let-ariaLabelledBy="ariaLabelledBy">
+    <div class="qrd__header">
+      <div class="qrd__title-row">
+        <h2 [id]="ariaLabelledBy" class="qrd__title">Demande de devis</h2>
+        <button
           type="button"
-          label="Annuler"
-          [text]="true"
-          severity="secondary"
-          (onClick)="close()"
-        />
-        <p-button
-          type="submit"
-          label="Envoyer la demande"
-          icon="pi pi-send"
-        />
-      </footer>
-    </form>
-  }
+          class="qrd__close"
+          aria-label="Fermer"
+          (click)="close()"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="qrd__craftsman">
+        <div class="qrd__avatar" aria-hidden="true">{{ initials }}</div>
+        <div class="qrd__craftsman-text">
+          <span class="qrd__craftsman-name">{{ craftsman().name }}</span>
+          @if (metaLine) {
+            <span class="qrd__craftsman-meta">
+              @if (showRating) {
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="#E3A21A"
+                  stroke="#E3A21A"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"
+                  />
+                </svg>
+              }
+              {{ metaLine }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="qrd__stage">
+    @if (success()) {
+      <div class="qrd__success">
+        <div class="qrd__success-icon" aria-hidden="true">
+          <svg
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </div>
+        <h3>Demande envoyée</h3>
+        <p>
+          {{ craftsman().name }} a reçu votre demande pour votre {{ summaryType }}.
+          Vous serez notifié·e dès qu’un devis vous est proposé.
+        </p>
+        <div class="qrd__summary">
+          @for (row of summaryRows; track row.key) {
+            <div class="qrd__summary-row">
+              <span>{{ row.key }}</span>
+              <span>{{ row.value }}</span>
+            </div>
+          }
+        </div>
+        <button type="button" class="qrd__done" (click)="close()">Fermer</button>
+      </div>
+    } @else {
+      <form id="qrd-form" class="qrd__body" (ngSubmit)="submit()">
+        <section class="qrd__section">
+          <h3>Type d’événement <span class="qrd__required">*</span></h3>
+          <div class="qrd__grid qrd__grid--types">
+            @for (type of eventTypes; track type) {
+              <button
+                type="button"
+                class="qrd__choice"
+                [class.qrd__choice--on]="eventType === type"
+                [attr.aria-pressed]="eventType === type"
+                (click)="pickEventType(type)"
+              >
+                {{ type }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="qrd__section">
+          <h3>Quand et où ? <span class="qrd__required">*</span></h3>
+          <div class="qrd__grid qrd__grid--when">
+            <label class="qrd__field">
+              Date de l’événement
+              <input type="date" name="projectDate" [(ngModel)]="projectDate" />
+            </label>
+            <label class="qrd__field">
+              Ville ou lieu
+              <input
+                type="text"
+                name="place"
+                [(ngModel)]="place"
+                placeholder="Ex. Toulouse, Domaine de…"
+              />
+            </label>
+          </div>
+          <label class="qrd__check">
+            <input type="checkbox" name="flexible" [(ngModel)]="flexible" />
+            Mes dates sont flexibles
+          </label>
+        </section>
+
+        <section class="qrd__section">
+          <h3>Nombre d’invités</h3>
+          <div class="qrd__grid qrd__grid--guests">
+            @for (range of guestRanges; track range) {
+              <button
+                type="button"
+                class="qrd__choice"
+                [class.qrd__choice--on]="guestRange === range"
+                [attr.aria-pressed]="guestRange === range"
+                (click)="pickGuestRange(range)"
+              >
+                {{ range }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="qrd__section">
+          <div class="qrd__section-head">
+            <h3>Prestations souhaitées</h3>
+            <span>Plusieurs choix possibles</span>
+          </div>
+          <div class="qrd__chips">
+            @for (service of eventServices; track service) {
+              <button
+                type="button"
+                class="qrd__chip"
+                [class.qrd__chip--on]="serviceOn(service)"
+                [attr.aria-pressed]="serviceOn(service)"
+                (click)="toggleService(service)"
+              >
+                @if (serviceOn(service)) {
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                }
+                {{ service }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="qrd__section">
+          <div class="qrd__section-head">
+            <h3>Budget indicatif</h3>
+            <span>Optionnel · TTC</span>
+          </div>
+          <div class="qrd__chips">
+            @for (amount of budgets; track amount) {
+              <button
+                type="button"
+                class="qrd__chip"
+                [class.qrd__chip--on]="budget === amount"
+                [attr.aria-pressed]="budget === amount"
+                (click)="pickBudget(amount)"
+              >
+                {{ amount }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="qrd__section qrd__section--message">
+          <h3>Votre message <span class="qrd__required">*</span></h3>
+          <div class="qrd__hints">
+            <span>Pensez à préciser :</span>
+            @for (hint of messageHints; track hint) {
+              <button type="button" class="qrd__hint" (click)="addHint(hint)">
+                + {{ hint }}
+              </button>
+            }
+          </div>
+          <label class="qrd__sr" for="qrd-message">Votre message</label>
+          <textarea
+            id="qrd-message"
+            name="message"
+            [ngModel]="message"
+            (ngModelChange)="onMessageInput($event)"
+            [attr.maxlength]="messageMax"
+            placeholder="Décrivez votre événement : déroulé, ambiance, contraintes du lieu…"
+          ></textarea>
+          <span class="qrd__count">{{ message.length }} / {{ messageMax }}</span>
+        </section>
+      </form>
+    }
+  </div>
+
+  <ng-template #footer>
+    @if (!success()) {
+      <div class="qrd__footer">
+        <div class="qrd__progress">
+          <span>{{ progressLabel }}</span>
+          <div class="qrd__progress-track">
+            <div class="qrd__progress-fill" [style.width]="progressPercent"></div>
+          </div>
+        </div>
+        <div class="qrd__actions">
+          <button type="button" class="qrd__cancel" (click)="close()">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="qrd__send"
+            [class.qrd__send--ready]="canSend"
+            form="qrd-form"
+            [attr.aria-disabled]="!canSend"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 3L10 14" />
+              <path d="M21 3l-7 18-4-7-7-4z" />
+            </svg>
+            Envoyer la demande
+          </button>
+        </div>
+      </div>
+    }
+  </ng-template>
 </p-dialog>

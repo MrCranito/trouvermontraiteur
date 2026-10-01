@@ -5,6 +5,7 @@ import {
   AppCraftsmanCatalogService,
   SearchSort,
 } from '@trouvermontraiteur/app-consumer-data';
+import { CategoryI18nService } from '@trouvermontraiteur/app-i18n';
 import {
   lookupFrenchCityByName,
   preloadFrenchCities,
@@ -22,7 +23,11 @@ import {
   buildSearchQueryParams,
   parseSearchQueryParams,
 } from '../search-query-params';
-import { buildSearchResultsTitle } from './search-results-title';
+import {
+  buildSearchResultsTitle,
+  resolveTradeDisplayLabel,
+  resolveTradeFamilyLabel,
+} from './search-results-title';
 import { SearchListing } from '../search-listing/search-listing';
 import { SearchListingSkeleton } from '../search-listing-skeleton/search-listing-skeleton';
 import {
@@ -48,6 +53,7 @@ import { Button } from 'primeng/button';
 export class Search {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly categoryI18n = inject(CategoryI18nService);
 
   protected readonly sortOptions: { label: string; value: SearchSort }[] = [
     { label: 'Pertinence', value: 'relevance' },
@@ -60,6 +66,7 @@ export class Search {
   protected query = signal('');
   protected minRating = signal(0);
   protected selectedTrades = signal<CraftsmanTrade[]>([]);
+  protected selectedSubCategoryIds = signal<string[]>([]);
   protected projectDate = signal('');
   protected selectedProjectTypes = signal<ProjectType[]>([]);
   protected selectedServiceOptions = signal<ServiceOption[]>([]);
@@ -105,11 +112,12 @@ export class Search {
   protected readonly filteredByCriteria = computed(() =>
     this.craftsmanService.filter({
       query: this.query(),
-      trades: this.selectedTrades(),
+      trades: this.selectedSubCategoryIds().length > 0 ? [] : this.selectedTrades(),
+      subCategoryIds: this.selectedSubCategoryIds(),
       minRating: this.minRating(),
       projectDate: this.projectDate(),
       projectTypes: this.selectedProjectTypes(),
-      serviceOptions: this.selectedServiceOptions(),
+      serviceOptions: [],
     }),
   );
 
@@ -131,6 +139,42 @@ export class Search {
 
   protected readonly resultCount = computed(() => this.results().length);
 
+  private readonly metierTitle = computed(() => {
+    this.categoryI18n.activeLang();
+    const ids = this.selectedSubCategoryIds();
+    if (ids.length === 0) {
+      return {
+        tradeLabel: resolveTradeDisplayLabel(this.selectedTrades()),
+        familyLabel: resolveTradeFamilyLabel(this.selectedTrades()),
+        singleTrade: this.selectedTrades().length === 1,
+      };
+    }
+
+    const selected = new Set(ids);
+    const matched = [...this.craftsmanService.categoriesSignal()]
+      .map((category) => ({
+        category,
+        subs: category.subCategories.filter((sub) => selected.has(sub.id)),
+      }))
+      .filter((entry) => entry.subs.length > 0);
+
+    if (matched.length !== 1) {
+      return { tradeLabel: null, familyLabel: null, singleTrade: false };
+    }
+
+    const { category, subs } = matched[0];
+    const familyLabel = this.categoryI18n.name(category);
+    if (subs.length === 1) {
+      return {
+        tradeLabel: this.categoryI18n.subCategoryLabel(subs[0]),
+        familyLabel,
+        singleTrade: true,
+      };
+    }
+
+    return { tradeLabel: familyLabel, familyLabel, singleTrade: false };
+  });
+
   protected readonly resultsTitle = computed(() =>
     buildSearchResultsTitle({
       count: this.resultCount(),
@@ -138,7 +182,7 @@ export class Search {
       userMovedMap: this.userMovedMap(),
       cityName: this.cityDisplayName(),
       projectDate: this.projectDate(),
-      trades: this.selectedTrades(),
+      ...this.metierTitle(),
     }),
   );
 
@@ -151,6 +195,7 @@ export class Search {
     query: this.query(),
     minRating: this.minRating(),
     trades: this.selectedTrades(),
+    subCategoryIds: this.selectedSubCategoryIds(),
     projectTypes: this.selectedProjectTypes(),
     serviceOptions: this.selectedServiceOptions(),
     projectDate: this.projectDate(),
@@ -167,13 +212,13 @@ export class Search {
     if (this.projectDate()) {
       count++;
     }
-    if (this.selectedTrades().length > 0) {
+    if (
+      this.selectedTrades().length > 0 ||
+      this.selectedSubCategoryIds().length > 0
+    ) {
       count++;
     }
     if (this.selectedProjectTypes().length > 0) {
-      count++;
-    }
-    if (this.selectedServiceOptions().length > 0) {
       count++;
     }
     return count;
@@ -197,6 +242,7 @@ export class Search {
       this.query.set(state.query);
       this.minRating.set(state.minRating);
       this.selectedTrades.set(state.trades);
+      this.selectedSubCategoryIds.set(state.subCategoryIds);
       this.projectDate.set(state.projectDate);
       this.selectedProjectTypes.set(state.projectTypes);
       this.selectedServiceOptions.set(state.serviceOptions);
@@ -262,6 +308,7 @@ export class Search {
     this.query.set('');
     this.minRating.set(0);
     this.selectedTrades.set([]);
+    this.selectedSubCategoryIds.set([]);
     this.selectedProjectTypes.set([]);
     this.selectedServiceOptions.set([]);
     this.projectDate.set('');
@@ -275,9 +322,12 @@ export class Search {
     this.cityDisplayName.set(values.query.trim() || null);
     this.query.set(values.query);
     this.minRating.set(values.minRating);
-    this.selectedTrades.set(values.trades);
-    this.selectedProjectTypes.set(values.projectTypes);
-    this.selectedServiceOptions.set(values.serviceOptions);
+    this.selectedSubCategoryIds.set(values.subCategoryIds);
+    this.selectedTrades.set(
+      values.subCategoryIds.length > 0 ? [] : values.trades,
+    );
+    this.selectedProjectTypes.set([]);
+    this.selectedServiceOptions.set([]);
     this.projectDate.set(values.projectDate);
     this.mapAutoFit.set(true);
     this.applyMapCoordinates(null, null, values.query);
@@ -349,6 +399,7 @@ export class Search {
       query: this.query(),
       minRating: this.minRating(),
       trades: this.selectedTrades(),
+      subCategoryIds: this.selectedSubCategoryIds(),
       projectDate: this.projectDate(),
       projectTypes: this.selectedProjectTypes(),
       serviceOptions: this.selectedServiceOptions(),

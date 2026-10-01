@@ -3,6 +3,7 @@ import {
   buildCraftsmanFromRelatedData,
   Craftsman,
   CraftsmanImage,
+  CraftsmanProUser,
   CraftsmanRecord,
   CraftsmanServiceRecord,
   CraftsmanSubCategory,
@@ -20,6 +21,7 @@ import { SubCategoryRow } from '../../rows/sub-category.row';
 import { UserEstimateRow } from '../../rows/user-estimate.row';
 import { UserFavoriteRow } from '../../rows/user-favorite.row';
 import { UserRow } from '../user-row';
+import { UsersProRow } from '../../rows/users-pro.row';
 import { toCraftsmanImagePublicUrl } from '../../storage/craftsman-images.storage';
 
 export interface CraftsmanSubCategoryWithRelationsRow
@@ -40,6 +42,7 @@ export interface CraftsmanWithRelationsRow extends CraftsmanRow {
   craftsmans_services: CraftsmanServiceRow[] | null;
   craftsmans_sub_category: CraftsmanSubCategoryWithRelationsRow[] | null;
   craftsmans_unavailabilities: CraftsmanUnavailabilityRow[] | null;
+  users_pro: UsersProRow | UsersProRow[] | null;
 }
 
 const CRAFTSMAN_DETAIL_SELECT = `*,
@@ -71,7 +74,11 @@ const CRAFTSMAN_DETAIL_SELECT = `*,
             name
           )
         )
-       )`;
+       ),
+      users_pro (
+        owner_user_id,
+        business_name
+      )`;
 
 @Injectable({ providedIn: 'root' })
 export class CraftsmanService {
@@ -87,6 +94,26 @@ export class CraftsmanService {
     }
 
     return this.mapRows(data as CraftsmanWithRelationsRow[] | null);
+  }
+
+  async getById(id: string): Promise<Craftsman | null> {
+    const { data, error } = await this.supabase
+      .from('craftsmans')
+      .select(CRAFTSMAN_DETAIL_SELECT)
+      .eq('id', id)
+      .eq('published', true)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return this.mapRows([data as CraftsmanWithRelationsRow])[0] ?? null;
   }
 
   async getByOwnerUserId(ownerUserId: string): Promise<Craftsman | null> {
@@ -196,9 +223,25 @@ export class CraftsmanService {
         unavailabilities: (row.craftsmans_unavailabilities ?? []).map((item) =>
           this.mapUnavailabilityRow(item, craftsmanId),
         ),
+        proUser: this.mapProUser(row.users_pro),
       },
       { resolveStoragePath },
     );
+  }
+
+  private mapProUser(
+    row: UsersProRow | UsersProRow[] | null | undefined,
+  ): CraftsmanProUser | null {
+    const proUser = Array.isArray(row) ? row[0] : row;
+    const id = proUser?.owner_user_id?.trim() ?? '';
+    if (!id) {
+      return null;
+    }
+
+    return {
+      id,
+      businessName: proUser?.business_name?.trim() ?? '',
+    };
   }
 
   private mapCraftsmanRecord(row: CraftsmanRow): CraftsmanRecord {
@@ -213,6 +256,8 @@ export class CraftsmanService {
       address: row.address,
       city: row.city,
       postalCode: row.postal_code,
+      rating: toNumber(row.rating),
+      reviewCount: toNumber(row.review_count),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
       deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
@@ -291,4 +336,9 @@ export class CraftsmanService {
       createdAt: row.created_at ? new Date(row.created_at) : new Date(0),
     };
   }
+}
+
+function toNumber(value: number | string | null | undefined): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

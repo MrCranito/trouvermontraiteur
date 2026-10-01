@@ -1,5 +1,6 @@
 <div class="app-shell">
   <tmt-topbar
+    brandName="Eventup"
     [dashboardUrl]="dashboardUrl"
     [auth]="authState()"
     loginHref="/auth/connexion"
@@ -10,5 +11,11 @@
   <main class="app-shell__main">
     <router-outlet />
   </main>
-  <tmt-footer [dashboardHref]="dashboardUrl" />
+  <tmt-favorite-login-dialog />
+  <tmt-footer
+    brandName="Eventup"
+    tagline="Trouvez les artisans pour votre événement, partout en France."
+    note="Fait avec soin pour vos événements."
+    [dashboardHref]="dashboardUrl"
+  />
 </div>

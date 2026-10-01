@@ -1,4 +1,11 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import {
+  Injectable,
+  Injector,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FavoriteService } from '@trouvermontraiteur/api';
 import { ConsumerAuthService } from '@trouvermontraiteur/app-auth';
 import { Craftsman } from '@trouvermontraiteur/models';
@@ -8,20 +15,43 @@ import { AppCraftsmanCatalogService } from './app-craftsman-catalog.service';
 export class ConsumerFavoritesService {
   private readonly auth = inject(ConsumerAuthService);
   private readonly favoriteApi = inject(FavoriteService);
-  private readonly catalog = inject(AppCraftsmanCatalogService);
+  private readonly injector = inject(Injector);
+  private catalogRef: AppCraftsmanCatalogService | null = null;
 
   private readonly favoriteIds = signal<string[]>([]);
   private readonly loading = signal(false);
   private readonly ready = signal(false);
 
   readonly ids = this.favoriteIds.asReadonly();
-  readonly isLoading = this.loading.asReadonly();
   readonly isReady = this.ready.asReadonly();
+
+  /**
+   * Stays true until favorite ids and, when there are any, the catalog
+   * used to resolve them are both ready. The catalog is created only then,
+   * so a craftsman details page can check ids without loading every craftsman.
+   */
+  readonly isLoading = computed(() => {
+    if (this.loading() || !this.ready()) {
+      return true;
+    }
+    if (this.favoriteIds().length === 0) {
+      return false;
+    }
+    return !this.catalog().isReady();
+  });
 
   readonly favoriteCraftsmen = computed((): Craftsman[] => {
     const ids = new Set(this.favoriteIds());
-    return this.catalog.getAll().filter((c) => ids.has(c.id));
+    if (ids.size === 0) {
+      return [];
+    }
+    return this.catalog().getAll().filter((c) => ids.has(c.id));
   });
+
+  private catalog(): AppCraftsmanCatalogService {
+    this.catalogRef ??= this.injector.get(AppCraftsmanCatalogService);
+    return this.catalogRef;
+  }
 
   /** @deprecated Use favoriteCraftsmen */
   readonly favoriteCaterers = this.favoriteCraftsmen;

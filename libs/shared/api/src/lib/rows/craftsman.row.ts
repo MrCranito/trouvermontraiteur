@@ -12,4 +12,6 @@ export interface CraftsmanRow {
   address: string | null;
   city: string | null;
   postal_code: string | null;
+  rating?: number | string | null;
+  review_count?: number | string | null;
 }

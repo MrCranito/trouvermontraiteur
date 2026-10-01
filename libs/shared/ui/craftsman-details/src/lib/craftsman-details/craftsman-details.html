@@ -96,6 +96,10 @@
         <i class="pi pi-upload" aria-hidden="true"></i>
         <span>Ajouter une photo de couverture</span>
       </button>
+      } @else {
+      <div class="listing__photo listing__photo--hero listing__photo--placeholder">
+        <img src="/images/empty_image.png" [alt]="c.name" />
+      </div>
       } }
     </div>
 
@@ -204,7 +208,16 @@
       @if (editMode()) {
       <div class="listing__title-edit">
         <span class="listing__edit-label">Nom affiché</span>
-        <h1 class="listing__title">{{ name() }}</h1>
+        <h1 class="listing__title">
+          {{ name() }}
+          @if (c.certified) {
+          <i
+            class="pi pi-verified listing__certified"
+            role="img"
+            aria-label="Profil certifié"
+          ></i>
+          }
+        </h1>
         <p-button
           type="button"
           label="Modifier le nom"
@@ -216,9 +229,19 @@
         />
       </div>
       } @else {
-      <h1 class="listing__title">{{ c.name }}</h1>
+      <h1 class="listing__title">
+        {{ c.name }}
+        @if (c.certified) {
+        <i
+          class="pi pi-verified listing__certified"
+          role="img"
+          aria-label="Profil certifié"
+        ></i>
+        }
+      </h1>
       }
       <p class="listing__meta" [class.listing__meta--edit]="editMode()">
+        @if (c.rating > 0) {
         <span class="listing__meta-item">
           <i class="pi pi-star-fill" aria-hidden="true"></i>
           <strong>{{ c.rating }}</strong>
@@ -226,6 +249,7 @@
         </span>
         @if (!editMode()) {
         <span class="listing__meta-dot" aria-hidden="true">·</span>
+        }
         }
         <span
           class="listing__meta-item"
@@ -661,10 +685,12 @@
             >
           </p>
           }
+          @if (c.rating > 0) {
           <div class="listing__book-rating">
             <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5" />
             <span>{{ c.rating }} · {{ c.reviewCount }} avis</span>
           </div>
+          }
           <p-button
             label="Demander un devis"
             icon="pi pi-envelope"

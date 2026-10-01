@@ -14,7 +14,7 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
-      "@env": ["./.env/environment.ts"],
+      "@env": ["./env/environment.ts"],
       "@trouvermontraiteur/models": ["./libs/shared/models/src/index.ts"],
       "@trouvermontraiteur/api": ["./libs/shared/api/src/index.ts"],
       "@trouvermontraiteur/theme": ["./libs/shared/theme/src/index.ts"],

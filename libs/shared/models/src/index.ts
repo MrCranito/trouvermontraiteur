@@ -36,13 +36,16 @@ export type {
   CraftsmanBuildInput,
   CraftsmanBuildOptions,
   CraftsmanLocation,
+  CraftsmanProUser,
   CraftsmanRealisation,
   ProjectType,
   ServiceItem,
   ServiceOption,
 } from './lib/craftsman';
 export {
+  CRAFTSMAN_EMPTY_IMAGE_URL,
   buildCraftsmanFromRelatedData,
+  craftsmanCoverImage,
   resolveCraftsmanTradeFromSubCategoryLabel,
 } from './lib/craftsman';
 export {

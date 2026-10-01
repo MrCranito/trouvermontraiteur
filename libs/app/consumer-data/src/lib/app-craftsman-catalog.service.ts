@@ -96,7 +96,15 @@ export class AppCraftsmanCatalogService {
         return false;
       }
 
-      if (filters.trades.length > 0) {
+      if (filters.subCategoryIds.length > 0) {
+        const selected = new Set(filters.subCategoryIds);
+        const hasSubCategory = craftsman.subCategoryIds.some((id) =>
+          selected.has(id),
+        );
+        if (!hasSubCategory) {
+          return false;
+        }
+      } else if (filters.trades.length > 0) {
         const craftsmanTrades = new Set(
           craftsman.trades
             .map((trade) => normalizeCraftsmanTrade(trade))

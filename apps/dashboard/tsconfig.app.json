@@ -6,8 +6,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "../../.env/environment.ts",
-    "../../.env/environment.types.ts"
+    "../../env/environment.ts",
+    "../../env/environment.types.ts"
   ],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
 }

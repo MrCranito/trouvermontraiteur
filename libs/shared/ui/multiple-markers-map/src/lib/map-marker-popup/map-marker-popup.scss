@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   width: 13.5rem;
-  text-decoration: none;
   color: inherit;
   background: #fff;
   border-radius: 0.75rem;
@@ -11,15 +10,138 @@
 }
 
 .map-marker-popup__media {
+  position: relative;
   aspect-ratio: 4 / 3;
   background: #f0e8d8;
   overflow: hidden;
+}
+
+.map-marker-popup__media-link,
+.map-marker-popup__body {
+  text-decoration: none;
+  color: inherit;
+}
+
+.map-marker-popup__media-link {
+  display: block;
+  height: 100%;
+}
+
+.map-marker-popup__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.map-marker-popup__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 
   img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
+
+.map-marker-popup__actions {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.map-marker-popup__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #7a6e61;
+  box-shadow: 0 2px 8px rgba(42, 34, 25, 0.15);
+  cursor: pointer;
+
+  .pi {
+    font-size: 0.78rem;
+  }
+
+  &:hover {
+    color: #c4622d;
+    background: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #c4622d;
+    outline-offset: 2px;
+  }
+
+  &--on {
+    color: #c4622d;
+    background: #fff;
+  }
+}
+
+.map-marker-popup__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #2a2219;
+  box-shadow: 0 2px 8px rgba(42, 34, 25, 0.15);
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  .pi {
+    font-size: 0.68rem;
+  }
+
+  &:hover {
+    background: #fff;
+    color: #c4622d;
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #c4622d;
+    outline-offset: 2px;
+  }
+
+  &--prev {
+    left: 0.35rem;
+  }
+
+  &--next {
+    right: 0.35rem;
   }
 }
 

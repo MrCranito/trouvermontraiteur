@@ -47,7 +47,7 @@ export const appRoutes: Route[] = [
         children: myDevisRoutes,
       },
       {
-        path: 'artisans/:slug',
+        path: 'artisans/:id',
         children: craftsmanDetailsRoutes,
       },
     ],

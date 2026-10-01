@@ -7,6 +7,16 @@
 }
 
 .discover-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+.discover-card__link {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -15,6 +25,43 @@
   min-height: 100%;
   text-decoration: none;
   color: inherit;
+}
+
+.discover-card__favorite {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #7a6e61;
+  box-shadow: 0 2px 10px rgba(42, 34, 25, 0.12);
+  cursor: pointer;
+
+  .pi {
+    font-size: 0.95rem;
+  }
+
+  &:hover {
+    color: #c4622d;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #c4622d;
+    outline-offset: 2px;
+  }
+
+  &--on {
+    color: #c4622d;
+    background: #fff;
+  }
 }
 
 .discover-card__media {
@@ -32,7 +79,9 @@
   }
 }
 
-.discover-card:hover .discover-card__media img {
+.discover-card:hover:not(:has(.discover-card__favorite:hover))
+  .discover-card__media
+  img {
   transform: scale(1.03);
 }
 
@@ -52,6 +101,14 @@
   gap: 0.4rem;
 }
 
+.discover-card__name-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
 .discover-card__name {
   margin: 0;
   font-size: 0.92rem;
@@ -64,9 +121,16 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  flex: 1;
   min-width: 0;
   min-height: 2.6em;
+}
+
+.discover-card__certified {
+  flex: none;
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: #1d9bf0;
 }
 
 .discover-card__rating {

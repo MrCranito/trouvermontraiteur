@@ -1,11 +1,11 @@
 :host {
   display: block;
   width: 100%;
-  background: transparent;
+  background: #faf6ef;
 }
 
 .listing {
-  background: #fff;
+  background: #faf6ef;
   color: #222;
   border-radius: 0.9rem;
 
@@ -299,6 +299,14 @@
     outline-offset: -2px;
     z-index: 1;
   }
+
+  &--placeholder {
+    cursor: default;
+
+    &:hover img {
+      transform: none;
+    }
+  }
 }
 
 .listing__photos-all {
@@ -330,12 +338,22 @@
 }
 
 .listing__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
   margin: 0 0 0.5rem;
   font-size: clamp(1.45rem, 3.5vw, 1.75rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: #222;
+}
+
+.listing__certified {
+  flex: none;
+  font-size: 1.05rem;
+  color: #1d9bf0;
 }
 
 .listing__meta {
@@ -390,6 +408,7 @@
 
 .listing__main {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .listing__availability-lead {
@@ -429,6 +448,7 @@
   line-height: 1.65;
   color: #222;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .listing__location-line {

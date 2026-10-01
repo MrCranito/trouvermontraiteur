@@ -9,14 +9,9 @@ import {
   preloadFrenchCities,
   type FrenchCityLocation,
 } from '@trouvermontraiteur/data';
-import {
-  Category,
-  Craftsman,
-  CraftsmanTrade,
-  resolveCraftsmanTradeFromSubCategoryLabel,
-  resolveSubCategoryTranslation,
-} from '@trouvermontraiteur/models';
+import { Category, Craftsman } from '@trouvermontraiteur/models';
 import { buildSearchQueryParams } from '@trouvermontraiteur/search';
+import { categoryIconClass } from '../category-icons';
 import { DiscoverCard } from '../discover-card/discover-card';
 import {
   DiscoverDatePicker,
@@ -39,25 +34,8 @@ interface DiscoverSection {
 
 type CategoryChip =
   | { type: 'back'; categoryId: string; icon: string }
-  | {
-      type: 'category';
-      id: string;
-      icon: string;
-      customIcon: boolean;
-    }
+  | { type: 'category'; id: string; icon: string }
   | { type: 'subCategory'; id: string; label: string };
-
-const CATEGORY_ICONS: Record<string, string> = {
-  batiments: 'pi pi-building',
-  reparation: 'pi pi-wrench',
-  mobilite: 'pi pi-car',
-  alimentation: 'discover__category-icon discover__category-icon--burger',
-  beaute: 'pi pi-sparkles',
-  mode: 'pi pi-tag',
-  decoration: 'pi pi-palette',
-  jardin: 'discover__category-icon discover__category-icon--tree',
-  audiovisuel: 'pi pi-camera',
-};
 
 @Component({
   selector: 'tmt-discover',
@@ -122,12 +100,10 @@ export class Discover {
     const categoryId = this.selectedCategoryId();
     if (!categoryId) {
       return this.categories().map((category) => {
-        const icon = this.categoryIcon(category);
         return {
           type: 'category' as const,
           id: category.id,
-          icon,
-          customIcon: icon.startsWith('discover__'),
+          icon: this.categoryIcon(category),
         };
       });
     }
@@ -221,7 +197,7 @@ export class Discover {
 
   protected openExplorer(options?: {
     query?: string;
-    trades?: CraftsmanTrade[];
+    subCategoryIds?: string[];
     projectDate?: string;
     mapLat?: number | null;
     mapLng?: number | null;
@@ -230,7 +206,9 @@ export class Discover {
       queryParams: buildSearchQueryParams({
         query: options?.query ?? this.destination(),
         minRating: 0,
-        trades: options?.trades ?? [],
+        trades: [],
+        subCategoryIds:
+          options?.subCategoryIds ?? this.subCategoryIdsForExplorer(),
         projectDate: options?.projectDate ?? this.projectDate(),
         projectTypes: [],
         serviceOptions: [],
@@ -249,45 +227,26 @@ export class Discover {
   private async submitWithCityCoordinates(): Promise<void> {
     const coords = await this.resolveCityCoordinates();
     this.openExplorer({
-      trades: this.tradesForExplorer(),
+      subCategoryIds: this.subCategoryIdsForExplorer(),
       mapLat: coords?.lat ?? null,
       mapLng: coords?.lng ?? null,
     });
   }
 
-  private tradesForExplorer(): CraftsmanTrade[] {
+  private subCategoryIdsForExplorer(): string[] {
     const subCategoryId = this.searchSubCategoryId();
     if (subCategoryId) {
-      const subCategory = this.catalog
-        .subCategoriesSignal()
-        .find((item) => item.id === subCategoryId);
-      const trade = subCategory
-        ? resolveCraftsmanTradeFromSubCategoryLabel(
-            resolveSubCategoryTranslation(subCategory, 'fr'),
-          )
-        : null;
-      return trade ? [trade] : [];
+      return [subCategoryId];
     }
 
     const categoryId = this.searchCategoryId();
-    if (categoryId) {
-      const seen = new Set<CraftsmanTrade>();
-      const trades: CraftsmanTrade[] = [];
-      for (const subCategory of this.catalog.getSubCategoriesForCategory(
-        categoryId,
-      )) {
-        const trade = resolveCraftsmanTradeFromSubCategoryLabel(
-          resolveSubCategoryTranslation(subCategory, 'fr'),
-        );
-        if (trade && !seen.has(trade)) {
-          seen.add(trade);
-          trades.push(trade);
-        }
-      }
-      return trades;
+    if (!categoryId) {
+      return [];
     }
 
-    return [];
+    return this.catalog
+      .getSubCategoriesForCategory(categoryId)
+      .map((subCategory) => subCategory.id);
   }
 
   private async resolveCityCoordinates(): Promise<{
@@ -432,7 +391,7 @@ export class Discover {
 
     const coords = await this.resolveCityCoordinates();
     this.openExplorer({
-      trades: this.tradesForExplorer(),
+      subCategoryIds: this.subCategoryIdsForExplorer(),
       mapLat: coords?.lat ?? null,
       mapLng: coords?.lng ?? null,
     });
@@ -458,7 +417,7 @@ export class Discover {
 
     const coords = await this.resolveCityCoordinates();
     this.openExplorer({
-      trades: this.tradesForExplorer(),
+      subCategoryIds: this.subCategoryIdsForExplorer(),
       mapLat: coords?.lat ?? null,
       mapLng: coords?.lng ?? null,
     });
@@ -482,7 +441,7 @@ export class Discover {
   }
 
   private categoryIcon(category: Category): string {
-    return CATEGORY_ICONS[category.id] ?? 'pi pi-briefcase';
+    return categoryIconClass(category);
   }
 
   private forSubCategory(

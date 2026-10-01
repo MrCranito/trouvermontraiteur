@@ -1,12 +1,82 @@
-<a
+<article
   class="map-marker-popup"
-  [routerLink]="['/artisans', craftsman().slug]"
   (click)="$event.stopPropagation()"
+  (mousedown)="$event.stopPropagation()"
 >
   <div class="map-marker-popup__media">
-    <img [src]="craftsman().imageUrl" [alt]="craftsman().name" loading="lazy" />
+    <a
+      class="map-marker-popup__media-link"
+      [routerLink]="['/artisans', craftsman().id]"
+    >
+      <div
+        #photoTrack
+        class="map-marker-popup__track"
+        (scroll)="onPhotoScroll($event)"
+      >
+        @for (photo of photos(); track photo.id; let i = $index) {
+          <div class="map-marker-popup__slide">
+            <img
+              [src]="photo.imageUrl"
+              [alt]="photo.caption"
+              [loading]="i === 0 ? 'eager' : 'lazy'"
+              draggable="false"
+            />
+          </div>
+        }
+      </div>
+    </a>
+
+    <div class="map-marker-popup__actions">
+      <button
+        type="button"
+        class="map-marker-popup__icon-btn"
+        [class.map-marker-popup__icon-btn--on]="isFavorite()"
+        [attr.aria-label]="
+          isFavorite() ? 'Retirer des favoris' : 'Ajouter aux favoris'
+        "
+        [attr.aria-pressed]="isFavorite()"
+        (click)="onFavoriteClick($event)"
+      >
+        <i
+          [class]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+          aria-hidden="true"
+        ></i>
+      </button>
+      <button
+        type="button"
+        class="map-marker-popup__icon-btn"
+        aria-label="Fermer"
+        (click)="onCloseClick($event)"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    @if (hasMultiplePhotos()) {
+      @if (photoIndex() > 0) {
+        <button
+          type="button"
+          class="map-marker-popup__nav map-marker-popup__nav--prev"
+          aria-label="Photo précédente"
+          (click)="prevPhoto($event)"
+        >
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
+        </button>
+      }
+      @if (photoIndex() < photos().length - 1) {
+        <button
+          type="button"
+          class="map-marker-popup__nav map-marker-popup__nav--next"
+          aria-label="Photo suivante"
+          (click)="nextPhoto($event)"
+        >
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
+        </button>
+      }
+    }
   </div>
-  <div class="map-marker-popup__body">
+
+  <a class="map-marker-popup__body" [routerLink]="['/artisans', craftsman().id]">
     <div class="map-marker-popup__head">
       <h3 class="map-marker-popup__name">{{ craftsman().name }}</h3>
       <span class="map-marker-popup__rating">
@@ -19,13 +89,15 @@
       {{ craftsman().location.city }}
     </p>
     @if (visibleProjectTypes().length > 0) {
-    <ul class="map-marker-popup__chips" aria-label="Types de projet">
-      @for (project of visibleProjectTypes(); track project) {
-      <li>
-        <span class="map-marker-popup__chip">{{ projectLabels[project] }}</span>
-      </li>
-      }
-    </ul>
+      <ul class="map-marker-popup__chips" aria-label="Types de projet">
+        @for (project of visibleProjectTypes(); track project) {
+          <li>
+            <span class="map-marker-popup__chip">{{
+              projectLabels[project]
+            }}</span>
+          </li>
+        }
+      </ul>
     }
-  </div>
-</a>
+  </a>
+</article>
