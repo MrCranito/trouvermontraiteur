@@ -11,6 +11,11 @@ export interface ConsumerQuoteRequest {
   projectTypeLabel: string;
   eventDateLabel: string;
   guestCount: number;
+  /** Guest range chosen in the quote dialog, e.g. "50–100". */
+  guestRange?: string;
+  place?: string;
+  datesFlexible?: boolean;
+  services?: string[];
   budgetHint?: string;
   message: string;
   requestedAt: string;

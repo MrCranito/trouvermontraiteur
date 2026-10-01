@@ -26,7 +26,7 @@
   <div class="search-listing__frame">
     <a
       class="search-listing__media-link"
-      [routerLink]="['/artisans', craftsman().slug]"
+      [routerLink]="['/artisans', craftsman().id]"
       [attr.aria-label]="'Voir ' + craftsman().name"
     >
       <div class="search-listing__media">
@@ -51,36 +51,51 @@
     </a>
 
     @if (hasMultiplePhotos()) {
-      <button
-        type="button"
-        class="search-listing__nav search-listing__nav--prev"
-        aria-label="Photo précédente"
-        (click)="prevPhoto($event)"
-      >
-        <i class="pi pi-chevron-left" aria-hidden="true"></i>
-      </button>
-      <button
-        type="button"
-        class="search-listing__nav search-listing__nav--next"
-        aria-label="Photo suivante"
-        (click)="nextPhoto($event)"
-      >
-        <i class="pi pi-chevron-right" aria-hidden="true"></i>
-      </button>
+      @if (photoIndex() > 0) {
+        <button
+          type="button"
+          class="search-listing__nav search-listing__nav--prev"
+          aria-label="Photo précédente"
+          (click)="prevPhoto($event)"
+        >
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
+        </button>
+      }
+      @if (photoIndex() < photos().length - 1) {
+        <button
+          type="button"
+          class="search-listing__nav search-listing__nav--next"
+          aria-label="Photo suivante"
+          (click)="nextPhoto($event)"
+        >
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
+        </button>
+      }
       <span class="search-listing__photo-count" aria-hidden="true">
         {{ photoIndex() + 1 }} / {{ photos().length }}
       </span>
     }
   </div>
 
-  <a class="search-listing__link" [routerLink]="['/artisans', craftsman().slug]">
+  <a class="search-listing__link" [routerLink]="['/artisans', craftsman().id]">
     <div class="search-listing__body">
       <div class="search-listing__head">
-        <h3>{{ craftsman().name }}</h3>
-        <span class="search-listing__rating">
-          <i class="pi pi-star-fill" aria-hidden="true"></i>
-          {{ craftsman().rating }}
-        </span>
+        <div class="search-listing__name-wrap">
+          <h3>{{ craftsman().name }}</h3>
+          @if (craftsman().certified) {
+            <i
+              class="pi pi-verified search-listing__certified"
+              role="img"
+              aria-label="Profil certifié"
+            ></i>
+          }
+        </div>
+        @if (craftsman().rating > 0) {
+          <span class="search-listing__rating">
+            <i class="pi pi-star-fill" aria-hidden="true"></i>
+            {{ craftsman().rating }}
+          </span>
+        }
       </div>
 
       <p class="search-listing__location">

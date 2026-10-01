@@ -12,6 +12,16 @@ import { ALL_TRADES } from './trade-families';
 
 export type { CraftsmanTrade } from './trade-families';
 
+/** Shown when a craftsman has no linked photos. Served from the app public folder. */
+export const CRAFTSMAN_EMPTY_IMAGE_URL = '/images/empty_image.png';
+
+export function craftsmanCoverImage(
+  imageUrl: string | null | undefined,
+): string {
+  const trimmed = imageUrl?.trim() ?? '';
+  return trimmed || CRAFTSMAN_EMPTY_IMAGE_URL;
+}
+
 export type ProjectType =
   | 'renovation'
   | 'depannage'
@@ -48,6 +58,12 @@ export interface CraftsmanRealisation {
   caption: string;
 }
 
+/** Professional account linked to a craftsman, when one exists. */
+export interface CraftsmanProUser {
+  id: string;
+  businessName: string;
+}
+
 export interface Craftsman {
   id: string;
   name: string;
@@ -57,6 +73,10 @@ export interface Craftsman {
   published: boolean;
   rating: number;
   reviewCount: number;
+  /** True when a professional account is included on this profile. */
+  certified: boolean;
+  /** Linked professional account, or null when none is available. */
+  proUser: CraftsmanProUser | null;
   subCategoryIds: string[];
   trades: CraftsmanTrade[];
   projectTypes: ProjectType[];
@@ -80,6 +100,7 @@ export interface CraftsmanBuildInput {
   craftsmanSubCategories: CraftsmanSubCategory[];
   subCategories: SubCategory[];
   unavailabilities: CraftsmanUnavailability[];
+  proUser?: CraftsmanProUser | null;
 }
 
 export interface CraftsmanBuildOptions {
@@ -163,8 +184,10 @@ export function buildCraftsmanFromRelatedData(
     imageUrl: craftsmanImages[0]
       ? resolveStoragePath(craftsmanImages[0].storagePath)
       : '',
-    rating: 0,
-    reviewCount: 0,
+    rating: craftsman.rating,
+    reviewCount: craftsman.reviewCount,
+    proUser: input.proUser ?? null,
+    certified: input.proUser != null,
     subCategoryIds: [...linkedSubCategoryIds],
     trades: uniqueTrades,
     projectTypes: [],

@@ -21,9 +21,9 @@
         <li class="consumer-devis__card">
           <a
             class="consumer-devis__craftsman"
-            [routerLink]="['/artisans', quote.craftsmanSlug]"
+            [routerLink]="['/artisans', quote.craftsmanId]"
           >
-            <img [src]="quote.craftsmanImageUrl" [alt]="quote.craftsmanName" loading="lazy" />
+            <img [src]="coverImage(quote.craftsmanImageUrl)" [alt]="quote.craftsmanName" loading="lazy" />
             <span>{{ quote.craftsmanName }}</span>
           </a>
 
@@ -44,6 +44,24 @@
               <dt>Date souhaitée</dt>
               <dd>{{ quote.eventDateLabel }}</dd>
             </div>
+            @if (quote.place) {
+              <div>
+                <dt>Lieu</dt>
+                <dd>{{ quote.place }}</dd>
+              </div>
+            }
+            @if (quote.guestRange) {
+              <div>
+                <dt>Invités</dt>
+                <dd>{{ quote.guestRange }}</dd>
+              </div>
+            }
+            @if (quote.services?.length) {
+              <div>
+                <dt>Prestations</dt>
+                <dd>{{ quote.services?.join(', ') }}</dd>
+              </div>
+            }
             @if (quote.budgetHint) {
               <div>
                 <dt>Budget</dt>

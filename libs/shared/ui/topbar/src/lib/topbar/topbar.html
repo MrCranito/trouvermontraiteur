@@ -2,7 +2,7 @@
   <a
     [routerLink]="homeLink()"
     class="tmt-topbar__brand"
-    aria-label="Trouver mon artisan — accueil"
+    [attr.aria-label]="brandName() + ' — accueil'"
   >
     <img
       class="tmt-topbar__logo"
@@ -12,7 +12,7 @@
       height="40"
       decoding="async"
     />
-    <span class="tmt-topbar__brand-text">Trouver mon artisan</span>
+    <span class="tmt-topbar__brand-text">{{ brandName() }}</span>
   </a>
 
   <nav class="tmt-topbar__actions" aria-label="Compte et espace professionnel">

@@ -26,9 +26,11 @@ export class TmtFooter {
   readonly homeHref = input<string | null>(null);
   readonly searchHref = input<string | null>(null);
   readonly dashboardHref = input<string | null>(null);
+  readonly brandName = input('Trouver mon artisan');
   readonly tagline = input(
     'Trouvez l’artisan idéal pour tous vos projets, partout en France.',
   );
+  readonly note = input('Fait avec soin pour vos projets du quotidien.');
 
   protected readonly currentYear = new Date().getFullYear();
 

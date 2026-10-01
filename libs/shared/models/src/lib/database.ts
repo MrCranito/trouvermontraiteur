@@ -5,6 +5,8 @@ export interface CategoryTranslation {
 
 export interface Category {
   id: string;
+  /** PrimeIcons classes, for example `pi pi-camera`. */
+  icon: string;
   translations: CategoryTranslation[];
   order: number;
   subCategories: SubCategory[];
@@ -33,6 +35,8 @@ export interface CraftsmanRecord {
   address: string | null;
   city: string | null;
   postalCode: string | null;
+  rating: number;
+  reviewCount: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

@@ -45,7 +45,7 @@ export const appRoutes: Route[] = [
         pathMatch: 'full',
       },
       {
-        path: 'artisans/:slug',
+        path: 'artisans/:id',
         redirectTo: 'custom-details',
         pathMatch: 'full',
       },

@@ -45,7 +45,10 @@
         (closeclick)="onPopupClose()"
       >
         @if (popupCraftsman(); as popup) {
-        <tmt-map-marker-popup [craftsman]="popup" />
+        <tmt-map-marker-popup
+          [craftsman]="popup"
+          (closed)="onPopupClose()"
+        />
         }
       </map-info-window>
     </google-map>
@@ -54,7 +57,7 @@
       <i class="pi pi-map" aria-hidden="true"></i>
       <p>
         @if (mapsKeyMissing) { Ajoutez votre clé Google Maps dans
-        <code>.env/environment.ts</code>
+        <code>env/environment.ts</code>
         (<code>googleMapsApiKey</code>). } @else { Impossible de charger Google
         Maps. Vérifiez la clé API et les APIs activées (Maps JavaScript API). }
       </p>

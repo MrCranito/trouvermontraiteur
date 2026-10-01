@@ -17,6 +17,7 @@ export interface SearchFiltersState {
   query: string;
   minRating: number;
   trades: CraftsmanTrade[];
+  subCategoryIds: string[];
   projectDate: string;
   projectTypes: ProjectType[];
   serviceOptions: ServiceOption[];
@@ -32,6 +33,23 @@ function parseCoordParam(value: string | null): number | null {
   }
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseSubCategoryIds(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const raw of value.split(',')) {
+    const token = raw.trim();
+    if (!token || seen.has(token)) {
+      continue;
+    }
+    seen.add(token);
+    ids.push(token);
+  }
+  return ids;
 }
 
 function parseTradesParam(value: string | null): CraftsmanTrade[] {
@@ -87,6 +105,7 @@ export function parseSearchQueryParams(params: ParamMap): SearchFiltersState {
       : 0;
 
   const trades = parseTradesParam(params.get('trades'));
+  const subCategoryIds = parseSubCategoryIds(params.get('subs'));
   const projectTypes = parseListParam<ProjectType>(
     params.get('projects'),
     VALID_PROJECTS,
@@ -112,6 +131,7 @@ export function parseSearchQueryParams(params: ParamMap): SearchFiltersState {
     query,
     minRating,
     trades,
+    subCategoryIds,
     projectDate,
     projectTypes,
     serviceOptions,
@@ -129,6 +149,8 @@ export function buildSearchQueryParams(
     q: state.query.trim() || null,
     rating: state.minRating > 0 ? String(state.minRating) : null,
     trades: state.trades.length > 0 ? state.trades.join(',') : null,
+    subs:
+      state.subCategoryIds.length > 0 ? state.subCategoryIds.join(',') : null,
     date: state.projectDate || null,
     projects:
       state.projectTypes.length > 0 ? state.projectTypes.join(',') : null,

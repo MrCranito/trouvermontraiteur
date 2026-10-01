@@ -8,7 +8,7 @@
           <a
             [href]="homeHref()!"
             class="tmt-footer__brand-link"
-            aria-label="Trouver mon artisan — accueil"
+            [attr.aria-label]="brandName() + ' — accueil'"
           >
             <img
               class="tmt-footer__logo"
@@ -18,13 +18,13 @@
               height="36"
               decoding="async"
             />
-            <span class="tmt-footer__brand-text">Trouver mon artisan</span>
+            <span class="tmt-footer__brand-text">{{ brandName() }}</span>
           </a>
         } @else {
           <a
             [routerLink]="homeLink()"
             class="tmt-footer__brand-link"
-            aria-label="Trouver mon artisan — accueil"
+            [attr.aria-label]="brandName() + ' — accueil'"
           >
             <img
               class="tmt-footer__logo"
@@ -34,11 +34,11 @@
               height="36"
               decoding="async"
             />
-            <span class="tmt-footer__brand-text">Trouver mon artisan</span>
+            <span class="tmt-footer__brand-text">{{ brandName() }}</span>
           </a>
         }
         <p class="tmt-footer__tagline">{{ tagline() }}</p>
-        <p class="tmt-footer__made">Fait avec soin pour vos projets du quotidien.</p>
+        <p class="tmt-footer__made">{{ note() }}</p>
       </div>
 
       @for (group of linkGroups(); track group.title) {
@@ -69,7 +69,7 @@
 
   <div class="tmt-footer__bottom">
     <p class="tmt-footer__copyright">
-      © {{ currentYear }} Trouver mon artisan. Tous droits réservés.
+      © {{ currentYear }} {{ brandName() }}. Tous droits réservés.
     </p>
     <nav class="tmt-footer__bottom-nav" aria-label="Liens secondaires">
       <a href="#" (click)="onPlaceholderLink($event)">Mentions légales</a>

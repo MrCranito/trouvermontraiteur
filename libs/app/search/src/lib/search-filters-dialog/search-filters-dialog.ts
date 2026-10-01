@@ -7,69 +7,102 @@ import {
   model,
   output,
   signal,
+  untracked,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { AppCraftsmanCatalogService } from '@trouvermontraiteur/app-consumer-data';
-import {
-  ALL_PROJECT_TYPES,
-  ALL_SERVICE_OPTIONS,
-  PROJECT_LABELS,
-  SERVICE_OPTION_LABELS,
-  TRADE_FAMILIES,
-} from '@trouvermontraiteur/data';
+import { CategoryI18nService } from '@trouvermontraiteur/app-i18n';
 import {
   CraftsmanTrade,
   ProjectType,
   ServiceOption,
 } from '@trouvermontraiteur/models';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionPanel,
-} from 'primeng/accordion';
-import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
 
 export interface SearchFilterValues {
   query: string;
   minRating: number;
   trades: CraftsmanTrade[];
+  subCategoryIds: string[];
   projectTypes: ProjectType[];
   serviceOptions: ServiceOption[];
   projectDate: string;
 }
 
+interface TradeChip {
+  id: string;
+  label: string;
+  on: boolean;
+}
+
+interface FamilyCard {
+  id: string;
+  label: string;
+  trades: TradeChip[];
+  selectedCount: number;
+  hasSelection: boolean;
+  isOpen: boolean;
+  allLabel: string;
+}
+
+interface TradeSearchHit {
+  id: string;
+  label: string;
+  category: string;
+  on: boolean;
+}
+
+interface ActiveFilterChip {
+  id: string;
+  label: string;
+  kind: 'query' | 'rating' | 'trade';
+  tradeId?: string;
+}
+
+const RATING_CHOICES: { label: string; value: number; star: boolean }[] = [
+  { label: 'Toutes', value: 0, star: false },
+  { label: '3+', value: 3, star: true },
+  { label: '4+', value: 4, star: true },
+  { label: '4,5+', value: 4.5, star: true },
+];
+
 export function formatFilterApplyLabel(matchCount: number): string {
   if (matchCount > 100) {
     return 'Afficher plus de 100 artisans';
+  }
+  if (matchCount === 0) {
+    return 'Aucun artisan';
   }
   const noun = matchCount === 1 ? 'artisan' : 'artisans';
   return `Afficher ${matchCount} ${noun}`;
 }
 
+function fold(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function ratingChipLabel(value: number): string {
+  const choice = RATING_CHOICES.find((item) => item.value === value);
+  if (choice) {
+    return `Note ${choice.label}`;
+  }
+  const text = Number.isInteger(value)
+    ? String(value)
+    : value.toLocaleString('fr-FR');
+  return `Note ${text}+`;
+}
+
 @Component({
   selector: 'tmt-search-filters-dialog',
-  imports: [
-    FormsModule,
-    Dialog,
-    Button,
-    Checkbox,
-    InputText,
-    Select,
-    Accordion,
-    AccordionPanel,
-    AccordionHeader,
-    AccordionContent,
-  ],
+  imports: [Dialog],
   templateUrl: './search-filters-dialog.html',
   styleUrl: './search-filters-dialog.scss',
 })
 export class SearchFiltersDialog {
   private readonly craftsmanService = inject(AppCraftsmanCatalogService);
+  private readonly categoryI18n = inject(CategoryI18nService);
 
   readonly visible = model.required<boolean>();
   readonly filters = input.required<SearchFilterValues>();
@@ -79,6 +112,8 @@ export class SearchFiltersDialog {
   readonly apply = output<SearchFilterValues>();
 
   protected readonly draft = signal<SearchFilterValues>(this.emptyDraft());
+  protected readonly tradeQuery = signal('');
+  private readonly openFamilyIds = signal<ReadonlySet<string>>(new Set());
   private readonly applying = signal(false);
   private readonly filterChangeLoading = signal(false);
   /** Bumped on each filter change to restart the dot CSS animation. */
@@ -90,6 +125,8 @@ export class SearchFiltersDialog {
   /** At least one full dot-bounce cycle (animation is 0.525s). */
   private static readonly LOADING_MIN_MS = 350;
 
+  protected readonly ratingChoices = RATING_CHOICES;
+
   protected readonly showApplyLoading = computed(
     () => this.applying() || this.filterChangeLoading(),
   );
@@ -98,11 +135,12 @@ export class SearchFiltersDialog {
     () =>
       this.craftsmanService.filter({
         query: this.draft().query,
-        trades: this.draft().trades,
+        trades: this.draft().subCategoryIds.length > 0 ? [] : this.draft().trades,
+        subCategoryIds: this.draft().subCategoryIds,
         minRating: this.draft().minRating,
         projectDate: this.draft().projectDate,
         projectTypes: this.draft().projectTypes,
-        serviceOptions: this.draft().serviceOptions,
+        serviceOptions: [],
       }).length,
   );
 
@@ -110,34 +148,154 @@ export class SearchFiltersDialog {
     formatFilterApplyLabel(this.draftMatchCount()),
   );
 
-  protected readonly tradeFamilies = TRADE_FAMILIES;
+  protected readonly tradeFamilies = computed(() => {
+    this.categoryI18n.activeLang();
+    return [...this.craftsmanService.categoriesSignal()]
+      .sort((a, b) => a.order - b.order)
+      .map((category) => ({
+        id: category.id,
+        label: this.categoryI18n.name(category),
+        trades: [...category.subCategories]
+          .sort((a, b) => a.order - b.order)
+          .map((subCategory) => ({
+            id: subCategory.id,
+            label: this.categoryI18n.subCategoryLabel(subCategory),
+          })),
+      }))
+      .filter((family) => family.trades.length > 0);
+  });
 
-  protected readonly projectOptions = ALL_PROJECT_TYPES.map((key) => ({
-    key,
-    label: PROJECT_LABELS[key],
-  }));
+  protected readonly familyCards = computed((): FamilyCard[] => {
+    const selected = new Set(this.draft().subCategoryIds);
+    const open = this.openFamilyIds();
+    return this.tradeFamilies().map((family) => {
+      const selectedCount = family.trades.filter((trade) =>
+        selected.has(trade.id),
+      ).length;
+      const allOn =
+        family.trades.length > 0 && selectedCount === family.trades.length;
+      return {
+        id: family.id,
+        label: family.label,
+        selectedCount,
+        hasSelection: selectedCount > 0,
+        isOpen: open.has(family.id),
+        allLabel: allOn ? 'Tout désélectionner' : 'Tout sélectionner',
+        trades: family.trades.map((trade) => ({
+          id: trade.id,
+          label: trade.label,
+          on: selected.has(trade.id),
+        })),
+      };
+    });
+  });
 
-  protected readonly serviceOptionChoices = ALL_SERVICE_OPTIONS.map((key) => ({
-    key,
-    label: SERVICE_OPTION_LABELS[key],
-  }));
+  protected readonly tradeSearchQuery = computed(() => this.tradeQuery().trim());
 
-  protected readonly ratingOptions: { label: string; value: number }[] = [
-    { label: 'Toutes les notes', value: 0 },
-    { label: '3 étoiles et plus', value: 3 },
-    { label: '3,5 étoiles et plus', value: 3.5 },
-    { label: '4 étoiles et plus', value: 4 },
-    { label: '4,5 étoiles et plus', value: 4.5 },
-  ];
+  protected readonly isSearchingTrades = computed(
+    () => this.tradeSearchQuery().length > 0,
+  );
+
+  protected readonly tradeSearchResults = computed((): TradeSearchHit[] => {
+    const query = fold(this.tradeSearchQuery());
+    if (!query) {
+      return [];
+    }
+    const selected = new Set(this.draft().subCategoryIds);
+    const results: TradeSearchHit[] = [];
+    for (const family of this.tradeFamilies()) {
+      const familyMatch = fold(family.label).includes(query);
+      for (const trade of family.trades) {
+        if (familyMatch || fold(trade.label).includes(query)) {
+          results.push({
+            id: trade.id,
+            label: trade.label,
+            category: family.label,
+            on: selected.has(trade.id),
+          });
+        }
+      }
+    }
+    return results;
+  });
+
+  protected readonly selectionCountLabel = computed(() => {
+    const count = this.draft().subCategoryIds.length;
+    if (count === 0) {
+      return 'Tous les métiers';
+    }
+    return `${count} sélectionné${count > 1 ? 's' : ''}`;
+  });
+
+  protected readonly activeChips = computed((): ActiveFilterChip[] => {
+    const draft = this.draft();
+    const chips: ActiveFilterChip[] = [];
+    if (draft.minRating > 0) {
+      chips.push({
+        id: 'rating',
+        label: ratingChipLabel(draft.minRating),
+        kind: 'rating',
+      });
+    }
+
+    const labels = new Map<string, string>();
+    for (const family of this.tradeFamilies()) {
+      for (const trade of family.trades) {
+        labels.set(trade.id, trade.label);
+      }
+    }
+    for (const tradeId of draft.subCategoryIds) {
+      chips.push({
+        id: `trade:${tradeId}`,
+        label: labels.get(tradeId) ?? tradeId,
+        kind: 'trade',
+        tradeId,
+      });
+    }
+
+    const query = draft.query.trim();
+    if (query) {
+      chips.push({ id: 'query', label: query, kind: 'query' });
+    }
+    return chips;
+  });
+
+  protected readonly hasActiveDraft = computed(() => {
+    const draft = this.draft();
+    return (
+      this.activeChips().length > 0 ||
+      draft.trades.length > 0 ||
+      draft.projectTypes.length > 0 ||
+      draft.serviceOptions.length > 0 ||
+      draft.projectDate.trim().length > 0
+    );
+  });
 
   constructor() {
     effect(() => {
-      if (this.visible()) {
-        this.draft.set(structuredClone(this.filters()));
+      if (!this.visible()) {
+        return;
+      }
+
+      untracked(() => {
+        const filters = structuredClone(this.filters());
+        this.draft.set(filters);
+        this.tradeQuery.set('');
         this.applying.set(false);
         this.filterChangeLoading.set(false);
         clearTimeout(this.queryPulseTimer);
-      }
+
+        const selected = new Set(filters.subCategoryIds);
+        this.openFamilyIds.set(
+          new Set(
+            this.tradeFamilies()
+              .filter((family) =>
+                family.trades.some((trade) => selected.has(trade.id)),
+              )
+              .map((family) => family.id),
+          ),
+        );
+      });
     });
 
     effect((onCleanup) => {
@@ -180,6 +338,21 @@ export class SearchFiltersDialog {
     });
   }
 
+  protected close(): void {
+    this.visible.set(false);
+  }
+
+  protected setRating(value: number): void {
+    if (this.draft().minRating === value) {
+      return;
+    }
+    this.patchDraft({ minRating: value });
+  }
+
+  protected onTradeQueryInput(event: Event): void {
+    this.tradeQuery.set((event.target as HTMLInputElement).value);
+  }
+
   protected patchDraft(partial: Partial<SearchFilterValues>): void {
     this.draft.update((current) => ({ ...current, ...partial }));
 
@@ -202,45 +375,61 @@ export class SearchFiltersDialog {
     this.filterChangeLoading.set(true);
   }
 
-  protected isTradeChecked(key: CraftsmanTrade): boolean {
-    return this.draft().trades.includes(key);
-  }
-
-  protected isProjectChecked(key: ProjectType): boolean {
-    return this.draft().projectTypes.includes(key);
-  }
-
-  protected isServiceOptionChecked(key: ServiceOption): boolean {
-    return this.draft().serviceOptions.includes(key);
-  }
-
-  protected toggleTrade(key: CraftsmanTrade, checked: boolean): void {
-    const trades = this.draft().trades;
+  protected toggleTrade(key: string, checked: boolean): void {
+    const subCategoryIds = this.draft().subCategoryIds;
     this.patchDraft({
-      trades: checked ? [...trades, key] : trades.filter((t) => t !== key),
+      subCategoryIds: checked
+        ? [...subCategoryIds, key]
+        : subCategoryIds.filter((id) => id !== key),
     });
   }
 
-  protected toggleProject(key: ProjectType, checked: boolean): void {
-    const projectTypes = this.draft().projectTypes;
-    this.patchDraft({
-      projectTypes: checked
-        ? [...projectTypes, key]
-        : projectTypes.filter((p) => p !== key),
+  protected toggleFamilyOpen(familyId: string): void {
+    this.openFamilyIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(familyId)) {
+        next.delete(familyId);
+      } else {
+        next.add(familyId);
+      }
+      return next;
     });
   }
 
-  protected toggleServiceOption(key: ServiceOption, checked: boolean): void {
-    const serviceOptions = this.draft().serviceOptions;
+  protected toggleFamilyAll(familyId: string): void {
+    const family = this.tradeFamilies().find((item) => item.id === familyId);
+    if (!family) {
+      return;
+    }
+    const ids = family.trades.map((trade) => trade.id);
+    const current = this.draft().subCategoryIds;
+    const selected = new Set(current);
+    const allOn = ids.every((id) => selected.has(id));
     this.patchDraft({
-      serviceOptions: checked
-        ? [...serviceOptions, key]
-        : serviceOptions.filter((o) => o !== key),
+      subCategoryIds: allOn
+        ? current.filter((id) => !ids.includes(id))
+        : [...current, ...ids.filter((id) => !selected.has(id))],
     });
+  }
+
+  protected removeChip(chip: ActiveFilterChip): void {
+    if (chip.kind === 'rating') {
+      this.patchDraft({ minRating: 0 });
+      return;
+    }
+    if (chip.kind === 'query') {
+      this.patchDraft({ query: '' });
+      return;
+    }
+    if (chip.tradeId) {
+      this.toggleTrade(chip.tradeId, false);
+    }
   }
 
   protected resetDraft(): void {
     this.draft.set(this.emptyDraft());
+    this.tradeQuery.set('');
+    this.openFamilyIds.set(new Set());
     this.pulseFilterLoading();
   }
 
@@ -261,6 +450,7 @@ export class SearchFiltersDialog {
       query: '',
       minRating: 0,
       trades: [],
+      subCategoryIds: [],
       projectTypes: [],
       serviceOptions: [],
       projectDate: '',

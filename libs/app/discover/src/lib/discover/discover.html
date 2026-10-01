@@ -1,10 +1,10 @@
 <div class="discover">
-  <section class="discover__hero" aria-label="Rechercher un artisan">
+  <section class="discover__hero" aria-label="Rechercher un artisan pour votre événement">
     <div class="discover__hero-inner">
-      <h1 class="discover__title">Trouvez l’artisan idéal pour votre projet</h1>
+      <h1 class="discover__title">Trouvez les artisans pour votre événement</h1>
       <p class="discover__lead">
-        Parcourez les artisans près de chez vous, comparez les prestations et
-        explorez la carte.
+        Parcourez les prestataires événementiels près de chez vous, comparez
+        les prestations et explorez la carte.
       </p>
 
       <form class="discover__search" (submit)="$event.preventDefault(); onSearchSubmit()">
@@ -132,11 +132,7 @@
               <i class="pi pi-arrow-left" aria-hidden="true"></i>
               {{ categoryLabel(chip.categoryId) }}
             } @else if (chip.type === 'category') {
-              @if (chip.customIcon) {
-                <span [class]="chip.icon" aria-hidden="true"></span>
-              } @else {
-                <i [class]="chip.icon" aria-hidden="true"></i>
-              }
+              <i [class]="chip.icon" aria-hidden="true"></i>
               {{ categoryLabel(chip.id) }}
             } @else {
               {{ chip.label }}

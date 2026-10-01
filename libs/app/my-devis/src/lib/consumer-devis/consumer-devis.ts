@@ -4,6 +4,7 @@ import {
   ConsumerQuoteRequest,
   ConsumerQuotesService,
 } from '@trouvermontraiteur/app-consumer-data';
+import { craftsmanCoverImage } from '@trouvermontraiteur/models';
 import { Button } from 'primeng/button';
 import { Tag } from 'primeng/tag';
 
@@ -17,6 +18,10 @@ export class ConsumerDevis {
   protected readonly quotesService = inject(ConsumerQuotesService);
 
   protected readonly quotes = this.quotesService.quotes;
+
+  protected coverImage(url: string): string {
+    return craftsmanCoverImage(url);
+  }
 
   protected statusLabel(status: ConsumerQuoteRequest['status']): string {
     const labels = {

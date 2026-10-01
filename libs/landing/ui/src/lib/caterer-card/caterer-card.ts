@@ -28,6 +28,6 @@ export class CatererCard {
     if (!base?.startsWith('http://') && !base?.startsWith('https://')) {
       return null;
     }
-    return `${base}/artisans/${this.craftsman().slug}`;
+    return `${base}/artisans/${this.craftsman().id}`;
   });
 }

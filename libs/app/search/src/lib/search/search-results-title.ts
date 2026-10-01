@@ -7,7 +7,9 @@ export interface SearchResultsTitleInput {
   userMovedMap: boolean;
   cityName: string | null;
   projectDate: string;
-  trades: CraftsmanTrade[];
+  tradeLabel: string | null;
+  familyLabel: string | null;
+  singleTrade: boolean;
 }
 
 export interface SearchResultsTitle {
@@ -97,9 +99,9 @@ export function buildSearchResultsTitle(
 
   const dateLabel = formatProjectDateLabel(input.projectDate);
   const cityName = input.cityName?.trim() || null;
-  const categoryLabel = resolveTradeDisplayLabel(input.trades);
-  const familyLabel = resolveTradeFamilyLabel(input.trades);
-  const singleTrade = input.trades.length === 1;
+  const categoryLabel = input.tradeLabel;
+  const familyLabel = input.familyLabel;
+  const singleTrade = input.singleTrade;
 
   if (cityName && categoryLabel && singleTrade) {
     const locationHeading = dateLabel

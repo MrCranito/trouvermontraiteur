@@ -14,6 +14,7 @@ export class CategoryService {
       .select(
         `id,
         order,
+        icon,
         categories_translations (
           language_code,
           name
@@ -41,6 +42,7 @@ export class CategoryService {
   private mapRow(row: CategoryRow): Category {
     return {
       id: row.id,
+      icon: row.icon,
       translations: row.categories_translations,
       order: row.order,
       subCategories: (row.sub_categories ?? []).map((subCategory) =>

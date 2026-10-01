@@ -3,23 +3,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AppCraftsmanCatalogService } from '@trouvermontraiteur/app-consumer-data';
 import { CategoryI18nService } from '@trouvermontraiteur/app-i18n';
 import { Category, SubCategory } from '@trouvermontraiteur/models';
+import { categoryIconClass } from '../category-icons';
 
 export interface DiscoverCategorySelection {
   categoryId: string | null;
   subCategoryId: string | null;
 }
-
-const CATEGORY_ICONS: Record<string, string> = {
-  batiments: 'pi pi-building',
-  reparation: 'pi pi-wrench',
-  mobilite: 'pi pi-car',
-  alimentation: 'pi pi-shopping-bag',
-  beaute: 'pi pi-sparkles',
-  mode: 'pi pi-tag',
-  decoration: 'pi pi-palette',
-  jardin: 'pi pi-sun',
-  audiovisuel: 'pi pi-camera',
-};
 
 @Component({
   selector: 'tmt-discover-category-picker',
@@ -60,7 +49,7 @@ export class DiscoverCategoryPicker {
   });
 
   protected categoryIcon(category: Category): string {
-    return CATEGORY_ICONS[category.id] ?? 'pi pi-briefcase';
+    return categoryIconClass(category);
   }
 
   protected onBackdropClick(event: MouseEvent): void {

@@ -13,6 +13,7 @@ import { TopbarAuthState } from './topbar-auth-state';
 })
 export class TmtTopbar {
   readonly dashboardUrl = input.required<string>();
+  readonly brandName = input('Trouver mon artisan');
   readonly homeLink = input<string>('/');
   readonly auth = input<TopbarAuthState | null>(null);
   /** Router link for the login button when the user is not authenticated. */

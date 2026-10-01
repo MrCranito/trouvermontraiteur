@@ -5,10 +5,17 @@ import { TmtLanguageSwitcher } from '@trouvermontraiteur/app-i18n';
 import { TmtFooter } from '@trouvermontraiteur/footer';
 import { TmtTopbar } from '@trouvermontraiteur/topbar';
 import { environment } from '@env';
+import { FavoriteLoginDialog } from '../favorite-login-dialog/favorite-login-dialog';
 
 @Component({
   selector: 'tmt-app-shell',
-  imports: [RouterOutlet, TmtTopbar, TmtFooter, TmtLanguageSwitcher],
+  imports: [
+    RouterOutlet,
+    TmtTopbar,
+    TmtFooter,
+    TmtLanguageSwitcher,
+    FavoriteLoginDialog,
+  ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

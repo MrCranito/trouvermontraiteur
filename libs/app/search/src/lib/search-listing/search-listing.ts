@@ -8,11 +8,17 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ConsumerAuthService } from '@trouvermontraiteur/app-auth';
-import { ConsumerFavoritesService } from '@trouvermontraiteur/app-consumer-data';
+import {
+  ConsumerFavoritesService,
+  FavoriteLoginPromptService,
+} from '@trouvermontraiteur/app-consumer-data';
 import { PROJECT_LABELS } from '@trouvermontraiteur/data';
-import { Craftsman } from '@trouvermontraiteur/models';
+import {
+  CRAFTSMAN_EMPTY_IMAGE_URL,
+  Craftsman,
+} from '@trouvermontraiteur/models';
 
 interface ListingPhoto {
   id: string;
@@ -27,9 +33,9 @@ interface ListingPhoto {
   styleUrl: './search-listing.scss',
 })
 export class SearchListing {
-  private readonly router = inject(Router);
   private readonly auth = inject(ConsumerAuthService);
   private readonly favorites = inject(ConsumerFavoritesService);
+  private readonly favoriteLoginPrompt = inject(FavoriteLoginPromptService);
 
   private readonly photoTrackRef =
     viewChild<ElementRef<HTMLElement>>('photoTrack');
@@ -43,14 +49,26 @@ export class SearchListing {
 
   protected readonly photos = computed((): ListingPhoto[] => {
     const c = this.craftsman();
-    return [
+    const photos = [
       { id: 'cover', imageUrl: c.imageUrl, caption: c.name },
       ...c.realisations.map((r) => ({
         id: r.id,
         imageUrl: r.imageUrl,
         caption: r.caption,
       })),
-    ];
+    ].filter((photo) => photo.imageUrl.trim().length > 0);
+
+    if (photos.length === 0) {
+      return [
+        {
+          id: 'empty',
+          imageUrl: CRAFTSMAN_EMPTY_IMAGE_URL,
+          caption: c.name,
+        },
+      ];
+    }
+
+    return photos;
   });
 
   protected readonly hasMultiplePhotos = computed(
@@ -85,15 +103,21 @@ export class SearchListing {
   protected prevPhoto(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.goToPhoto(
-      (this.photoIndex() - 1 + this.photos().length) % this.photos().length,
-    );
+    const index = this.photoIndex();
+    if (index <= 0) {
+      return;
+    }
+    this.goToPhoto(index - 1);
   }
 
   protected nextPhoto(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.goToPhoto((this.photoIndex() + 1) % this.photos().length);
+    const index = this.photoIndex();
+    if (index >= this.photos().length - 1) {
+      return;
+    }
+    this.goToPhoto(index + 1);
   }
 
   protected onFavoriteClick(event: Event): void {
@@ -101,9 +125,7 @@ export class SearchListing {
     event.stopPropagation();
 
     if (!this.auth.isAuthenticated()) {
-      void this.router.navigate(['/auth/connexion'], {
-        queryParams: { returnUrl: this.router.url || '/' },
-      });
+      this.favoriteLoginPrompt.open();
       return;
     }
 
