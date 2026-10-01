@@ -65,6 +65,7 @@
 }
 
 .discover-card__media {
+  position: relative;
   aspect-ratio: 20 / 19;
   border-radius: 0.85rem;
   overflow: hidden;
@@ -127,10 +128,14 @@
 
 .discover-card__certified {
   flex: none;
-  margin-top: 0.15rem;
-  font-size: 0.85rem;
-  line-height: 1;
-  color: #1d9bf0;
+  margin-top: 0.12rem;
+}
+
+.discover-card__certified-chip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
 }
 
 .discover-card__rating {

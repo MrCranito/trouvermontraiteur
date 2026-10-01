@@ -352,8 +352,13 @@
 
 .listing__certified {
   flex: none;
-  font-size: 1.05rem;
-  color: #1d9bf0;
+}
+
+.listing__certified-chip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
 }
 
 .listing__meta {

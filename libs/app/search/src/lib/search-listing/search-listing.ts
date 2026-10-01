@@ -15,6 +15,7 @@ import {
   FavoriteLoginPromptService,
 } from '@trouvermontraiteur/app-consumer-data';
 import { PROJECT_LABELS } from '@trouvermontraiteur/data';
+import { CertifiedBadge } from '@trouvermontraiteur/certified-badge';
 import {
   CRAFTSMAN_EMPTY_IMAGE_URL,
   Craftsman,
@@ -28,7 +29,7 @@ interface ListingPhoto {
 
 @Component({
   selector: 'tmt-search-listing',
-  imports: [RouterLink],
+  imports: [RouterLink, CertifiedBadge],
   templateUrl: './search-listing.html',
   styleUrl: './search-listing.scss',
 })

@@ -6,11 +6,12 @@ import {
   FavoriteLoginPromptService,
 } from '@trouvermontraiteur/app-consumer-data';
 import { PROJECT_LABELS } from '@trouvermontraiteur/data';
+import { CertifiedBadge } from '@trouvermontraiteur/certified-badge';
 import { Craftsman, craftsmanCoverImage } from '@trouvermontraiteur/models';
 
 @Component({
   selector: 'tmt-discover-card',
-  imports: [RouterLink],
+  imports: [RouterLink, CertifiedBadge],
   templateUrl: './discover-card.html',
   styleUrl: './discover-card.scss',
 })

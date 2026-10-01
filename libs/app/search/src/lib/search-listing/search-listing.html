@@ -47,6 +47,13 @@
           }
         </div>
         <span class="search-listing__media-shade" aria-hidden="true"></span>
+        @if (craftsman().certified) {
+          <tmt-certified-badge
+            class="search-listing__certified-chip"
+            variant="overlay"
+            label="Certifié"
+          />
+        }
       </div>
     </a>
 
@@ -83,11 +90,7 @@
         <div class="search-listing__name-wrap">
           <h3>{{ craftsman().name }}</h3>
           @if (craftsman().certified) {
-            <i
-              class="pi pi-verified search-listing__certified"
-              role="img"
-              aria-label="Profil certifié"
-            ></i>
+            <tmt-certified-badge class="search-listing__certified" [size]="16" />
           }
         </div>
         @if (craftsman().rating > 0) {

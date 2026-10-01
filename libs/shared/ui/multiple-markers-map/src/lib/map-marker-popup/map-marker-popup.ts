@@ -16,6 +16,7 @@ import {
   FavoriteLoginPromptService,
 } from '@trouvermontraiteur/app-consumer-data';
 import { PROJECT_LABELS } from '@trouvermontraiteur/data';
+import { CertifiedBadge } from '@trouvermontraiteur/certified-badge';
 import {
   CRAFTSMAN_EMPTY_IMAGE_URL,
   Craftsman,
@@ -30,7 +31,7 @@ interface PopupPhoto {
 
 @Component({
   selector: 'tmt-map-marker-popup',
-  imports: [RouterLink],
+  imports: [RouterLink, CertifiedBadge],
   templateUrl: './map-marker-popup.html',
   styleUrl: './map-marker-popup.scss',
 })

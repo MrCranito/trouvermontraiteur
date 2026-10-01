@@ -17,17 +17,20 @@
   <a class="discover-card__link" [routerLink]="['/artisans', craftsman().id]">
   <div class="discover-card__media">
     <img [src]="coverImage()" [alt]="craftsman().name" loading="lazy" />
+    @if (craftsman().certified) {
+      <tmt-certified-badge
+        class="discover-card__certified-chip"
+        variant="overlay"
+        label="Certifié"
+      />
+    }
   </div>
   <div class="discover-card__body">
     <div class="discover-card__row">
       <div class="discover-card__name-wrap">
         <h3 class="discover-card__name">{{ craftsman().name }}</h3>
         @if (craftsman().certified) {
-          <i
-            class="pi pi-verified discover-card__certified"
-            role="img"
-            aria-label="Profil certifié"
-          ></i>
+          <tmt-certified-badge class="discover-card__certified" [size]="16" />
         }
       </div>
       @if (craftsman().rating > 0) {
