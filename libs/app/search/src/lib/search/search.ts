@@ -237,6 +237,8 @@ export class Search {
   });
 
   constructor(private readonly craftsmanService: AppCraftsmanCatalogService) {
+    void this.craftsmanService.ensureFullCatalog();
+
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const state = parseSearchQueryParams(params);
       this.query.set(state.query);

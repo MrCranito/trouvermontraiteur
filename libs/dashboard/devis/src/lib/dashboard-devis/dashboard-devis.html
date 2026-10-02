@@ -35,6 +35,117 @@
     </li>
   </ul>
 
+  <section class="dash-devis__section" aria-labelledby="dash-devis-contracts-title">
+    <div class="dash-devis__section-head">
+      <div>
+        <p class="dash-devis__eyebrow">Contrats signés &amp; en cours</p>
+        <h3 id="dash-devis-contracts-title">Contrats</h3>
+      </div>
+      <p-button
+        type="button"
+        icon="pi pi-refresh"
+        [rounded]="true"
+        [outlined]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Actualiser les contrats"
+        [loading]="contractsLoading()"
+        (onClick)="refreshContracts()"
+      />
+    </div>
+
+    @if (contractsError(); as error) {
+      <p-message severity="error" [text]="error" />
+    }
+
+    <div class="dash-devis__card">
+      <p-table
+        class="dash-devis__table"
+        [value]="contractRows()"
+        [rowHover]="true"
+        [loading]="contractsLoading()"
+        [paginator]="contractRows().length > 8"
+        [rows]="8"
+        [rowsPerPageOptions]="[8, 15, 25]"
+        dataKey="id"
+        responsiveLayout="scroll"
+        styleClass="dash-devis-table"
+        paginatorStyleClass="dash-devis-paginator"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Client</th>
+            <th>Événement</th>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Créé</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-contract>
+          <tr>
+            <td>
+              <div class="dash-devis__client">
+                <span class="dash-devis__avatar" aria-hidden="true">{{
+                  clientInitials(contract.clientName || '?')
+                }}</span>
+                <div>
+                  <strong>{{ contract.clientName || 'Client' }}</strong>
+                  @if (contract.clientEmail) {
+                    <span class="dash-devis__email">{{ contract.clientEmail }}</span>
+                  }
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (contract.eventType || contract.title) {
+                <span class="dash-devis__event-chip">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  {{ contract.eventType || contract.title }}
+                </span>
+              } @else {
+                <span class="dash-devis__budget dash-devis__budget--muted">—</span>
+              }
+            </td>
+            <td>{{ formatContractDate(contract.eventDate) }}</td>
+            <td>{{ formatAmount(contract) }}</td>
+            <td>
+              <p-tag
+                [value]="contractStatusLabel(contract.status)"
+                [severity]="contractStatusSeverity(contract.status)"
+                [rounded]="true"
+              />
+            </td>
+            <td>
+              <span class="dash-devis__time">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                {{ formatContractDate(contract.createdAt) }}
+              </span>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6">
+              <div class="dash-devis__empty">
+                <i class="pi pi-file" aria-hidden="true"></i>
+                <p>Aucun contrat pour le moment.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+
+  <section class="dash-devis__section" aria-labelledby="dash-devis-requests-title">
+    <div class="dash-devis__section-head">
+      <div>
+        <p class="dash-devis__eyebrow">Demandes clients</p>
+        <h3 id="dash-devis-requests-title">Demandes de devis</h3>
+      </div>
+    </div>
+
   <div class="dash-devis__card">
     <p-table
       class="dash-devis__table"
@@ -193,6 +304,7 @@
       </ng-template>
     </p-table>
   </div>
+  </section>
 
   <p-dialog
     header="Demande de devis"

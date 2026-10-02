@@ -212,11 +212,23 @@
           </div>
         </header>
 
-        <ul class="discover__row">
-          @for (craftsman of section.craftsmen; track craftsman.id) {
-            <li class="discover__row-item">
-              <tmt-discover-card [craftsman]="craftsman" />
-            </li>
+        <ul class="discover__row" [attr.aria-busy]="isSectionLoading(section)">
+          @if (isSectionLoading(section) && section.craftsmen.length === 0) {
+            @for (item of skeletonRowItems; track item) {
+              <li class="discover__row-item">
+                <div class="discover__row-item-skeleton">
+                  <span class="discover__skeleton discover__skeleton--card-media"></span>
+                  <span class="discover__skeleton discover__skeleton--card-title"></span>
+                  <span class="discover__skeleton discover__skeleton--card-text"></span>
+                </div>
+              </li>
+            }
+          } @else {
+            @for (craftsman of section.craftsmen; track craftsman.id) {
+              <li class="discover__row-item">
+                <tmt-discover-card [craftsman]="craftsman" />
+              </li>
+            }
           }
         </ul>
       </section>

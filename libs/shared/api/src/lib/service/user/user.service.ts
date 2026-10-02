@@ -37,6 +37,16 @@ export class UserService {
     return data ? this.mapRowToUser(data as UserRow) : null;
   }
 
+  /**
+   * Upserts the signed-in consumer into public.users (required by users_favorites FK).
+   */
+  async ensureConsumerProfile(): Promise<void> {
+    const { error } = await this.supabase.rpc('ensure_consumer_profile');
+    if (error) {
+      throw error;
+    }
+  }
+
   private mapRowToRecord(row: UserRow): UserRecord {
     return {
       id: row.id,

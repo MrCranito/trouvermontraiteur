@@ -27,9 +27,13 @@
   gap: 0.4rem;
   font-size: 0.88rem;
   font-weight: 600;
+  font-style: normal;
   color: #2a2219;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+
+  .pi {
+    text-decoration: none;
+  }
 
   &:hover {
     color: #c4622d;

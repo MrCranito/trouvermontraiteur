@@ -19,6 +19,7 @@ export class ConsumerFavoritesService {
   private catalogRef: AppCraftsmanCatalogService | null = null;
 
   private readonly favoriteIds = signal<string[]>([]);
+  private readonly favoriteCraftsmenList = signal<Craftsman[]>([]);
   private readonly loading = signal(false);
   private readonly ready = signal(false);
 
@@ -26,27 +27,17 @@ export class ConsumerFavoritesService {
   readonly isReady = this.ready.asReadonly();
 
   /**
-   * Stays true until favorite ids and, when there are any, the catalog
-   * used to resolve them are both ready. The catalog is created only then,
-   * so a craftsman details page can check ids without loading every craftsman.
+   * Stays true until favorite ids and, when there are any, the craftsmen
+   * used to resolve them are both ready.
    */
   readonly isLoading = computed(() => {
     if (this.loading() || !this.ready()) {
       return true;
     }
-    if (this.favoriteIds().length === 0) {
-      return false;
-    }
-    return !this.catalog().isReady();
+    return false;
   });
 
-  readonly favoriteCraftsmen = computed((): Craftsman[] => {
-    const ids = new Set(this.favoriteIds());
-    if (ids.size === 0) {
-      return [];
-    }
-    return this.catalog().getAll().filter((c) => ids.has(c.id));
-  });
+  readonly favoriteCraftsmen = this.favoriteCraftsmenList.asReadonly();
 
   private catalog(): AppCraftsmanCatalogService {
     this.catalogRef ??= this.injector.get(AppCraftsmanCatalogService);
@@ -57,14 +48,22 @@ export class ConsumerFavoritesService {
   readonly favoriteCaterers = this.favoriteCraftsmen;
 
   constructor() {
+    let loadedForUserId: string | null | undefined;
+
     effect(() => {
       if (!this.auth.isReady()) {
         return;
       }
 
       const userId = this.auth.user()?.id ?? null;
+      if (userId === loadedForUserId) {
+        return;
+      }
+      loadedForUserId = userId;
+
       if (!userId) {
         this.favoriteIds.set([]);
+        this.favoriteCraftsmenList.set([]);
         this.ready.set(true);
         return;
       }
@@ -80,6 +79,7 @@ export class ConsumerFavoritesService {
   async load(): Promise<void> {
     if (!this.auth.isAuthenticated()) {
       this.favoriteIds.set([]);
+      this.favoriteCraftsmenList.set([]);
       this.ready.set(true);
       return;
     }
@@ -88,9 +88,12 @@ export class ConsumerFavoritesService {
 
     try {
       const favorites = await this.favoriteApi.getAll();
-      this.favoriteIds.set(favorites.map((item) => item.craftsmanId));
+      const ids = favorites.map((item) => item.craftsmanId);
+      this.favoriteIds.set(ids);
+      this.favoriteCraftsmenList.set(await this.catalog().getByIds(ids));
     } catch {
       this.favoriteIds.set([]);
+      this.favoriteCraftsmenList.set([]);
     } finally {
       this.loading.set(false);
       this.ready.set(true);
@@ -102,10 +105,18 @@ export class ConsumerFavoritesService {
       return false;
     }
 
+    const accessError = await this.auth.ensureConsumerAccess();
+    if (accessError || !this.auth.isConsumer()) {
+      return false;
+    }
+
     const wasFavorite = this.isFavorite(craftsmanId);
 
     if (wasFavorite) {
       this.favoriteIds.update((ids) => ids.filter((id) => id !== craftsmanId));
+      this.favoriteCraftsmenList.update((list) =>
+        list.filter((item) => item.id !== craftsmanId),
+      );
       try {
         await this.favoriteApi.remove(craftsmanId);
         return false;
@@ -118,6 +129,14 @@ export class ConsumerFavoritesService {
     this.favoriteIds.update((ids) => [...ids, craftsmanId]);
     try {
       await this.favoriteApi.add(craftsmanId);
+      const [craftsman] = await this.catalog().getByIds([craftsmanId]);
+      if (craftsman) {
+        this.favoriteCraftsmenList.update((list) =>
+          list.some((item) => item.id === craftsmanId)
+            ? list
+            : [...list, craftsman],
+        );
+      }
       return true;
     } catch (err) {
       this.favoriteIds.update((ids) => ids.filter((id) => id !== craftsmanId));

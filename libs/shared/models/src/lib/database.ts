@@ -97,3 +97,28 @@ export interface UserFavorite {
   craftsmanId: string;
   createdAt: Date;
 }
+
+export type UserProContractStatus =
+  | 'draft'
+  | 'sent'
+  | 'signed'
+  | 'cancelled';
+
+export interface UserProContract {
+  id: string;
+  ownerUserId: string;
+  title: string | null;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  eventType: string | null;
+  eventDate: string | null;
+  guestCount: number | null;
+  amountCents: number | null;
+  currency: string;
+  status: UserProContractStatus;
+  notes: string | null;
+  signedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
