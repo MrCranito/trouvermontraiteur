@@ -1,139 +1,388 @@
 <div class="dash-overview">
   @if (completeness().score < 100) {
-  <aside class="dash-overview__alert" role="status">
-    <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <div>
-      <strong>Votre page ne peut pas être encore publier.</strong>
-      <p>
-        Ajouter les éléments obligatoires pour pouvoir publier votre page et
-        avoir de la visibilité lors des résultats de recherche des utilisateurs.
-      </p>
-    </div>
-    <a routerLink="/custom-details" class="dash-overview__alert-link"
-      >Modifier</a
-    >
-  </aside>
+    <aside class="dash-overview__alert" role="status">
+      <div>
+        <strong>Votre page n'est pas encore prête à être publiée.</strong>
+        <p>
+          Complétez les éléments obligatoires pour apparaître dans les résultats
+          de recherche.
+        </p>
+      </div>
+      <a routerLink="/custom-details" class="dash-overview__alert-link"
+        >Modifier</a
+      >
+    </aside>
   }
 
-  <section class="dash-overview__intro" aria-labelledby="overview-title">
-    <div>
-      <p class="dash-overview__eyebrow">Vue d'ensemble</p>
-      <h2 id="overview-title">Performances de votre vitrine</h2>
-      <p class="dash-overview__lead">
-        Statistiques de visibilité sur Eventup — période : {{
-        stats.periodLabel }}.
+  <header class="dash-overview__header">
+    <div class="dash-overview__header-text">
+      <div class="dash-overview__title-row">
+        <h1>Bonjour, {{ greetingName() }}</h1>
+        @if (caterer()?.certified) {
+          <svg
+            class="dash-overview__certified"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            aria-label="Artisan certifié"
+          >
+            <polygon
+              points="12.00,1.00 14.41,3.02 17.50,2.47 18.58,5.42 21.53,6.50 20.98,9.59 23.00,12.00 20.98,14.41 21.53,17.50 18.58,18.58 17.50,21.53 14.41,20.98 12.00,23.00 9.59,20.98 6.50,21.53 5.42,18.58 2.47,17.50 3.02,14.41 1.00,12.00 3.02,9.59 2.47,6.50 5.42,5.42 6.50,2.47 9.59,3.02"
+              fill="#B04A17"
+              stroke="#B04A17"
+              stroke-width="1.4"
+              stroke-linejoin="round"
+            ></polygon>
+            <path
+              d="M8.4 12.3l2.4 2.4 4.8-5"
+              fill="none"
+              stroke="#FFFFFF"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+        }
+        @if (isPremium()) {
+          <span class="dash-overview__premium-pill">Premium</span>
+        }
+      </div>
+      <p class="dash-overview__subtitle">
+        Voici l'activité de votre page sur les 30 derniers jours.
       </p>
     </div>
-  </section>
-
-  <section class="dash-overview__stats" aria-label="Indicateurs clés">
-    <ul class="dash-overview__stat-grid">
-      @for (card of statCards(); track card.key) {
-      <li
-        class="dash-overview__stat-card"
-        [class]="'dash-overview__stat-card--' + card.accent"
-      >
-        <span class="dash-overview__stat-icon" aria-hidden="true">
-          <i [class]="card.icon"></i>
-        </span>
-        <p class="dash-overview__stat-label">{{ card.label }}</p>
-        <p class="dash-overview__stat-value">
-          {{ formatTrend(card.trend, card.key === 'rating') }} @if (card.key ===
-          'rating') {
-          <span class="dash-overview__stat-suffix">/ 5</span>
-          }
-        </p>
-        @if (trendLabel(card.trend.delta); as label) {
-        <span
-          class="dash-overview__trend"
-          [class]="trendClass(card.trend.delta)"
+    <div class="dash-overview__header-actions">
+      <button type="button" class="dash-overview__btn dash-overview__btn--ghost">
+        30 derniers jours ▾
+      </button>
+      @if (publicPageUrl(); as url) {
+        <a
+          class="dash-overview__btn dash-overview__btn--outline"
+          [href]="url"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Voir ma page</a
         >
-          {{ label }}
-        </span>
-        }
-        <span class="dash-overview__stat-hint">{{ card.hint }}</span>
-      </li>
+      } @else {
+        <a
+          routerLink="/custom-details"
+          class="dash-overview__btn dash-overview__btn--outline"
+          >Voir ma page</a
+        >
       }
-    </ul>
+    </div>
+  </header>
+
+  <section class="dash-overview__kpis" aria-label="Indicateurs clés">
+    @for (kpi of kpis(); track kpi.key) {
+      <article class="dash-overview__kpi">
+        <span class="dash-overview__kpi-label">{{ kpi.label }}</span>
+        <span class="dash-overview__kpi-value">{{ kpi.value }}</span>
+        <span
+          class="dash-overview__kpi-trend"
+          [class.dash-overview__kpi-trend--up]="kpi.up === true"
+        >
+          {{ kpi.trend }}
+        </span>
+      </article>
+    }
   </section>
 
-  <div class="dash-overview__panels">
-    <section
-      class="dash-overview__panel dash-overview__panel--chart"
-      aria-labelledby="chart-title"
-    >
-      <header
-        class="dash-overview__panel-head dash-overview__panel-head--chart"
-      >
-        <div>
-          <p class="dash-overview__eyebrow">Tendance</p>
-          <h3 id="chart-title">{{ viewsChartTitle() }}</h3>
+  <div class="dash-overview__row">
+    <section class="dash-overview__panel dash-overview__panel--quotes">
+      <div class="dash-overview__panel-head">
+        <h2>Demandes de devis</h2>
+        <a routerLink="/devis" class="dash-overview__link">Tout voir</a>
+      </div>
+
+      <div class="dash-overview__tabs" role="tablist">
+        @for (tab of quoteTabs(); track tab.id) {
+          <button
+            type="button"
+            role="tab"
+            class="dash-overview__tab"
+            [class.dash-overview__tab--active]="tab.selected"
+            [attr.aria-selected]="tab.selected"
+            (click)="selectTab(tab.id)"
+          >
+            {{ tab.label }} · {{ tab.count }}
+          </button>
+        }
+      </div>
+
+      <div class="dash-overview__table" role="table">
+        <div class="dash-overview__table-head" role="row">
+          <span role="columnheader">Client</span>
+          <span role="columnheader">Événement</span>
+          <span role="columnheader">Date</span>
+          <span role="columnheader">Budget</span>
+          <span role="columnheader">Statut</span>
         </div>
-        <p-select
-          inputId="overview-views-period"
-          class="dash-overview__period-select"
-          [options]="viewsPeriodOptions"
-          [ngModel]="selectedViewsPeriod()"
-          (ngModelChange)="selectViewsPeriod($event)"
-          optionLabel="label"
-          optionValue="value"
-          [showClear]="false"
-          ariaLabel="Granularité du graphique"
-        />
-      </header>
-      <div class="dash-overview__chart-wrap">
-        <p-chart
-          type="line"
-          [data]="viewsChartData()"
-          [options]="viewsChartOptions()"
-          [responsive]="true"
-          height="16rem"
-          [attr.aria-label]="viewsChartTitle()"
-        />
+        @for (row of quoteRows(); track row.id) {
+          <div class="dash-overview__table-row" role="row">
+            <span class="dash-overview__cell-client" role="cell">
+              <strong [style.font-weight]="row.nameWeight">{{
+                row.clientName
+              }}</strong>
+              <small>Reçue {{ row.receivedLabel }}</small>
+            </span>
+            <span class="dash-overview__cell-event" role="cell">
+              <span>{{ row.eventType }}</span>
+              <small>{{ row.guestsLabel }} invités</small>
+            </span>
+            <span class="dash-overview__cell-date" role="cell">{{
+              row.eventDateLabel
+            }}</span>
+            <span class="dash-overview__cell-budget" role="cell">{{
+              row.budgetLabel
+            }}</span>
+            <span role="cell">
+              <span
+                class="dash-overview__status"
+                [style.background]="row.statusBg"
+                [style.color]="row.statusFg"
+                >{{ row.statusLabel }}</span
+              >
+            </span>
+          </div>
+        } @empty {
+          <p class="dash-overview__empty">Aucune demande pour ce filtre.</p>
+        }
       </div>
     </section>
 
-    <section class="dash-overview__panel" aria-labelledby="keywords-title">
-      <header class="dash-overview__panel-head">
-        <div>
-          <p class="dash-overview__eyebrow">Recherche</p>
-          <h3 id="keywords-title">Mots-clés fréquents</h3>
+    <section
+      class="dash-overview__panel dash-overview__panel--calendar"
+      [class.dash-overview__panel--locked]="!isPremium()"
+    >
+      <div
+        class="dash-overview__calendar-inner"
+        [attr.aria-hidden]="!isPremium() ? true : null"
+      >
+        <div class="dash-overview__panel-head">
+          <h2>Disponibilités</h2>
+          <span class="dash-overview__sync">
+            <span class="dash-overview__sync-dot" aria-hidden="true"></span>
+            Google Agenda synchronisé
+          </span>
         </div>
-      </header>
-      <ul class="dash-overview__keywords">
-        @for (kw of stats.topKeywords; track kw) {
-        <li><p-tag [value]="kw" severity="secondary" /></li>
+        <div class="dash-overview__cal-nav">
+          <button type="button" aria-label="Mois précédent">‹</button>
+          <span>Octobre 2026</span>
+          <button type="button" aria-label="Mois suivant">›</button>
+        </div>
+        <div class="dash-overview__cal-grid">
+          @for (w of weekdays; track $index) {
+            <span class="dash-overview__cal-weekday">{{ w }}</span>
+          }
+          @for (c of calendarCells(); track $index) {
+            <span
+              class="dash-overview__cal-day"
+              [style.background]="c.bg"
+              [style.color]="c.fg"
+              [style.border-color]="c.bd"
+              [style.font-weight]="c.weight"
+              >{{ c.label }}</span
+            >
+          }
+        </div>
+        <div class="dash-overview__cal-legend">
+          <span
+            ><i class="dash-overview__swatch dash-overview__swatch--booked"></i
+            >Réservé</span
+          >
+          <span
+            ><i class="dash-overview__swatch dash-overview__swatch--pending"></i
+            >Devis en attente</span
+          >
+          <span
+            ><i class="dash-overview__swatch dash-overview__swatch--off"></i
+            >Indisponible</span
+          >
+        </div>
+      </div>
+
+      @if (!isPremium()) {
+        <div class="dash-overview__lock-overlay dash-overview__lock-overlay--stack">
+          <span class="dash-overview__lock-icon" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+              <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+            </svg>
+          </span>
+          <strong>Calendrier de disponibilités</strong>
+          <p>
+            Synchronisez votre agenda : vos dates prises sont bloquées et les
+            clients voient quand vous êtes libre.
+          </p>
+          <button type="button" class="dash-overview__btn dash-overview__btn--accent">
+            Débloquer avec Premium
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+
+  <div class="dash-overview__row">
+    <section class="dash-overview__panel dash-overview__panel--chart">
+      <div class="dash-overview__panel-head dash-overview__panel-head--baseline">
+        <h2>Vues de votre page</h2>
+        <span class="dash-overview__muted">{{ stats.periodLabel }}</span>
+      </div>
+      <div class="dash-overview__bars" role="img" aria-label="Vues de la page">
+        @for (bar of viewBars(); track $index) {
+          <div
+            class="dash-overview__bar"
+            [class.dash-overview__bar--accent]="bar.accent"
+            [style.height]="bar.height"
+            [attr.title]="bar.tip"
+          ></div>
         }
-      </ul>
-      <p class="dash-overview__panel-note">
-        Ces requêtes ont mené les utilisateurs vers votre fiche.
-      </p>
+      </div>
+      <div class="dash-overview__bar-labels">
+        <span>2 sept.</span>
+        <span>9 sept.</span>
+        <span>16 sept.</span>
+        <span>23 sept.</span>
+        <span>1 oct.</span>
+      </div>
+    </section>
+
+    <section
+      class="dash-overview__panel dash-overview__panel--boost"
+      [class.dash-overview__panel--boost-free]="!isPremium()"
+    >
+      <div class="dash-overview__panel-head">
+        <h2>Mise en avant</h2>
+      </div>
+      @if (isPremium()) {
+        <p class="dash-overview__boost-status">
+          Active : vous apparaissez en tête des recherches dans votre zone.
+        </p>
+      } @else {
+        <div class="dash-overview__boost-free">
+          <p>
+            Apparaissez en tête des résultats pour votre métier, avec un libellé
+            « Sponsorisé ».
+          </p>
+          <div class="dash-overview__boost-rank">
+            <span class="dash-overview__boost-rank-label"
+              >Votre position moyenne aujourd'hui</span
+            >
+            <span class="dash-overview__boost-rank-value"
+              >14<sup>e</sup></span
+            >
+            <span class="dash-overview__boost-rank-hint"
+              >Les 3 premiers résultats reçoivent la majorité des clics.</span
+            >
+          </div>
+          <button type="button" class="dash-overview__btn dash-overview__btn--accent">
+            Me mettre en avant
+          </button>
+        </div>
+      }
     </section>
   </div>
 
   <section
-    class="dash-overview__panel dash-overview__panel--wide"
-    aria-labelledby="activity-title"
+    class="dash-overview__panel dash-overview__panel--advanced"
+    [class.dash-overview__panel--locked]="!isPremium()"
   >
-    <header class="dash-overview__panel-head">
-      <div>
-        <p class="dash-overview__eyebrow">Activité récente</p>
-        <h3 id="activity-title">Dernières interactions</h3>
-      </div>
-    </header>
-    <ol class="dash-overview__activity">
-      @for (item of stats.recentActivity; track item.id) {
-      <li class="dash-overview__activity-item">
-        <span class="dash-overview__activity-icon" aria-hidden="true">
-          <i [class]="item.icon"></i>
-        </span>
-        <div class="dash-overview__activity-body">
-          <strong>{{ item.title }}</strong>
-          <p>{{ item.description }}</p>
+    <div
+      class="dash-overview__advanced-inner"
+      [attr.aria-hidden]="!isPremium() ? true : null"
+    >
+      <h2>Statistiques avancées</h2>
+      <div class="dash-overview__advanced-grid">
+        <div>
+          <h3>Parcours client</h3>
+          @for (f of funnel; track f.label) {
+            <div class="dash-overview__meter">
+              <div class="dash-overview__meter-head">
+                <span>{{ f.label }}</span>
+                <span
+                  ><strong>{{ f.value }}</strong>
+                  <em>{{ f.rate }}</em></span
+                >
+              </div>
+              <div class="dash-overview__meter-track">
+                <div
+                  class="dash-overview__meter-fill dash-overview__meter-fill--accent"
+                  [style.width]="f.w"
+                ></div>
+              </div>
+            </div>
+          }
         </div>
-        <time>{{ item.timeAgo }}</time>
-      </li>
-      }
-    </ol>
+        <div>
+          <h3>D'où viennent vos visiteurs</h3>
+          @for (s of sources; track s.label) {
+            <div class="dash-overview__meter">
+              <div class="dash-overview__meter-head">
+                <span>{{ s.label }}</span>
+                <strong>{{ s.pct }}</strong>
+              </div>
+              <div class="dash-overview__meter-track">
+                <div
+                  class="dash-overview__meter-fill dash-overview__meter-fill--sage"
+                  [style.width]="s.pct"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+        <div>
+          <h3>Vous vs artisans similaires</h3>
+          @for (b of bench; track b.label) {
+            <div class="dash-overview__bench">
+              <span>{{ b.label }}</span>
+              <span class="dash-overview__bench-vals">
+                <strong>{{ b.you }}</strong>
+                <small>moy. {{ b.avg }}</small>
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (!isPremium()) {
+      <div class="dash-overview__lock-overlay dash-overview__lock-overlay--row">
+        <span class="dash-overview__lock-icon" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+          </svg>
+        </span>
+        <div>
+          <strong>Comprenez ce qui vous fait gagner des clients</strong>
+          <p>
+            Parcours de la vue au devis signé, sources de trafic et comparaison
+            avec les artisans de votre zone.
+          </p>
+        </div>
+        <button type="button" class="dash-overview__btn dash-overview__btn--accent">
+          Débloquer avec Premium
+        </button>
+      </div>
+    }
   </section>
 </div>

@@ -17,6 +17,8 @@ export class ConsumerUserService {
   readonly isReady = this.ready.asReadonly();
 
   constructor() {
+    let loadedForUserId: string | null | undefined;
+
     effect(() => {
       const authUserId = this.auth.isReady()
         ? (this.auth.user()?.id ?? null)
@@ -25,6 +27,11 @@ export class ConsumerUserService {
       if (authUserId === undefined) {
         return;
       }
+
+      if (authUserId === loadedForUserId) {
+        return;
+      }
+      loadedForUserId = authUserId;
 
       void this.load(authUserId);
     });

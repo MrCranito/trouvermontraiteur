@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AppCraftsmanCatalogService } from '@trouvermontraiteur/app-consumer-data';
@@ -49,7 +49,7 @@ type CategoryChip =
   templateUrl: './discover.html',
   styleUrl: './discover.scss',
 })
-export class Discover {
+export class Discover implements OnInit {
   private readonly router = inject(Router);
   private readonly catalog = inject(AppCraftsmanCatalogService);
   private readonly categoryI18n = inject(CategoryI18nService);
@@ -71,11 +71,22 @@ export class Discover {
     [...this.catalog.categoriesSignal()].sort((a, b) => a.order - b.order),
   );
   protected readonly loading = computed(
-    () => this.catalog.isLoading() || !this.catalog.isReady(),
+    () => !this.catalog.isReady() || this.catalog.categoriesSignal().length === 0,
   );
   protected readonly skeletonCategoryChipItems = [0, 1, 2, 3, 4, 5];
   protected readonly skeletonSectionItems = [0, 1, 2];
   protected readonly skeletonRowItems = [0, 1, 2, 3];
+
+  ngOnInit(): void {
+    void this.bootstrapCategoryPreviews();
+  }
+
+  private async bootstrapCategoryPreviews(): Promise<void> {
+    await this.catalog.ensureCategories();
+    for (const category of this.categories()) {
+      void this.catalog.loadCategoryPreview(category.id);
+    }
+  }
 
   protected readonly searchCategoryLabel = computed(() => {
     this.categoryI18n.activeLang();
@@ -130,8 +141,9 @@ export class Discover {
 
   protected readonly sections = computed((): DiscoverSection[] => {
     this.categoryI18n.activeLang();
+    // Re-read previews when category/subcategory loads finish.
+    this.catalog.craftsmenSignal();
 
-    const all = this.catalog.getAll();
     const categoryId = this.selectedCategoryId();
 
     if (!categoryId) {
@@ -140,7 +152,7 @@ export class Discover {
         title: '',
         subtitle: '',
         categoryId: category.id,
-        craftsmen: this.forCategory(all, category.id, 10),
+        craftsmen: this.catalog.getCategoryPreview(category.id),
       }));
     }
 
@@ -161,10 +173,17 @@ export class Discover {
           subtitle: `${categoryName} — ${subCategoryName}`,
           categoryId,
           subCategoryId: subCategory.id,
-          craftsmen: this.forSubCategory(all, subCategory.id, 10),
+          craftsmen: this.catalog.getSubCategoryPreview(subCategory.id),
         };
       });
   });
+
+  protected isSectionLoading(section: DiscoverSection): boolean {
+    if (section.subCategoryId) {
+      return this.catalog.isSubCategoryPreviewLoading(section.subCategoryId);
+    }
+    return this.catalog.isCategoryPreviewLoading(section.categoryId);
+  }
 
   protected categoryTranslocoKey(categoryId: string): string {
     return `categories.${categoryId}`;
@@ -364,10 +383,15 @@ export class Discover {
   protected onCategoryChipClick(chip: CategoryChip): void {
     if (chip.type === 'back') {
       this.selectedCategoryId.set(null);
+      this.searchCategoryId.set(null);
+      this.searchSubCategoryId.set(null);
       return;
     }
     if (chip.type === 'category') {
       this.selectedCategoryId.set(chip.id);
+      this.searchCategoryId.set(chip.id);
+      this.searchSubCategoryId.set(null);
+      void this.catalog.loadSubCategoryPreviewsForCategory(chip.id);
       return;
     }
     void this.navigateToSearchWithSubCategory(chip.id);
@@ -442,37 +466,5 @@ export class Discover {
 
   private categoryIcon(category: Category): string {
     return categoryIconClass(category);
-  }
-
-  private forSubCategory(
-    all: Craftsman[],
-    subCategoryId: string,
-    limit: number,
-  ): Craftsman[] {
-    return all
-      .filter((craftsman) => craftsman.subCategoryIds.includes(subCategoryId))
-      .slice(0, limit);
-  }
-
-  private forCategory(
-    all: Craftsman[],
-    categoryId: string,
-    limit: number,
-  ): Craftsman[] {
-    const subCategoryIds = new Set(
-      this.catalog
-        .getSubCategoriesForCategory(categoryId)
-        .map((item) => item.id),
-    );
-
-    if (subCategoryIds.size === 0) {
-      return [];
-    }
-
-    return all
-      .filter((craftsman) =>
-        craftsman.subCategoryIds.some((id) => subCategoryIds.has(id)),
-      )
-      .slice(0, limit);
   }
 }

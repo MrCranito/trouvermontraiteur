@@ -1,42 +1,75 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   CatererDevisService,
-  CatererProfileService,
 } from '@trouvermontraiteur/dashboard-data';
 import { CatererAuthService } from '@trouvermontraiteur/dashboard-auth';
-import { Button } from 'primeng/button';
+
+export type DashNavItem = {
+  id: string;
+  label: string;
+  route?: string;
+  badge?: boolean;
+  locked?: boolean;
+  exact?: boolean;
+  /** When false, link navigates but never shows as active. */
+  markActive?: boolean;
+};
 
 @Component({
   selector: 'tmt-dashboard-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Button],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
 export class DashboardShell {
-  private readonly profileService = inject(CatererProfileService);
   private readonly devisService = inject(CatererDevisService);
   private readonly auth = inject(CatererAuthService);
 
-  protected readonly caterer = this.profileService.profileSignal;
-
-  protected readonly showCompleteProfileCta = computed(() => {
-    const profile = this.caterer();
-    return profile !== null && !profile.published;
-  });
+  /** Free tier by default — Premium unlocks calendar & advanced stats. */
+  protected readonly isPremium = signal(false);
 
   protected readonly newDevisCount = this.devisService.newCount;
 
-  protected readonly navItems = computed<
-    { label: string; icon: string; route: string; badge?: boolean }[]
-  >(() => {
+  protected readonly navItems = computed<DashNavItem[]>(() => {
+    const premium = this.isPremium();
     return [
-      { label: "Vue d'ensemble", icon: 'pi pi-chart-bar', route: '/apercu' },
-      { label: 'Devis', icon: 'pi pi-file-edit', route: '/devis', badge: true },
       {
-        label: 'Personnalisation',
-        icon: 'pi pi-id-card',
+        id: 'overview',
+        label: 'Tableau de bord',
+        route: '/apercu',
+        exact: true,
+      },
+      {
+        id: 'devis',
+        label: 'Demandes de devis',
+        route: '/devis',
+        badge: true,
+      },
+      {
+        id: 'calendar',
+        label: 'Calendrier',
+        locked: !premium,
+        route: premium ? '/disponibilites' : undefined,
+      },
+      {
+        id: 'stats',
+        label: 'Statistiques',
+        route: '/apercu',
+        markActive: false,
+      },
+      {
+        id: 'reviews',
+        label: 'Avis clients',
+      },
+      {
+        id: 'page',
+        label: 'Ma page',
         route: '/custom-details',
+      },
+      {
+        id: 'billing',
+        label: 'Abonnement',
       },
     ];
   });

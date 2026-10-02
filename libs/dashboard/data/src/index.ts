@@ -1,6 +1,7 @@
 export { CatererProfileService } from './lib/caterer-profile.service';
 export { CatererStatsService } from './lib/caterer-stats.service';
 export { CatererDevisService } from './lib/caterer-devis.service';
+export { CatererContractsService } from './lib/caterer-contracts.service';
 export type { DevisQueryOptions } from './lib/caterer-devis.service';
 export type {
   CatererQuoteRequest,

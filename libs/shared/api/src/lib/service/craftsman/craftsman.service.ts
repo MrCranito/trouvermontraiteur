@@ -87,7 +87,142 @@ export class CraftsmanService {
   async getAll(): Promise<Craftsman[]> {
     const { data, error } = await this.supabase
       .from('craftsmans')
-      .select(CRAFTSMAN_DETAIL_SELECT);
+      .select(CRAFTSMAN_DETAIL_SELECT)
+      .eq('published', true)
+      .is('deleted_at', null);
+
+    if (error) {
+      throw error;
+    }
+
+    return this.mapRows(data as CraftsmanWithRelationsRow[] | null);
+  }
+
+  async getByIds(ids: string[]): Promise<Craftsman[]> {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    const { data, error } = await this.supabase
+      .from('craftsmans')
+      .select(CRAFTSMAN_DETAIL_SELECT)
+      .in('id', uniqueIds)
+      .eq('published', true)
+      .is('deleted_at', null);
+
+    if (error) {
+      throw error;
+    }
+
+    return this.mapRows(data as CraftsmanWithRelationsRow[] | null);
+  }
+
+  /**
+   * Published craftsmen for one main category (discover home section).
+   */
+  async getByCategoryId(categoryId: string, limit = 10): Promise<Craftsman[]> {
+    const { data, error } = await this.supabase
+      .from('craftsmans')
+      .select(
+        `*,
+      craftsmans_services (
+        id,
+        name,
+        description,
+        price
+      ),
+      craftsmans_images (
+        id,
+        storage_path,
+        sort_order
+      ),
+      craftsmans_unavailabilities (
+        id,
+        date
+      ),
+      craftsmans_sub_category!inner (
+        craftsman_id,
+        sub_category_id,
+        created_at,
+        sub_categories!inner (
+          id,
+          order,
+          category_id,
+          sub_categories_translations (
+            language_code,
+            name
+          )
+        )
+       ),
+      users_pro (
+        owner_user_id,
+        business_name
+      )`,
+      )
+      .eq('published', true)
+      .is('deleted_at', null)
+      .eq('craftsmans_sub_category.sub_categories.category_id', categoryId)
+      .order('rating', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    return this.mapRows(data as CraftsmanWithRelationsRow[] | null);
+  }
+
+  /**
+   * Published craftsmen for one subcategory (discover category drill-down).
+   */
+  async getBySubCategoryId(
+    subCategoryId: string,
+    limit = 10,
+  ): Promise<Craftsman[]> {
+    const { data, error } = await this.supabase
+      .from('craftsmans')
+      .select(
+        `*,
+      craftsmans_services (
+        id,
+        name,
+        description,
+        price
+      ),
+      craftsmans_images (
+        id,
+        storage_path,
+        sort_order
+      ),
+      craftsmans_unavailabilities (
+        id,
+        date
+      ),
+      craftsmans_sub_category!inner (
+        craftsman_id,
+        sub_category_id,
+        created_at,
+        sub_categories (
+          id,
+          order,
+          category_id,
+          sub_categories_translations (
+            language_code,
+            name
+          )
+        )
+       ),
+      users_pro (
+        owner_user_id,
+        business_name
+      )`,
+      )
+      .eq('published', true)
+      .is('deleted_at', null)
+      .eq('craftsmans_sub_category.sub_category_id', subCategoryId)
+      .order('rating', { ascending: false })
+      .limit(limit);
 
     if (error) {
       throw error;

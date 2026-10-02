@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthError, Session, User } from '@supabase/supabase-js';
-import { SUPABASE_CLIENT } from '@trouvermontraiteur/api';
+import { SUPABASE_CLIENT, UserService } from '@trouvermontraiteur/api';
 import {
   USER_TYPE,
   consumerUserMetadata,
@@ -16,6 +16,7 @@ import { AUTH_REDIRECT_BASE } from './auth-redirect.token';
 @Injectable({ providedIn: 'root' })
 export class ConsumerAuthService {
   private readonly supabase = inject(SUPABASE_CLIENT);
+  private readonly users = inject(UserService);
   private readonly router = inject(Router);
   private readonly redirectBase = inject(AUTH_REDIRECT_BASE);
 
@@ -60,7 +61,11 @@ export class ConsumerAuthService {
     this.session.set(data.session);
     this.initialized.set(true);
 
-    this.supabase.auth.onAuthStateChange((_event, session) => {
+    this.supabase.auth.onAuthStateChange((event, session) => {
+      // getSession() already applied the restored session; skip the duplicate emit.
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
       this.session.set(session);
     });
   }
@@ -110,21 +115,26 @@ export class ConsumerAuthService {
       return wrongPortalAuthError();
     }
 
-    if (type === USER_TYPE.consumer) {
-      return null;
+    if (type !== USER_TYPE.consumer) {
+      const { data, error } = await this.supabase.auth.updateUser({
+        data: consumerUserMetadata(),
+      });
+      if (error) {
+        return error;
+      }
+
+      if (data.user) {
+        this.patchSessionUser(data.user);
+      }
+      await this.refreshSession();
     }
 
-    const { data, error } = await this.supabase.auth.updateUser({
-      data: consumerUserMetadata(),
-    });
-    if (error) {
-      return error;
+    try {
+      await this.users.ensureConsumerProfile();
+    } catch (err) {
+      return err as AuthError;
     }
 
-    if (data.user) {
-      this.patchSessionUser(data.user);
-    }
-    await this.refreshSession();
     return null;
   }
 

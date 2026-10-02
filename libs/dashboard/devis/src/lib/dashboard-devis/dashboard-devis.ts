@@ -1,10 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  CatererContractsService,
   CatererDevisService,
   CatererQuoteRequest,
   QuoteRequestStatus,
 } from '@trouvermontraiteur/dashboard-data';
+import { UserProContract, UserProContractStatus } from '@trouvermontraiteur/models';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
@@ -28,6 +30,7 @@ import { Textarea } from 'primeng/textarea';
 })
 export class DashboardDevis {
   private readonly devisService = inject(CatererDevisService);
+  private readonly contractsService = inject(CatererContractsService);
 
   protected readonly detailVisible = signal(false);
   protected readonly respondVisible = signal(false);
@@ -39,8 +42,18 @@ export class DashboardDevis {
   protected readonly requests = this.devisService.requestsSignal;
   protected readonly newCount = this.devisService.newCount;
 
+  protected readonly contracts = this.contractsService.contractsSignal;
+  protected readonly contractsLoading = this.contractsService.isLoading;
+  protected readonly contractsError = this.contractsService.errorSignal;
+
   protected readonly tableRows = computed((): CatererQuoteRequest[] =>
     [...this.requests()].sort((a, b) => b.requestedAtMs - a.requestedAtMs),
+  );
+
+  protected readonly contractRows = computed((): UserProContract[] =>
+    [...this.contracts()].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    ),
   );
 
   protected readonly statsSummary = computed(() => {
@@ -53,6 +66,10 @@ export class DashboardDevis {
       answered: all.filter((r) => r.status === 'answered').length,
     };
   });
+
+  protected refreshContracts(): void {
+    void this.contractsService.load();
+  }
 
   protected openDetail(request: CatererQuoteRequest): void {
     this.devisService.markAsViewed(request.id);
@@ -119,6 +136,56 @@ export class DashboardDevis {
       default:
         return 'secondary';
     }
+  }
+
+  protected contractStatusLabel(status: UserProContractStatus): string {
+    const labels: Record<UserProContractStatus, string> = {
+      draft: 'Brouillon',
+      sent: 'Envoyé',
+      signed: 'Signé',
+      cancelled: 'Annulé',
+    };
+    return labels[status];
+  }
+
+  protected contractStatusSeverity(
+    status: UserProContractStatus,
+  ): 'success' | 'info' | 'warn' | 'secondary' | 'danger' {
+    switch (status) {
+      case 'draft':
+        return 'secondary';
+      case 'sent':
+        return 'info';
+      case 'signed':
+        return 'success';
+      case 'cancelled':
+        return 'danger';
+    }
+  }
+
+  protected formatAmount(contract: UserProContract): string {
+    if (contract.amountCents == null) {
+      return '—';
+    }
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: contract.currency || 'EUR',
+    }).format(contract.amountCents / 100);
+  }
+
+  protected formatContractDate(value: string | Date | null): string {
+    if (!value) {
+      return '—';
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '—';
+    }
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
   }
 
   protected markAsAnswered(id: string): void {

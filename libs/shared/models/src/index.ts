@@ -11,6 +11,8 @@ export type {
   SubCategoryTranslation,
   UserEstimate,
   UserFavorite,
+  UserProContract,
+  UserProContractStatus,
   UserRecord,
 } from './lib/database';
 export {

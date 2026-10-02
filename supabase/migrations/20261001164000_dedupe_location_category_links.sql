@@ -61,4 +61,32 @@ where link.craftsman_id = craftsman.id
   and craftsman.name in (
     'Loc2lux Events - Location Matériels pour évènements ( Mariage, Baby shower, Fêtes privés... )',
     'Options Toulouse - Location de matériel événementiel'
+  )
+  and not exists (
+    select 1
+    from public.craftsmans_sub_category as existing
+    where existing.craftsman_id = link.craftsman_id
+      and existing.sub_category_id = materiel.sub_category_id
+  );
+
+-- Rows that already had both categories: drop the Tables & chaises duplicate.
+delete from public.craftsmans_sub_category as link
+using public.craftsmans as craftsman,
+  public.sub_categories_translations as current_label,
+  public.sub_categories_translations as materiel
+where link.craftsman_id = craftsman.id
+  and current_label.sub_category_id = link.sub_category_id
+  and current_label.language_code = 'fr'
+  and current_label.name = 'Tables & chaises'
+  and materiel.language_code = 'fr'
+  and materiel.name = 'Matériel événementiel'
+  and craftsman.name in (
+    'Loc2lux Events - Location Matériels pour évènements ( Mariage, Baby shower, Fêtes privés... )',
+    'Options Toulouse - Location de matériel événementiel'
+  )
+  and exists (
+    select 1
+    from public.craftsmans_sub_category as existing
+    where existing.craftsman_id = link.craftsman_id
+      and existing.sub_category_id = materiel.sub_category_id
   );

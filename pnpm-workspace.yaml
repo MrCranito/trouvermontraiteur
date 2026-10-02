@@ -6,3 +6,4 @@ allowBuilds:
   lmdb: set this to true or false
   msgpackr-extract: set this to true or false
   nx: set this to true or false
+  unrs-resolver: set this to true or false

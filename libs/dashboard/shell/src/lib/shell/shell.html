@@ -9,61 +9,84 @@
     </a>
 
     <nav class="dash-shell__nav">
-      @for (item of navItems(); track item.route) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="dash-shell__nav-link--active"
-          class="dash-shell__nav-link"
-        >
-          <i [class]="item.icon" aria-hidden="true"></i>
-          {{ item.label }}
-          @if (item.badge && newDevisCount() > 0) {
-            <span class="dash-shell__nav-badge">{{ newDevisCount() }}</span>
-          }
-        </a>
+      @for (item of navItems(); track item.id) {
+        @if (item.locked || !item.route) {
+          <span
+            class="dash-shell__nav-link"
+            [class.dash-shell__nav-link--locked]="item.locked"
+            [attr.aria-disabled]="item.locked || !item.route ? true : null"
+          >
+            <span>{{ item.label }}</span>
+            @if (item.badge && newDevisCount() > 0) {
+              <span class="dash-shell__nav-badge">{{ newDevisCount() }}</span>
+            }
+            @if (item.locked) {
+              <svg
+                class="dash-shell__lock"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+              </svg>
+            }
+          </span>
+        } @else {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="dash-shell__nav-link--active"
+            [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+            class="dash-shell__nav-link"
+            [class.dash-shell__nav-link--quiet]="item.markActive === false"
+          >
+            <span>{{ item.label }}</span>
+            @if (item.badge && newDevisCount() > 0) {
+              <span class="dash-shell__nav-badge">{{ newDevisCount() }}</span>
+            }
+          </a>
+        }
       }
     </nav>
 
     <div class="dash-shell__sidebar-bottom">
-      <p-button
-        label="Déconnexion"
-        icon="pi pi-sign-out"
-        styleClass="dash-shell__sign-out"
-        [text]="true"
-        (onClick)="signOut()"
-      />
-      @if (caterer(); as profile) {
-        <div class="dash-shell__profile-card">
-          <img
-            class="dash-shell__avatar"
-            [src]="profile.imageUrl"
-            [alt]="profile.name"
-          />
-          <div class="dash-shell__profile-meta">
-            <strong>{{ profile.name }}</strong>
-            <span>{{ profile.location.city }}</span>
-            <span class="dash-shell__rating">
-              <i class="pi pi-star-fill" aria-hidden="true"></i>
-              {{ profile.rating }} · {{ profile.reviewCount }} avis
-            </span>
-          </div>
+      @if (!isPremium()) {
+        <div class="dash-shell__upsell">
+          <span class="dash-shell__upsell-eyebrow">Offre gratuite</span>
+          <span class="dash-shell__upsell-title"
+            >Passez Premium pour être vu en premier</span
+          >
+          <span class="dash-shell__upsell-body"
+            >Mise en avant, statistiques avancées et calendrier
+            synchronisé.</span
+          >
+          <button type="button" class="dash-shell__upsell-cta">
+            Passer Premium
+          </button>
+        </div>
+      } @else {
+        <div class="dash-shell__premium-card">
+          <span class="dash-shell__premium-eyebrow">Premium actif</span>
+          <span class="dash-shell__premium-meta"
+            >Renouvellement le 1 nov. 2026</span
+          >
+          <a href="#" class="dash-shell__premium-link">Gérer l'abonnement</a>
         </div>
       }
+
+      <button type="button" class="dash-shell__sign-out" (click)="signOut()">
+        Déconnexion
+      </button>
     </div>
   </aside>
 
-  <div class="dash-shell__workspace">
-    <header class="dash-shell__header">
-      <div class="dash-shell__header-text">
-        <p class="dash-shell__eyebrow">Espace pro</p>
-        @if (caterer(); as profile) {
-          <h1>{{ profile.name }}</h1>
-        }
-      </div>
-    </header>
-
-    <main class="dash-shell__content">
-      <router-outlet />
-    </main>
-  </div>
+  <main class="dash-shell__content">
+    <router-outlet />
+  </main>
 </div>
