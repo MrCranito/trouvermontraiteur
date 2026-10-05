@@ -32,10 +32,6 @@
         width="100%"
         height="100%"
       >
-        <map-marker
-          [position]="markerPosition(craftsman())"
-          [options]="markerOptions(craftsman())"
-        />
       </google-map>
     } @else if (loadFailed()) {
       <div class="caterer-map__placeholder" role="status">

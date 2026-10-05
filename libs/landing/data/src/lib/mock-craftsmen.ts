@@ -1475,6 +1475,7 @@ function buildCraftsman(
     certified: false,
     proUser: null,
     subCategoryIds: [],
+    categoryLabels: [tradeLabel],
     trades: [seed.trade],
     projectTypes: seed.projectTypes,
     serviceOptions: seed.serviceOptions,

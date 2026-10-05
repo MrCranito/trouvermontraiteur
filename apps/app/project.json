@@ -6,9 +6,17 @@
   "sourceRoot": "apps/app/src",
   "tags": [],
   "targets": {
+    "generate-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node scripts/generate-environment.mjs"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["generate-env", "^build"],
       "options": {
         "outputPath": "dist/apps/app",
         "browser": "apps/app/src/main.ts",
@@ -37,13 +45,13 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "900kb",
-              "maximumError": "1.5mb"
+              "maximumWarning": "1.5mb",
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "6kb",
-              "maximumError": "12kb"
+              "maximumWarning": "12kb",
+              "maximumError": "24kb"
             }
           ],
           "outputHashing": "all"

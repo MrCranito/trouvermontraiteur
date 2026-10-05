@@ -1,8 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AppCraftsmanCatalogService,
+  CraftsmanFilters,
+  CraftsmanPage,
   SearchSort,
 } from '@trouvermontraiteur/app-consumer-data';
 import { CategoryI18nService } from '@trouvermontraiteur/app-i18n';
@@ -70,7 +72,7 @@ export class Search {
   protected projectDate = signal('');
   protected selectedProjectTypes = signal<ProjectType[]>([]);
   protected selectedServiceOptions = signal<ServiceOption[]>([]);
-  protected sort = signal<SearchSort>('relevance');
+  protected sort = signal<SearchSort | null>(null);
   protected mapSelectedId = signal<string | null>(null);
   protected hoveredId = signal<string | null>(null);
   protected filtersVisible = signal(false);
@@ -109,35 +111,22 @@ export class Search {
     () => this.hoveredId() ?? this.mapSelectedId(),
   );
 
-  protected readonly filteredByCriteria = computed(() =>
-    this.craftsmanService.filter({
-      query: this.query(),
-      trades: this.selectedSubCategoryIds().length > 0 ? [] : this.selectedTrades(),
-      subCategoryIds: this.selectedSubCategoryIds(),
-      minRating: this.minRating(),
-      projectDate: this.projectDate(),
-      projectTypes: this.selectedProjectTypes(),
-      serviceOptions: [],
-    }),
-  );
-
-  /** Up to 20 craftsmen in the map viewport (radius + center). */
-  protected readonly results = computed(() => {
-    const viewport = this.mapViewport();
-    if (!viewport) {
-      return [];
-    }
-    return this.craftsmanService.searchInMapArea(
-      this.filteredByCriteria(),
-      viewport,
-      this.sort(),
-    );
+  private readonly page = signal<CraftsmanPage>({
+    items: [],
+    from: 0,
+    to: -1,
+    total: 0,
   });
+  private readonly resultsLoading = signal(false);
+  private searchToken = 0;
 
-  /** All craftsmen matching filters (for map markers and initial fit). */
-  protected readonly mapCraftsmen = computed(() => this.filteredByCriteria());
+  /** First page of craftsmen matching the filters inside the map bounds. */
+  protected readonly results = computed(() => this.page().items);
 
-  protected readonly resultCount = computed(() => this.results().length);
+  /** Same page, used to frame the map when auto-fit is on. */
+  protected readonly mapCraftsmen = computed(() => this.page().items);
+
+  protected readonly resultCount = computed(() => this.page().total);
 
   private readonly metierTitle = computed(() => {
     this.categoryI18n.activeLang();
@@ -188,7 +177,10 @@ export class Search {
 
   /** Grid placeholders while the map viewport or results are updating. */
   protected readonly listLoading = computed(
-    () => this.mapLoading() || this.mapViewport() === null,
+    () =>
+      this.mapLoading() ||
+      this.resultsLoading() ||
+      this.mapViewport() === null,
   );
 
   protected readonly currentFilters = computed<SearchFilterValues>(() => ({
@@ -259,6 +251,59 @@ export class Search {
       this.mapTitleUnlocked = false;
       this.applyMapCoordinates(state.mapLat, state.mapLng, state.query);
     });
+
+    effect(() => {
+      const viewport = this.mapViewport();
+      const sort = this.sort();
+      const filters = this.searchFilters();
+      const ready = this.craftsmanService.isReady();
+      if (!viewport || !ready) {
+        return;
+      }
+      void this.loadResults(viewport, filters, sort);
+    });
+  }
+
+  private searchFilters(): CraftsmanFilters {
+    return {
+      query: this.query(),
+      trades:
+        this.selectedSubCategoryIds().length > 0 ? [] : this.selectedTrades(),
+      subCategoryIds: this.selectedSubCategoryIds(),
+      minRating: this.minRating(),
+      projectDate: this.projectDate(),
+      projectTypes: this.selectedProjectTypes(),
+      serviceOptions: [],
+    };
+  }
+
+  private async loadResults(
+    viewport: MapViewport,
+    filters: CraftsmanFilters,
+    sort: SearchSort | null,
+  ): Promise<void> {
+    const token = ++this.searchToken;
+    this.resultsLoading.set(true);
+
+    try {
+      const page = await this.craftsmanService.search(filters, {
+        sort,
+        bounds: boundsFromViewport(viewport),
+      });
+      if (token !== this.searchToken) {
+        return;
+      }
+      this.page.set(page);
+    } catch {
+      if (token !== this.searchToken) {
+        return;
+      }
+      this.page.set({ items: [], from: 0, to: -1, total: 0 });
+    } finally {
+      if (token === this.searchToken) {
+        this.resultsLoading.set(false);
+      }
+    }
   }
 
   private applyMapCoordinates(
@@ -295,7 +340,7 @@ export class Search {
     });
   }
 
-  protected onSortChange(value: SearchSort): void {
+  protected onSortChange(value: SearchSort | null): void {
     this.sort.set(value);
     this.syncToUrl();
   }
@@ -347,6 +392,9 @@ export class Search {
   }
 
   protected onMapViewportChange(viewport: MapViewport): void {
+    if (isSameMapViewport(this.mapViewport(), viewport)) {
+      return;
+    }
     void this.applyMapViewport(viewport);
   }
 
@@ -361,12 +409,6 @@ export class Search {
     if (token !== this.viewportLoadToken) {
       return;
     }
-
-    this.craftsmanService.searchInMapArea(
-      this.filteredByCriteria(),
-      viewport,
-      this.sort(),
-    );
 
     const elapsed = performance.now() - startedAt;
     const remaining = Search.MAP_LOAD_MIN_MS - elapsed;
@@ -417,4 +459,38 @@ export class Search {
       replaceUrl: true,
     });
   }
+}
+
+function isSameMapViewport(
+  current: MapViewport | null,
+  next: MapViewport,
+): boolean {
+  if (!current) {
+    return false;
+  }
+  const latDelta = Math.abs(current.center.lat - next.center.lat);
+  const lngDelta = Math.abs(current.center.lng - next.center.lng);
+  const radiusDelta = Math.abs(current.radiusMeters - next.radiusMeters);
+  return latDelta < 0.00005 && lngDelta < 0.00005 && radiusDelta < 25;
+}
+
+function boundsFromViewport(viewport: MapViewport): {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+} {
+  const lat = viewport.center.lat;
+  const lng = viewport.center.lng;
+  const latDelta = viewport.radiusMeters / 111_320;
+  const lngScale = Math.cos((lat * Math.PI) / 180);
+  const lngDelta =
+    viewport.radiusMeters / (111_320 * Math.max(Math.abs(lngScale), 0.01));
+
+  return {
+    minLat: lat - latDelta,
+    maxLat: lat + latDelta,
+    minLng: lng - lngDelta,
+    maxLng: lng + lngDelta,
+  };
 }

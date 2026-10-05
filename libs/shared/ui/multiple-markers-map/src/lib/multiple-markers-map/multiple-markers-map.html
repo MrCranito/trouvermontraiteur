@@ -32,15 +32,8 @@
       width="100%"
       height="100%"
     >
-      @for (craftsman of craftsmen(); track craftsman.id) {
-      <map-marker
-        #marker="mapMarker"
-        [position]="markerPosition(craftsman)"
-        [options]="markerOptions(craftsman)"
-        (mapClick)="onMarkerClick(craftsman, marker)"
-      />
-      }
       <map-info-window
+        [position]="popupPosition()"
         [options]="popupWindowOptions()"
         (closeclick)="onPopupClose()"
       >

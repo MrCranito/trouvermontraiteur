@@ -21,7 +21,7 @@ export interface SearchFiltersState {
   projectDate: string;
   projectTypes: ProjectType[];
   serviceOptions: ServiceOption[];
-  sort: SearchSort;
+  sort: SearchSort | null;
   view: SearchViewMode;
   mapLat: number | null;
   mapLng: number | null;
@@ -119,8 +119,8 @@ export function parseSearchQueryParams(params: ParamMap): SearchFiltersState {
   const projectDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : '';
 
   const sortParam = params.get('sort');
-  const sort: SearchSort =
-    sortParam && VALID_SORT.has(sortParam) ? (sortParam as SearchSort) : 'relevance';
+  const sort: SearchSort | null =
+    sortParam && VALID_SORT.has(sortParam) ? (sortParam as SearchSort) : null;
 
   const view: SearchViewMode = params.get('view') === 'map' ? 'map' : 'grid';
 
@@ -156,7 +156,7 @@ export function buildSearchQueryParams(
       state.projectTypes.length > 0 ? state.projectTypes.join(',') : null,
     options:
       state.serviceOptions.length > 0 ? state.serviceOptions.join(',') : null,
-    sort: state.sort !== 'relevance' ? state.sort : null,
+    sort: state.sort,
     view: state.view !== 'grid' ? state.view : null,
     lat: state.mapLat !== null ? String(state.mapLat) : null,
     lng: state.mapLng !== null ? String(state.mapLng) : null,

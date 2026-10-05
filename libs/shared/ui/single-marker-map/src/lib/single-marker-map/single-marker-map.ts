@@ -1,29 +1,34 @@
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
   viewChild,
 } from '@angular/core';
-import { GoogleMap, MapMarker } from '@angular/google-maps';
+import { GoogleMap } from '@angular/google-maps';
 import { Craftsman } from '@trouvermontraiteur/models';
 import {
   buildCraftsmanMapOptions,
+  formatMarkerRating,
   GoogleMapsLoaderService,
-  homeMarkerIcon,
+  MapPinLayer,
+  markerCategoryOf,
   PARIS_CENTER,
+  type MapPinInput,
 } from '@trouvermontraiteur/map-base';
 
 @Component({
   selector: 'tmt-single-marker-map',
-  imports: [GoogleMap, MapMarker],
+  imports: [GoogleMap],
   templateUrl: './single-marker-map.html',
   styleUrl: './single-marker-map.scss',
 })
 export class SingleMarkerMap {
   private readonly mapsLoader = inject(GoogleMapsLoaderService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly mapsKeyMissing = !this.mapsLoader.isConfigured();
 
@@ -32,6 +37,7 @@ export class SingleMarkerMap {
   readonly showHint = input(true);
 
   private readonly mapRef = viewChild(GoogleMap);
+  private pinLayer: MapPinLayer | null = null;
 
   protected readonly apiReady = signal(false);
   protected readonly loadFailed = signal(false);
@@ -43,6 +49,31 @@ export class SingleMarkerMap {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.pinLayer?.destroy());
+
+    effect(() => {
+      const ready = this.apiReady();
+      const mapRef = this.mapRef();
+      const pin = this.pinInput();
+      if (!ready || !mapRef) {
+        return;
+      }
+      queueMicrotask(() => {
+        const map = mapRef.googleMap;
+        if (!map) {
+          return;
+        }
+        if (!this.pinLayer) {
+          this.pinLayer = new MapPinLayer(false);
+        }
+        this.pinLayer.attach(map, {
+          onPinClick: () => undefined,
+          onClusterClick: () => undefined,
+        });
+        this.pinLayer.sync([pin]);
+      });
+    });
+
     if (!this.mapsLoader.isConfigured()) {
       this.loadFailed.set(true);
       return;
@@ -82,21 +113,25 @@ export class SingleMarkerMap {
     });
   }
 
-  protected markerOptions(craftsman: Craftsman): google.maps.MarkerOptions {
+  private readonly pinInput = computed((): MapPinInput => {
+    const craftsman = this.craftsman();
+    const rated = craftsman.reviewCount > 0;
     return {
-      clickable: this.interactive(),
-      zIndex: 1,
-      title: craftsman.name,
-      icon: homeMarkerIcon(true),
+      id: craftsman.id,
+      name: craftsman.name,
+      position: {
+        lat: craftsman.location.lat,
+        lng: craftsman.location.lng,
+      },
+      category: markerCategoryOf(craftsman),
+      ratingLabel: rated ? formatMarkerRating(craftsman.rating) : null,
+      certified: craftsman.certified,
+      sponsored: false,
+      selected: false,
+      visited: false,
+      hovered: false,
     };
-  }
-
-  protected markerPosition(craftsman: Craftsman): google.maps.LatLngLiteral {
-    return {
-      lat: craftsman.location.lat,
-      lng: craftsman.location.lng,
-    };
-  }
+  });
 
   protected zoomIn(): void {
     this.adjustZoom(1);

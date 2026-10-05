@@ -78,6 +78,8 @@ export interface Craftsman {
   /** Linked professional account, or null when none is available. */
   proUser: CraftsmanProUser | null;
   subCategoryIds: string[];
+  /** French names of linked services, used to pick the map pin icon. */
+  categoryLabels: string[];
   trades: CraftsmanTrade[];
   projectTypes: ProjectType[];
   serviceOptions: ServiceOption[];
@@ -189,6 +191,10 @@ export function buildCraftsmanFromRelatedData(
     proUser: input.proUser ?? null,
     certified: input.proUser != null,
     subCategoryIds: [...linkedSubCategoryIds],
+    categoryLabels: input.subCategories
+      .filter((item) => linkedSubCategoryIds.has(item.id))
+      .sort((a, b) => a.order - b.order)
+      .map((item) => resolveSubCategoryTranslation(item, 'fr')),
     trades: uniqueTrades,
     projectTypes: [],
     serviceOptions: [],

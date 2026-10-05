@@ -1,3 +1,4 @@
+/** Legacy SVG icons. Live map pins are the HTML overlays in `map-marker-pin.ts`. */
 import { colors } from '@trouvermontraiteur/theme';
 import { HOME_ICON_PNG_BASE64 } from './home-icon.base64';
 

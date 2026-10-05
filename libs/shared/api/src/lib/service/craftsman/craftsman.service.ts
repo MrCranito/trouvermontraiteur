@@ -45,6 +45,36 @@ export interface CraftsmanWithRelationsRow extends CraftsmanRow {
   users_pro: UsersProRow | UsersProRow[] | null;
 }
 
+export interface CraftsmanSearchBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+export interface CraftsmanSearchFilters {
+  query?: string;
+  subCategoryIds?: string[];
+  minRating?: number;
+  projectDate?: string;
+  ids?: string[];
+  bounds?: CraftsmanSearchBounds;
+}
+
+export type CraftsmanSearchSort =
+  | 'relevance'
+  | 'rating'
+  | 'reviews'
+  | 'name'
+  | 'price';
+
+export interface CraftsmanPage {
+  items: Craftsman[];
+  from: number;
+  to: number;
+  total: number;
+}
+
 const CRAFTSMAN_DETAIL_SELECT = `*,
       craftsmans_services (
         id,
@@ -83,6 +113,92 @@ const CRAFTSMAN_DETAIL_SELECT = `*,
 @Injectable({ providedIn: 'root' })
 export class CraftsmanService {
   private readonly supabase = inject(SUPABASE_CLIENT);
+
+  async search(
+    filters: CraftsmanSearchFilters = {},
+    page = 0,
+    pageSize = 20,
+    sort?: CraftsmanSearchSort,
+  ): Promise<CraftsmanPage> {
+    const safePage = Math.max(0, page);
+    const safePageSize = Math.max(1, pageSize);
+    const from = safePage * safePageSize;
+    const to = from + safePageSize - 1;
+
+    const requestedIds = distinctIds(filters.ids);
+    if (filters.ids && requestedIds.length === 0) {
+      return { items: [], from, to: -1, total: 0 };
+    }
+
+    const subCategoryIds = distinctIds(filters.subCategoryIds);
+    let query = this.supabase
+      .from('craftsmans')
+      .select(
+        craftsmanDetailSelect(
+          subCategoryIds.length > 0,
+        ) as typeof CRAFTSMAN_DETAIL_SELECT,
+        { count: 'exact' },
+      )
+      .eq('published', true)
+      .is('deleted_at', null);
+
+    if (requestedIds.length > 0) {
+      query = query.in('id', requestedIds);
+    }
+
+    if (subCategoryIds.length > 0) {
+      query = query.in('category_filter.sub_category_id', subCategoryIds);
+    }
+
+    if (filters.minRating != null && filters.minRating > 0) {
+      query = query.gte('rating', filters.minRating);
+    }
+
+    const text = sanitizeIlike(filters.query ?? '');
+    if (text) {
+      query = query.or(
+        `name.ilike.%${text}%,description.ilike.%${text}%,city.ilike.%${text}%,address.ilike.%${text}%`,
+      );
+    }
+
+    const bounds = filters.bounds;
+    if (bounds) {
+      query = query
+        .gte('latitude', bounds.minLat)
+        .lte('latitude', bounds.maxLat)
+        .gte('longitude', bounds.minLng)
+        .lte('longitude', bounds.maxLng);
+    }
+
+    if (filters.projectDate) {
+      const unavailableIds = await this.idsUnavailableOn(filters.projectDate);
+      if (unavailableIds.length > 0) {
+        query = query.not('id', 'in', `(${unavailableIds.join(',')})`);
+      }
+    }
+
+    const sorted = sort ? applyCraftsmanSort(query, sort) : query;
+    const { data, error, count } = await sorted.range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    let items = this.mapRows(data as CraftsmanWithRelationsRow[] | null);
+    if (sort === 'price') {
+      items = [...items].sort(
+        (a, b) => minServicePrice(a) - minServicePrice(b),
+      );
+    }
+
+    const total = count ?? 0;
+    return {
+      items,
+      total,
+      from,
+      to: items.length === 0 ? -1 : from + items.length - 1,
+    };
+  }
 
   async getAll(): Promise<Craftsman[]> {
     const { data, error } = await this.supabase
@@ -471,9 +587,97 @@ export class CraftsmanService {
       createdAt: row.created_at ? new Date(row.created_at) : new Date(0),
     };
   }
+
+  private async idsUnavailableOn(projectDate: string): Promise<string[]> {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) {
+      return [];
+    }
+
+    const start = `${projectDate}T00:00:00.000Z`;
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1);
+
+    const { data, error } = await this.supabase
+      .from('craftsmans_unavailabilities')
+      .select('craftsman_id, owner_craftsman_id')
+      .gte('date', start)
+      .lt('date', end.toISOString());
+
+    if (error) {
+      throw error;
+    }
+
+    const ids = new Set<string>();
+    for (const row of data ?? []) {
+      const id = row.craftsman_id ?? row.owner_craftsman_id;
+      if (id) {
+        ids.add(id);
+      }
+    }
+    return [...ids];
+  }
 }
 
 function toNumber(value: number | string | null | undefined): number {
   const parsed = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function distinctIds(ids: string[] | undefined): string[] {
+  return [
+    ...new Set((ids ?? []).map((id) => id.trim()).filter((id) => id.length > 0)),
+  ];
+}
+
+function craftsmanDetailSelect(filterBySubCategory: boolean): string {
+  if (!filterBySubCategory) {
+    return CRAFTSMAN_DETAIL_SELECT;
+  }
+
+  return `category_filter:craftsmans_sub_category!inner(sub_category_id), ${CRAFTSMAN_DETAIL_SELECT}`;
+}
+
+function sanitizeIlike(value: string): string {
+  return value
+    .replace(/[%_,.()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function minServicePrice(craftsman: Craftsman): number {
+  if (craftsman.services.length === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return Math.min(...craftsman.services.map((item) => item.price));
+}
+
+function applyCraftsmanSort<
+  T extends {
+    order: (
+      column: string,
+      options: { ascending: boolean },
+    ) => T;
+  },
+>(query: T, sort: CraftsmanSearchSort): T {
+  switch (sort) {
+    case 'rating':
+      return query
+        .order('rating', { ascending: false })
+        .order('id', { ascending: true });
+    case 'reviews':
+      return query
+        .order('review_count', { ascending: false })
+        .order('id', { ascending: true });
+    case 'name':
+    case 'price':
+      return query
+        .order('name', { ascending: true })
+        .order('id', { ascending: true });
+    case 'relevance':
+    default:
+      return query
+        .order('rating', { ascending: false })
+        .order('review_count', { ascending: false })
+        .order('id', { ascending: true });
+  }
 }

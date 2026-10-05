@@ -2,6 +2,8 @@ export {
   AppCraftsmanCatalogService,
   SEARCH_RESULTS_LIMIT,
   type CraftsmanFilters,
+  type CraftsmanPage,
+  type CraftsmanSearchOptions,
   type MapViewport,
   type SearchSort,
 } from './lib/app-craftsman-catalog.service';

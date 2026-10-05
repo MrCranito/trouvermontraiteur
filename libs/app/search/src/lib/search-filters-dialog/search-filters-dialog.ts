@@ -121,6 +121,9 @@ export class SearchFiltersDialog {
   private applyStartedAt = 0;
   private filterChangeStartedAt = 0;
   private queryPulseTimer: ReturnType<typeof setTimeout> | undefined;
+  private matchCountTimer: ReturnType<typeof setTimeout> | undefined;
+  private matchToken = 0;
+  private readonly matchCount = signal(0);
 
   /** At least one full dot-bounce cycle (animation is 0.525s). */
   private static readonly LOADING_MIN_MS = 350;
@@ -131,18 +134,7 @@ export class SearchFiltersDialog {
     () => this.applying() || this.filterChangeLoading(),
   );
 
-  protected readonly draftMatchCount = computed(
-    () =>
-      this.craftsmanService.filter({
-        query: this.draft().query,
-        trades: this.draft().subCategoryIds.length > 0 ? [] : this.draft().trades,
-        subCategoryIds: this.draft().subCategoryIds,
-        minRating: this.draft().minRating,
-        projectDate: this.draft().projectDate,
-        projectTypes: this.draft().projectTypes,
-        serviceOptions: [],
-      }).length,
-  );
+  protected readonly draftMatchCount = computed(() => this.matchCount());
 
   protected readonly applyButtonLabel = computed(() =>
     formatFilterApplyLabel(this.draftMatchCount()),
@@ -299,6 +291,21 @@ export class SearchFiltersDialog {
     });
 
     effect((onCleanup) => {
+      if (!this.visible()) {
+        return;
+      }
+
+      const draft = this.draft();
+      const token = ++this.matchToken;
+      clearTimeout(this.matchCountTimer);
+      this.matchCountTimer = setTimeout(() => {
+        void this.loadMatchCount(draft, token);
+      }, 250);
+
+      onCleanup(() => clearTimeout(this.matchCountTimer));
+    });
+
+    effect((onCleanup) => {
       if (!this.applying()) {
         return;
       }
@@ -363,6 +370,33 @@ export class SearchFiltersDialog {
     }
 
     this.pulseFilterLoading();
+  }
+
+  private async loadMatchCount(
+    draft: SearchFilterValues,
+    token: number,
+  ): Promise<void> {
+    try {
+      const page = await this.craftsmanService.search(
+        {
+          query: draft.query,
+          trades: draft.subCategoryIds.length > 0 ? [] : draft.trades,
+          subCategoryIds: draft.subCategoryIds,
+          minRating: draft.minRating,
+          projectDate: draft.projectDate,
+          projectTypes: draft.projectTypes,
+          serviceOptions: [],
+        },
+        { page: 0, pageSize: 1 },
+      );
+      if (token === this.matchToken) {
+        this.matchCount.set(page.total);
+      }
+    } catch {
+      if (token === this.matchToken) {
+        this.matchCount.set(0);
+      }
+    }
   }
 
   /** Brief loading pulse on the apply button after each filter change. */

@@ -88,6 +88,13 @@ export function buildSearchResultsTitle(
     };
   }
 
+  if (input.count > 1000) {
+    return {
+      heading: 'Plus de 1000 artisans dans la zone de la carte',
+      subtitle: 'Selon la zone visible sur la carte',
+    };
+  }
+
   const countLabel = formatArtisanCount(input.count);
 
   if (input.userMovedMap) {

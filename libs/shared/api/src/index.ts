@@ -10,7 +10,13 @@ export {
 } from './lib/storage/craftsman-images.storage';
 export { CategoryService } from './lib/service/category/category.service';
 export { ContractService } from './lib/service/contract/contract.service';
-export { CraftsmanService } from './lib/service/craftsman/craftsman.service';
+export {
+  CraftsmanService,
+  type CraftsmanPage,
+  type CraftsmanSearchBounds,
+  type CraftsmanSearchFilters,
+  type CraftsmanSearchSort,
+} from './lib/service/craftsman/craftsman.service';
 export { EstimateService } from './lib/service/estimate/estimate.service';
 export { FavoriteService } from './lib/service/favorite/favorite.service';
 export { UserService } from './lib/service/user/user.service';

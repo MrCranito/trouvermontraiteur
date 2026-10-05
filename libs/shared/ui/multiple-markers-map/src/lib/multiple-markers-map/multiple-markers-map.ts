@@ -1,34 +1,42 @@
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
+  NgZone,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { GoogleMap, MapInfoWindow, MapMarker } from '@angular/google-maps';
+import { GoogleMap, MapInfoWindow } from '@angular/google-maps';
 import { Craftsman } from '@trouvermontraiteur/models';
 import {
   buildCraftsmanMapOptions,
-  craftsmanRatingMarkerIcon,
+  formatMarkerRating,
   getMapViewport,
   GoogleMapsLoaderService,
+  MAP_PIN_CLUSTER_MAX_ZOOM,
+  MapPinLayer,
+  markerCategoryOf,
   PARIS_CENTER,
   type MapFocus,
+  type MapPinInput,
   type MapViewport,
 } from '@trouvermontraiteur/map-base';
 import { MapMarkerPopup } from '../map-marker-popup/map-marker-popup';
 
 @Component({
   selector: 'tmt-multiple-markers-map',
-  imports: [GoogleMap, MapMarker, MapInfoWindow, MapMarkerPopup],
+  imports: [GoogleMap, MapInfoWindow, MapMarkerPopup],
   templateUrl: './multiple-markers-map.html',
   styleUrl: './multiple-markers-map.scss',
 })
 export class MultipleMarkersMap {
   private readonly mapsLoader = inject(GoogleMapsLoaderService);
+  private readonly zone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly mapsKeyMissing = !this.mapsLoader.isConfigured();
 
@@ -37,6 +45,8 @@ export class MultipleMarkersMap {
   /** Bounds used when `autoFit` is true; defaults to `craftsmen`. */
   readonly fitTargets = input<Craftsman[] | null>(null);
   readonly selectedId = input<string | null>(null);
+  /** Listing hover: scales the pin without selecting it. */
+  readonly hoveredId = input<string | null>(null);
   readonly interactive = input(true);
   readonly showHint = input(true);
   /** When true, fits bounds to craftsmen (e.g. after filter change). */
@@ -51,12 +61,22 @@ export class MultipleMarkersMap {
 
   private readonly mapRef = viewChild(GoogleMap);
   private readonly infoWindowRef = viewChild(MapInfoWindow);
+  private pinLayer: MapPinLayer | null = null;
   private mapListeners: google.maps.MapsEventListener[] = [];
   private userMapReady = false;
   private programmaticMove = false;
   private ignoreNextMapClickClose = false;
 
   protected readonly popupCraftsman = signal<Craftsman | null>(null);
+  private readonly visitedIds = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly popupPosition = computed((): google.maps.LatLngLiteral => {
+    const popup = this.popupCraftsman();
+    if (!popup) {
+      return PARIS_CENTER;
+    }
+    return { lat: popup.location.lat, lng: popup.location.lng };
+  });
 
   protected readonly popupWindowOptions = computed(
     (): google.maps.InfoWindowOptions => {
@@ -65,7 +85,7 @@ export class MultipleMarkersMap {
         disableAutoPan: true,
       };
       if (this.apiReady() && typeof google !== 'undefined' && google.maps) {
-        base.pixelOffset = new google.maps.Size(0, 28);
+        base.pixelOffset = new google.maps.Size(0, -46);
       }
       return base;
     },
@@ -81,6 +101,24 @@ export class MultipleMarkersMap {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.pinLayer?.destroy());
+
+    effect(() => {
+      const ready = this.apiReady();
+      const mapRef = this.mapRef();
+      const pins = this.pinInputs();
+      if (!ready || !mapRef) {
+        return;
+      }
+      queueMicrotask(() => {
+        const map = mapRef.googleMap;
+        if (!map) {
+          return;
+        }
+        this.ensurePinLayer(map).sync(pins);
+      });
+    });
+
     if (!this.mapsLoader.isConfigured()) {
       this.loadFailed.set(true);
       return;
@@ -92,11 +130,14 @@ export class MultipleMarkersMap {
       .catch(() => this.loadFailed.set(true));
 
     effect(() => {
-      const fitList = this.fitTargets() ?? this.craftsmen();
       const ready = this.apiReady();
       const shouldFit = this.autoFit();
       const focus = this.mapFocus();
       const mapRef = this.mapRef();
+      // Marker updates must not move or re-report the camera. Reading the
+      // list only while auto-fit is on keeps a result refresh from emitting
+      // another viewport.
+      const fitList = shouldFit ? (this.fitTargets() ?? this.craftsmen()) : null;
       if (!ready || !mapRef) {
         return;
       }
@@ -110,7 +151,7 @@ export class MultipleMarkersMap {
         google.maps.event.trigger(map, 'resize');
         if (focus) {
           this.focusMapOn(focus, map);
-        } else if (shouldFit) {
+        } else if (shouldFit && fitList) {
           this.fitMapToCraftsmen(fitList, map);
         }
         this.bindViewportListener(map);
@@ -167,20 +208,31 @@ export class MultipleMarkersMap {
     });
   }
 
-  protected markerOptions(caterer: Craftsman): google.maps.MarkerOptions {
-    const active =
-      this.selectedId() === caterer.id ||
-      this.popupCraftsman()?.id === caterer.id;
-    const note = Number.isInteger(caterer.rating)
-      ? String(caterer.rating)
-      : caterer.rating.toFixed(1);
-    return {
-      clickable: this.interactive(),
-      zIndex: active ? 200 : Math.round(caterer.rating * 10),
-      title: `${caterer.name} — ${note}`,
-      icon: craftsmanRatingMarkerIcon(caterer.rating, active),
-    };
-  }
+  private readonly pinInputs = computed((): MapPinInput[] => {
+    const selectedId = this.selectedId();
+    const hoveredId = this.hoveredId();
+    const popupId = this.popupCraftsman()?.id ?? null;
+    const visited = this.visitedIds();
+    return this.craftsmen().map((craftsman) => {
+      const selected = selectedId === craftsman.id || popupId === craftsman.id;
+      const rated = craftsman.reviewCount > 0;
+      return {
+        id: craftsman.id,
+        name: craftsman.name,
+        position: {
+          lat: craftsman.location.lat,
+          lng: craftsman.location.lng,
+        },
+        category: markerCategoryOf(craftsman),
+        ratingLabel: rated ? formatMarkerRating(craftsman.rating) : null,
+        certified: craftsman.certified,
+        sponsored: false,
+        selected,
+        visited: visited.has(craftsman.id),
+        hovered: hoveredId === craftsman.id,
+      };
+    });
+  });
 
   protected markerPosition(caterer: Craftsman): google.maps.LatLngLiteral {
     return {
@@ -189,24 +241,69 @@ export class MultipleMarkersMap {
     };
   }
 
-  protected onMarkerClick(caterer: Craftsman, marker: MapMarker): void {
+  private ensurePinLayer(map: google.maps.Map): MapPinLayer {
+    if (!this.pinLayer) {
+      this.pinLayer = new MapPinLayer(true);
+    }
+    this.pinLayer.attach(map, {
+      onPinClick: (id) => this.zone.run(() => this.onPinClick(id)),
+      onClusterClick: (bounds) => this.zone.run(() => this.focusCluster(bounds)),
+      onPointerDown: () => {
+        this.ignoreNextMapClickClose = true;
+        window.setTimeout(() => {
+          this.ignoreNextMapClickClose = false;
+        }, 350);
+      },
+    });
+    return this.pinLayer;
+  }
+
+  private onPinClick(id: string): void {
     if (!this.interactive()) {
       return;
     }
 
-    this.ignoreNextMapClickClose = true;
-    queueMicrotask(() => {
-      this.ignoreNextMapClickClose = false;
-    });
+    const caterer = this.craftsmen().find((item) => item.id === id);
+    if (!caterer) {
+      return;
+    }
 
     if (this.popupCraftsman()?.id === caterer.id) {
       this.closePopup();
       return;
     }
 
+    this.visitedIds.update((current) => {
+      if (current.has(caterer.id)) {
+        return current;
+      }
+      const next = new Set(current);
+      next.add(caterer.id);
+      return next;
+    });
     this.popupCraftsman.set(caterer);
     this.catererSelect.emit(caterer.id);
-    queueMicrotask(() => this.infoWindowRef()?.open(marker));
+    const info = this.infoWindowRef();
+    info?.infoWindow?.setPosition(this.markerPosition(caterer));
+    queueMicrotask(() => info?.open());
+  }
+
+  private focusCluster(bounds: google.maps.LatLngBounds): void {
+    const map = this.mapRef()?.googleMap;
+    if (!map) {
+      return;
+    }
+
+    this.closePopup();
+    this.programmaticMove = true;
+    map.fitBounds(bounds, 72);
+    google.maps.event.addListenerOnce(map, 'idle', () => {
+      const zoom = map.getZoom();
+      if (zoom != null && zoom <= MAP_PIN_CLUSTER_MAX_ZOOM) {
+        this.programmaticMove = true;
+        map.setZoom(MAP_PIN_CLUSTER_MAX_ZOOM + 1);
+      }
+    });
   }
 
   protected onPopupClose(): void {

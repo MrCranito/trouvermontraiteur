@@ -1,6 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   CategoryService,
+  CraftsmanPage,
+  CraftsmanSearchBounds,
   CraftsmanService as CraftsmanApiService,
 } from '@trouvermontraiteur/api';
 import {
@@ -18,11 +20,20 @@ import {
   Category,
   Craftsman,
   CraftsmanTrade,
+  resolveCraftsmanTradeFromSubCategoryLabel,
+  resolveSubCategoryTranslation,
   SubCategory,
 } from '@trouvermontraiteur/models';
 
-export type { MapViewport, SearchSort, CraftsmanFilters };
+export type { MapViewport, SearchSort, CraftsmanFilters, CraftsmanPage };
 export { SEARCH_RESULTS_LIMIT };
+
+export interface CraftsmanSearchOptions {
+  page?: number;
+  pageSize?: number;
+  sort?: SearchSort | null;
+  bounds?: CraftsmanSearchBounds;
+}
 
 const DISCOVER_PREVIEW_PER_CATEGORY = 10;
 
@@ -85,6 +96,39 @@ export class AppCraftsmanCatalogService {
     const category = this.categories().find((item) => item.id === categoryId);
     return [...(category?.subCategories ?? [])].sort(
       (a, b) => a.order - b.order,
+    );
+  }
+
+  async search(
+    filters: CraftsmanFilters,
+    options: CraftsmanSearchOptions = {},
+  ): Promise<CraftsmanPage> {
+    const page = options.page ?? 0;
+    const pageSize = options.pageSize ?? SEARCH_RESULTS_LIMIT;
+    const from = Math.max(0, page) * Math.max(1, pageSize);
+
+    if (filters.projectTypes.length > 0 || filters.serviceOptions.length > 0) {
+      return { items: [], from, to: -1, total: 0 };
+    }
+
+    const subCategoryIds = this.resolveSubCategoryIds(filters);
+    const categoryFilterRequested =
+      filters.subCategoryIds.length > 0 || filters.trades.length > 0;
+    if (categoryFilterRequested && subCategoryIds.length === 0) {
+      return { items: [], from, to: -1, total: 0 };
+    }
+
+    return this.craftsmanApi.search(
+      {
+        query: filters.query,
+        subCategoryIds,
+        minRating: filters.minRating,
+        projectDate: filters.projectDate,
+        bounds: options.bounds,
+      },
+      page,
+      pageSize,
+      options.sort === undefined ? 'relevance' : (options.sort ?? undefined),
     );
   }
 
@@ -506,5 +550,24 @@ export class AppCraftsmanCatalogService {
       this.loading.set(false);
       this.ready.set(true);
     }
+  }
+
+  private resolveSubCategoryIds(filters: CraftsmanFilters): string[] {
+    if (filters.subCategoryIds.length > 0) {
+      return filters.subCategoryIds;
+    }
+    if (filters.trades.length === 0) {
+      return [];
+    }
+
+    const wanted = new Set(filters.trades);
+    return this.subCategoriesSignal()
+      .filter((subCategory) => {
+        const trade = resolveCraftsmanTradeFromSubCategoryLabel(
+          resolveSubCategoryTranslation(subCategory, 'fr'),
+        );
+        return trade !== null && wanted.has(trade);
+      })
+      .map((subCategory) => subCategory.id);
   }
 }
