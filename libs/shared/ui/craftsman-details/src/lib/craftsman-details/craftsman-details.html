@@ -13,8 +13,13 @@
   </div>
 </aside>
 }
-<article class="listing" [class.listing--edit]="editMode()">
+<article
+  class="listing"
+  [class.listing--edit]="editMode()"
+  [class.listing--public]="!editMode()"
+>
   <div class="listing__container">
+    @if (editMode()) {
     <div class="listing__top-actions">
       @if (editMode()) {       @if (saved()) {
       <p-message
@@ -712,6 +717,323 @@
       </aside>
       }
     </div>
+    } @else {
+    <div class="listing__hero">
+      <div class="listing__hero-copy">
+        <h1 class="listing__title">{{ c.name }}</h1>
+        <p class="listing__meta">
+          @if (c.rating > 0) {
+          <a class="listing__meta-item" [href]="sectionHref('avis')" (click)="selectSection('avis', $event)">
+            <ng-container
+              [ngTemplateOutlet]="ratingStars"
+              [ngTemplateOutletContext]="{ size: 16, rating: c.rating }"
+            />
+            <strong>{{ formatRating(c.rating) }}</strong>
+            <span class="listing__meta-link"
+              >{{ c.reviewCount }} avis Google</span
+            >
+          </a>
+          <span class="listing__meta-dot" aria-hidden="true">•</span>
+          }
+          @if (c.location.city) {
+          <a class="listing__meta-item" [href]="sectionHref('localisation')" (click)="selectSection('localisation', $event)">
+            <i class="pi pi-map-marker" aria-hidden="true"></i>
+            {{ c.location.city }}
+          </a>
+          }
+        </p>
+      </div>
+      <div class="listing__hero-actions">
+        <button type="button" class="listing__outline-btn" (click)="shareListing()">
+          <i class="pi pi-share-alt" aria-hidden="true"></i>
+          Partager
+        </button>
+        <button
+          type="button"
+          class="listing__outline-btn"
+          [class.listing__outline-btn--saved]="isFavorite()"
+          (click)="toggleSave()"
+        >
+          <i
+            [class]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+            aria-hidden="true"
+          ></i>
+          {{ isFavorite() ? 'Enregistré' : 'Enregistrer' }}
+        </button>
+        @if (shareHintVisible()) {
+        <span class="listing__share-hint" role="status">Lien copié</span>
+        }
+      </div>
+    </div>
+
+    <div
+      class="listing__gallery"
+      [class.listing__gallery--single]="mosaicCount() === 1"
+      [ngClass]="'listing__gallery--count-' + (mosaicCount() || 1)"
+    >
+      @for (photo of mosaicPhotos(); track photo.id; let i = $index) {
+      <button
+        type="button"
+        class="listing__photo"
+        [class.listing__gallery-main]="i === 0 && mosaicCount() > 2"
+        (click)="openGallery(i)"
+        [attr.aria-label]="'Voir la photo ' + (i + 1)"
+      >
+        <img [src]="photo.imageUrl" [alt]="photo.caption" loading="eager" />
+      </button>
+      } @empty {
+      <div class="listing__photo listing__photo--hero listing__photo--placeholder">
+        <img src="/images/empty_image.png" [alt]="c.name" />
+      </div>
+      }
+    </div>
+
+    <nav class="listing__tabs" aria-label="Sections">
+      <a
+        [href]="sectionHref('apropos')"
+        class="listing__tab"
+        [class.listing__tab--active]="activeSection() === 'apropos'"
+        (click)="selectSection('apropos', $event)"
+        >À propos</a
+      >
+      @if (showContact()) {
+      <a
+        [href]="sectionHref('contact')"
+        class="listing__tab"
+        [class.listing__tab--active]="activeSection() === 'contact'"
+        (click)="selectSection('contact', $event)"
+        >Coordonnées</a
+      >
+      }
+      @if (showReviews()) {
+      <a
+        [href]="sectionHref('avis')"
+        class="listing__tab"
+        [class.listing__tab--active]="activeSection() === 'avis'"
+        (click)="selectSection('avis', $event)"
+        >Avis</a
+      >
+      }
+      <a
+        [href]="sectionHref('localisation')"
+        class="listing__tab"
+        [class.listing__tab--active]="activeSection() === 'localisation'"
+        (click)="selectSection('localisation', $event)"
+        >Localisation</a
+      >
+    </nav>
+
+    <div class="listing__layout">
+      <div class="listing__main">
+        @if (listingContact().phone || listingContact().websiteHref || directionsUrl(c)) {
+        <div class="listing__quick">
+          @if (listingContact().phone; as phone) {
+          <a class="listing__quick-card" [href]="phoneHref(phone)">
+            <i class="pi pi-phone" aria-hidden="true"></i>
+            <span class="listing__quick-title">Appeler</span>
+            <span class="listing__quick-meta">{{ phone }}</span>
+          </a>
+          }
+          @if (listingContact().websiteHref; as website) {
+          <a
+            class="listing__quick-card"
+            [href]="website"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="pi pi-globe" aria-hidden="true"></i>
+            <span class="listing__quick-title">Site web</span>
+            <span class="listing__quick-meta">{{ listingContact().websiteHost }}</span>
+          </a>
+          }
+          @if (directionsUrl(c); as directions) {
+          <a
+            class="listing__quick-card"
+            [href]="directions"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="pi pi-send" aria-hidden="true"></i>
+            <span class="listing__quick-title">Itinéraire</span>
+            <span class="listing__quick-meta">{{
+              c.location.address || c.location.city
+            }}</span>
+          </a>
+          }
+        </div>
+        }
+
+        <section id="apropos" class="listing__section" aria-labelledby="listing-about-title">
+          <h2 id="listing-about-title">À propos de cet artisan</h2>
+          @if (listingContact().about) {
+          <p class="listing__about">{{ listingContact().about }}</p>
+          }
+          @if (listingContact().aboutNeedsDetail) {
+          <p class="listing__about-note">
+            Description à compléter par l'artisan : style, types d'événements,
+            durée des prestations, zone d'intervention.
+          </p>
+          }
+        </section>
+
+        @if (showContact()) {
+        <section id="contact" class="listing__section" aria-labelledby="listing-contact-title">
+          <h2 id="listing-contact-title">Coordonnées</h2>
+          <dl class="listing__facts">
+            @if (listingContact().phone; as phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="phoneHref(phone)">{{ phone }}</a></dd>
+            </div>
+            }
+            @if (listingContact().websiteHref; as website) {
+            <div>
+              <dt>Site web</dt>
+              <dd>
+                <a [href]="website" target="_blank" rel="noopener noreferrer"
+                  >{{ listingContact().websiteLabel }} ↗</a
+                >
+              </dd>
+            </div>
+            }
+            @if (formatAddress(c); as address) {
+            <div>
+              <dt>Adresse</dt>
+              <dd>{{ address }}</dd>
+            </div>
+            }
+            @if (placeUrl(c); as place) {
+            <div>
+              <dt>Fiche Google</dt>
+              <dd>
+                <a [href]="place" target="_blank" rel="noopener noreferrer"
+                  >Ouvrir dans Google Maps ↗</a
+                >
+              </dd>
+            </div>
+            }
+          </dl>
+        </section>
+        }
+
+        @if (showReviews()) {
+        <section id="avis" class="listing__section" aria-labelledby="listing-reviews-title">
+          <h2 id="listing-reviews-title">Avis clients</h2>
+          <div class="listing__reviews">
+            <div class="listing__reviews-score">
+              <span class="listing__reviews-value">{{ formatRating(c.rating) }}</span>
+              <ng-container
+                [ngTemplateOutlet]="ratingStars"
+                [ngTemplateOutletContext]="{ size: 18, rating: c.rating }"
+              />
+              <span class="listing__reviews-count"
+                >{{ c.reviewCount }} avis sur Google</span
+              >
+            </div>
+            <div class="listing__reviews-copy">
+              <p>{{ reviewBlurb(c.rating) }}</p>
+              @if (placeUrl(c); as place) {
+              <a
+                class="listing__reviews-link"
+                [href]="place"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Lire les avis sur Google ↗</a
+              >
+              }
+            </div>
+          </div>
+        </section>
+        }
+
+        <section
+          id="localisation"
+          class="listing__section"
+          aria-labelledby="listing-location-title"
+        >
+          <div class="listing__place-head">
+            <div>
+              <h2 id="listing-location-title">Où se situe l'artisan</h2>
+              @if (formatAddress(c); as address) {
+              <p class="listing__place-address">{{ address }}</p>
+              }
+            </div>
+            @if (directionsUrl(c); as directions) {
+            <a
+              class="listing__route-btn"
+              [href]="directions"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i class="pi pi-send" aria-hidden="true"></i>
+              Itinéraire
+            </a>
+            }
+          </div>
+          <div class="listing__map-wrap">
+            <tmt-single-marker-map
+              class="listing__map"
+              [craftsman]="c"
+              [interactive]="false"
+              [showHint]="false"
+            />
+          </div>
+        </section>
+      </div>
+
+      <aside class="listing__book" aria-label="Demander un devis">
+        <div class="listing__book-card">
+          @if (c.rating > 0) {
+          <div class="listing__book-rating">
+            <ng-container
+              [ngTemplateOutlet]="ratingStars"
+              [ngTemplateOutletContext]="{ size: 18, rating: c.rating }"
+            />
+            <span>{{ formatCardRating(c.rating) }} · {{ c.reviewCount }} avis</span>
+          </div>
+          }
+          <button type="button" class="listing__quote-btn" (click)="openQuoteDialog()">
+            <i class="pi pi-envelope" aria-hidden="true"></i>
+            Demander un devis
+          </button>
+          @if (formatAddress(c); as address) {
+          <p class="listing__book-address">
+            <i class="pi pi-map-marker" aria-hidden="true"></i>
+            {{ address }}
+          </p>
+          }
+        </div>
+      </aside>
+    </div>
+
+    <tmt-listing-photo-gallery
+      [visible]="galleryVisible()"
+      (visibleChange)="galleryVisible.set($event)"
+      [photos]="allPhotos()"
+      [startIndex]="galleryStartIndex()"
+    />
+
+    <ng-template #ratingStars let-size="size" let-rating="rating">
+      <span
+        class="listing__stars"
+        [attr.aria-label]="roundedRating(rating) + ' étoiles sur 5'"
+      >
+        @for (star of ratingStarSlots; track star) {
+        <svg
+          [attr.width]="size"
+          [attr.height]="size"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          [attr.fill]="star <= roundedRating(rating) ? '#D69A2D' : '#E6DED3'"
+        >
+          <path
+            d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"
+          />
+        </svg>
+        }
+      </span>
+    </ng-template>
+    }
 
     @if (editMode() && editNameDialogVisible()) {
     <div class="listing__inline-modal">

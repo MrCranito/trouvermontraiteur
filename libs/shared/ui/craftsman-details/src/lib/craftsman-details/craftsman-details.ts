@@ -1,4 +1,4 @@
-import { NgClass } from '@angular/common';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 import {
   Component,
   computed,
@@ -68,10 +68,23 @@ export interface ListingPhoto {
   caption: string;
 }
 
+type ListingSectionId = 'apropos' | 'contact' | 'avis' | 'localisation';
+
+interface ListingContactInfo {
+  about: string;
+  aboutNeedsDetail: boolean;
+  phone: string | null;
+  websiteHref: string | null;
+  websiteHost: string | null;
+  websiteLabel: string | null;
+  googleMapsUrl: string | null;
+}
+
 @Component({
   selector: 'tmt-craftsman-details',
   imports: [
     NgClass,
+    NgTemplateOutlet,
     ListingDetailsSkeleton,
     FormsModule,
     RouterLink,
@@ -132,6 +145,8 @@ export class CraftsmanDetails {
   protected readonly galleryVisible = signal(false);
   protected readonly galleryStartIndex = signal(0);
   protected readonly shareHintVisible = signal(false);
+  protected readonly activeSection = signal<ListingSectionId>('apropos');
+  protected readonly ratingStarSlots = [1, 2, 3, 4, 5];
   protected readonly saved = signal(false);
   protected readonly publishing = signal(false);
   protected readonly editNameDialogVisible = signal(false);
@@ -366,6 +381,27 @@ export class CraftsmanDetails {
     }
     const c = this.craftsman();
     return c ? favorites.isFavorite(c.id) : false;
+  });
+
+  protected readonly listingContact = computed(() =>
+    parseListingDescription(this.craftsman()?.description ?? ''),
+  );
+
+  protected readonly showReviews = computed(() => {
+    const craftsman = this.craftsman();
+    return !!craftsman && (craftsman.rating > 0 || craftsman.reviewCount > 0);
+  });
+
+  protected readonly showContact = computed(() => {
+    const contact = this.listingContact();
+    const craftsman = this.craftsman();
+    return !!(
+      contact.phone ||
+      contact.websiteHref ||
+      contact.googleMapsUrl ||
+      craftsman?.location.address ||
+      craftsman?.location.city
+    );
   });
 
   protected readonly priceFrom = computed(() => {
@@ -796,11 +832,94 @@ export class CraftsmanDetails {
     }).format(price);
   }
 
+  protected sectionHref(section: ListingSectionId): string {
+    const path = this.router.url.split('#')[0].split('?')[0];
+    return `${path}#${section}`;
+  }
+
+  protected selectSection(section: ListingSectionId, event?: Event): void {
+    event?.preventDefault();
+    this.activeSection.set(section);
+    document.getElementById(section)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
+  protected roundedRating(rating: number): number {
+    return Math.max(0, Math.min(5, Math.round(rating)));
+  }
+
+  protected formatRating(rating: number): string {
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(rating);
+  }
+
+  protected formatCardRating(rating: number): string {
+    const rounded = Math.round(rating * 10) / 10;
+    if (Number.isInteger(rounded)) {
+      return String(rounded);
+    }
+    return this.formatRating(rating);
+  }
+
+  protected reviewBlurb(rating: number): string {
+    if (rating >= 4.95) {
+      return "Note parfaite sur l'ensemble des avis laissés par ses clients sur Google.";
+    }
+    return 'Note issue des avis laissés par ses clients sur Google.';
+  }
+
+  protected formatAddress(craftsman: Craftsman): string {
+    return [craftsman.location.address, craftsman.location.city]
+      .filter((part) => part.trim().length > 0)
+      .join(', ');
+  }
+
+  protected phoneHref(phone: string): string {
+    return `tel:${phone.replace(/[^\d+]/g, '')}`;
+  }
+
+  protected placeUrl(craftsman: Craftsman): string | null {
+    const stored = this.listingContact().googleMapsUrl;
+    if (stored) {
+      return stored;
+    }
+    if (!this.hasPlace(craftsman)) {
+      return null;
+    }
+    return this.mapsUrl(craftsman.location);
+  }
+
+  protected directionsUrl(craftsman: Craftsman): string | null {
+    const { address, city, lat, lng } = craftsman.location;
+    if (lat !== 0 || lng !== 0) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    }
+    const destination = [address, city].filter((part) => part.trim().length > 0);
+    if (destination.length > 0) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination.join(', '))}`;
+    }
+    return this.placeUrl(craftsman);
+  }
+
   protected mapsUrl(location: CraftsmanLocation): string {
     const query = encodeURIComponent(
       `${location.address}, ${location.city}`,
     );
     return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  }
+
+  private hasPlace(craftsman: Craftsman): boolean {
+    const { address, city, lat, lng } = craftsman.location;
+    return (
+      address.trim().length > 0 ||
+      city.trim().length > 0 ||
+      lat !== 0 ||
+      lng !== 0
+    );
   }
 
   private toggleList<T>(
@@ -814,5 +933,73 @@ export class CraftsmanDetails {
     } else {
       listSignal.set(current.filter((x) => x !== item));
     }
+  }
+}
+
+function parseListingDescription(description: string): ListingContactInfo {
+  const aboutLines: string[] = [];
+  let phone: string | null = null;
+  let websiteRaw: string | null = null;
+  let googleMapsUrl: string | null = null;
+
+  for (const rawLine of description.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    const phoneMatch = /^Téléphone\s*:\s*(.+)$/i.exec(line);
+    const webMatch = /^Site web\s*:\s*(.+)$/i.exec(line);
+    const mapsMatch = /^Google Maps\s*:\s*(.+)$/i.exec(line);
+    if (phoneMatch) {
+      phone = phoneMatch[1].trim();
+      continue;
+    }
+    if (webMatch) {
+      websiteRaw = webMatch[1].trim();
+      continue;
+    }
+    if (mapsMatch) {
+      googleMapsUrl = mapsMatch[1].trim();
+      continue;
+    }
+    if (/^Note Google\s*:/i.test(line)) {
+      continue;
+    }
+    aboutLines.push(line);
+  }
+
+  const about = aboutLines.join('\n');
+  const website = websiteRaw ? formatWebsite(websiteRaw) : null;
+
+  return {
+    about,
+    aboutNeedsDetail: about.length < 80,
+    phone,
+    websiteHref: website?.href ?? null,
+    websiteHost: website?.host ?? null,
+    websiteLabel: website?.label ?? null,
+    googleMapsUrl,
+  };
+}
+
+function formatWebsite(
+  raw: string,
+): { href: string; host: string; label: string } | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(href);
+    return {
+      href,
+      host: url.hostname.replace(/^www\./i, ''),
+      label: url.hostname,
+    };
+  } catch {
+    return { href: trimmed, host: trimmed, label: trimmed };
   }
 }

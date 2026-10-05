@@ -17,13 +17,9 @@
 }
 
 .listing__container {
-  max-width: 70rem;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 1rem 1.5rem 4rem;
-
-  @media (min-width: 744px) {
-    padding: 1.5rem 2.5rem 5rem;
-  }
+  padding: 20px 24px 80px;
 }
 
 .listing__rule {
@@ -48,16 +44,6 @@
   min-width: 0;
 }
 
-.listing__top-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.15rem;
-  margin-bottom: 0.75rem;
-}
-
-.listing-skeleton__action,
 .listing-skeleton__photos,
 .listing-skeleton__title,
 .listing-skeleton__meta,
@@ -85,13 +71,12 @@
 
 .listing-skeleton__photos {
   width: 100%;
-  height: min(56vw, 26rem);
-  margin-bottom: 1.5rem;
-  border-radius: 0.75rem;
+  height: 432px;
+  margin: 20px 0 28px;
+  border-radius: 16px;
 
-  @media (min-width: 744px) {
-    height: min(36vw, 32rem);
-    border-radius: 0.85rem;
+  @media (max-width: 760px) {
+    height: 280px;
   }
 }
 
