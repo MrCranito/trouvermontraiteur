@@ -10,6 +10,8 @@ export interface ConsumerQuoteRequest {
   status: ConsumerQuoteStatus;
   projectTypeLabel: string;
   eventDateLabel: string;
+  /** Date ISO `YYYY-MM-DD` envoyée dans `quote_requests.event_date`. */
+  eventDateIso?: string;
   guestCount: number;
   /** Guest range chosen in the quote dialog, e.g. "50–100". */
   guestRange?: string;

@@ -66,6 +66,7 @@ export class QuoteRequestDialog {
   readonly submitted = output<ConsumerQuoteRequest>();
 
   protected readonly success = signal(false);
+  protected readonly submitError = signal('');
   protected readonly eventTypes = EVENT_TYPES;
   protected readonly guestRanges = GUEST_RANGES;
   protected readonly eventServices = EVENT_SERVICES;
@@ -231,7 +232,7 @@ export class QuoteRequestDialog {
     this.message = value.slice(0, MESSAGE_MAX);
   }
 
-  protected submit(): void {
+  protected async submit(): Promise<void> {
     if (!this.canSend || !this.eventType) {
       return;
     }
@@ -239,7 +240,7 @@ export class QuoteRequestDialog {
     const craftsman = this.craftsman();
     const services = this.orderedServices();
     const quote: ConsumerQuoteRequest = {
-      id: `cq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: '',
       craftsmanId: craftsman.id,
       craftsmanName: craftsman.name,
       craftsmanSlug: craftsman.slug,
@@ -247,6 +248,7 @@ export class QuoteRequestDialog {
       status: 'pending',
       projectTypeLabel: this.eventType,
       eventDateLabel: this.formatProjectDateLabel(this.projectDate),
+      eventDateIso: this.projectDate,
       guestCount: this.guestRange ? GUEST_COUNTS[this.guestRange] : 0,
       guestRange: this.guestRange || undefined,
       place: this.place.trim() || undefined,
@@ -258,9 +260,18 @@ export class QuoteRequestDialog {
       requestedAtMs: Date.now(),
     };
 
-    this.quotesService.addQuote(quote);
-    this.success.set(true);
-    this.submitted.emit(quote);
+    this.submitError.set('');
+    try {
+      const saved = await this.quotesService.addQuote(quote);
+      this.success.set(true);
+      this.submitted.emit(saved);
+    } catch (err) {
+      this.submitError.set(
+        err instanceof Error
+          ? err.message
+          : 'Impossible d’enregistrer la demande de devis.',
+      );
+    }
   }
 
   protected close(): void {
@@ -273,6 +284,7 @@ export class QuoteRequestDialog {
 
   private resetForm(): void {
     this.success.set(false);
+    this.submitError.set('');
     this.eventType = 'Mariage';
     this.projectDate = '';
     this.place = '';

@@ -81,8 +81,102 @@
               }
             </article>
           }
+
+          <p-button
+            class="consumer-devis__talk"
+            label="Ouvrir la conversation"
+            icon="pi pi-comments"
+            (onClick)="openConversation(quote)"
+          />
         </li>
       }
     </ul>
   }
 </div>
+
+<p-dialog
+  [visible]="conversationVisible()"
+  (visibleChange)="conversationVisible.set($event)"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(720px, calc(100vw - 2rem))' }"
+  styleClass="consumer-devis-thread"
+>
+  <ng-template #header>
+    <div class="cthread__header">
+      <h2>Conversation</h2>
+      <button type="button" aria-label="Fermer" (click)="conversationVisible.set(false)">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+    @if (activeQuote(); as quote) {
+      <p class="cthread__who">{{ quote.craftsmanName }} · {{ quote.projectTypeLabel }}</p>
+    }
+  </ng-template>
+
+  @if (activeQuote(); as quote) {
+    <div class="cthread">
+      <div #threadScroller class="cthread__log" role="log">
+        @for (message of messages(); track message.id) {
+          <article class="cthread__bubble" [class.cthread__bubble--mine]="message.author === 'client'">
+            <header>
+              {{ message.author === 'client' ? 'Vous' : quote.craftsmanName }}
+              <time>{{ formatMessageTime(message.createdAt) }}</time>
+            </header>
+            @if (message.body) {
+              <p>{{ message.body }}</p>
+            }
+            @if (message.attachments.length) {
+              <ul>
+                @for (file of message.attachments; track file.id) {
+                  <li>
+                    @if (isImage(file.mimeType)) {
+                      <a [href]="file.dataUrl" target="_blank" rel="noopener">
+                        <img [src]="file.dataUrl" [alt]="file.name" />
+                      </a>
+                    } @else {
+                      <a [href]="file.dataUrl" [download]="file.name">{{ file.name }}</a>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </article>
+        }
+      </div>
+      <form class="cthread__composer" (ngSubmit)="sendMessage()">
+        @if (pendingFiles().length) {
+          <ul class="cthread__pending">
+            @for (file of pendingFiles(); track file.id) {
+              <li>
+                <span>{{ file.name }}</span>
+                <button type="button" (click)="removePending(file.id)" aria-label="Retirer">×</button>
+              </li>
+            }
+          </ul>
+        }
+        @if (threadError()) {
+          <p class="cthread__error" role="alert">{{ threadError() }}</p>
+        }
+        <div class="cthread__row">
+          <label class="cthread__attach">
+            <i class="pi pi-paperclip" aria-hidden="true"></i>
+            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt,.zip" (change)="onAttach($event)" />
+          </label>
+          <textarea
+            rows="2"
+            name="draft"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            placeholder="Écrivez un message, ajoutez une photo ou un fichier…"
+          ></textarea>
+          <button type="submit" [disabled]="threadSending() || (!draft().trim() && pendingFiles().length === 0)">
+            Envoyer
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</p-dialog>

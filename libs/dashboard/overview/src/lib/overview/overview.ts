@@ -269,7 +269,10 @@ export class DashboardOverview {
     return `${sign}${delta.toFixed(0).replace('.', ',')} ${suffix}`;
   }
 
-  private formatGuests(count: number): string {
+  private formatGuests(count: number | null): string {
+    if (count == null) {
+      return '—';
+    }
     if (count < 50) {
       return '< 50';
     }

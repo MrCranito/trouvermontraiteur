@@ -50,18 +50,30 @@ export class MapMarkerPopup {
 
   protected readonly photos = computed((): PopupPhoto[] => {
     const craftsman = this.craftsman();
-    const photos = [
-      {
-        id: 'cover',
-        imageUrl: craftsman.imageUrl,
-        caption: craftsman.name,
-      },
-      ...craftsman.realisations.map((realisation) => ({
+    const seen = new Set<string>();
+    const photos: PopupPhoto[] = [];
+
+    const add = (photo: PopupPhoto): void => {
+      const imageUrl = photo.imageUrl.trim();
+      if (!imageUrl || seen.has(imageUrl)) {
+        return;
+      }
+      seen.add(imageUrl);
+      photos.push({ ...photo, imageUrl });
+    };
+
+    add({
+      id: 'cover',
+      imageUrl: craftsman.imageUrl,
+      caption: craftsman.name,
+    });
+    for (const realisation of craftsman.realisations) {
+      add({
         id: realisation.id,
         imageUrl: realisation.imageUrl,
-        caption: realisation.caption,
-      })),
-    ].filter((photo) => photo.imageUrl.trim().length > 0);
+        caption: realisation.caption || craftsman.name,
+      });
+    }
 
     if (photos.length === 0) {
       return [

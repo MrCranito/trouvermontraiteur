@@ -99,6 +99,9 @@
       </div>
     } @else {
       <form id="qrd-form" class="qrd__body" (ngSubmit)="submit()">
+        @if (submitError()) {
+          <p class="qrd__error" role="alert">{{ submitError() }}</p>
+        }
         <section class="qrd__section">
           <h3>Type d’événement <span class="qrd__required">*</span></h3>
           <div class="qrd__grid qrd__grid--types">

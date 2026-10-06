@@ -66,3 +66,14 @@ export type {
   CatererDetailLayoutPreset,
   CatererDetailSectionId,
 } from './lib/caterer-detail-layout';
+export type {
+  QuoteThreadAttachment,
+  QuoteThreadAuthor,
+  QuoteThreadMessage,
+} from './lib/quote-thread';
+export {
+  fileToQuoteAttachment,
+  isQuoteThreadImage,
+  listLocalQuoteThread,
+  saveLocalQuoteThreadMessage,
+} from './lib/quote-thread';

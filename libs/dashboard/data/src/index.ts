@@ -7,6 +7,7 @@ export type {
   CatererQuoteRequest,
   QuoteRequestStatus,
 } from './lib/caterer-quote-request';
+export { compareQuoteColumn } from './lib/caterer-quote-request';
 export type {
   CatererDashboardStats,
   StatTrend,

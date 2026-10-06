@@ -72,7 +72,6 @@ type ListingSectionId = 'apropos' | 'contact' | 'avis' | 'localisation';
 
 interface ListingContactInfo {
   about: string;
-  aboutNeedsDetail: boolean;
   phone: string | null;
   websiteHref: string | null;
   websiteHost: string | null;
@@ -974,7 +973,6 @@ function parseListingDescription(description: string): ListingContactInfo {
 
   return {
     about,
-    aboutNeedsDetail: about.length < 80,
     phone,
     websiteHref: website?.href ?? null,
     websiteHost: website?.host ?? null,

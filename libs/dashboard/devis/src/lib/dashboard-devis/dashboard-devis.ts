@@ -1,18 +1,29 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import {
-  CatererContractsService,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { QuoteThreadService } from '@trouvermontraiteur/api';
+import {
   CatererDevisService,
   CatererQuoteRequest,
+  compareQuoteColumn,
   QuoteRequestStatus,
 } from '@trouvermontraiteur/dashboard-data';
-import { UserProContract, UserProContractStatus } from '@trouvermontraiteur/models';
+import {
+  fileToQuoteAttachment,
+  isQuoteThreadImage,
+  QuoteThreadAttachment,
+  QuoteThreadMessage,
+} from '@trouvermontraiteur/models';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
-import { Message } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
-import { Textarea } from 'primeng/textarea';
 
 @Component({
   selector: 'tmt-dashboard-devis',
@@ -22,38 +33,36 @@ import { Textarea } from 'primeng/textarea';
     Button,
     Tag,
     Dialog,
-    Textarea,
-    Message,
   ],
   templateUrl: './dashboard-devis.html',
   styleUrl: './dashboard-devis.scss',
 })
 export class DashboardDevis {
   private readonly devisService = inject(CatererDevisService);
-  private readonly contractsService = inject(CatererContractsService);
+  private readonly threads = inject(QuoteThreadService);
+  private readonly threadScroller =
+    viewChild<ElementRef<HTMLElement>>('threadScroller');
 
   protected readonly detailVisible = signal(false);
-  protected readonly respondVisible = signal(false);
+  protected readonly conversationVisible = signal(false);
   protected readonly detailRequest = signal<CatererQuoteRequest | null>(null);
-  protected readonly respondRequest = signal<CatererQuoteRequest | null>(null);
-  protected readonly responseText = signal('');
-  protected readonly respondSuccess = signal(false);
+  protected readonly conversationRequest = signal<CatererQuoteRequest | null>(
+    null,
+  );
+  protected readonly messages = signal<QuoteThreadMessage[]>([]);
+  protected readonly draft = signal('');
+  protected readonly pendingFiles = signal<QuoteThreadAttachment[]>([]);
+  protected readonly threadError = signal('');
+  protected readonly threadSending = signal(false);
+  protected readonly isImage = isQuoteThreadImage;
 
   protected readonly requests = this.devisService.requestsSignal;
+  protected readonly requestsLoading = this.devisService.isLoading;
+  protected readonly requestsError = this.devisService.errorSignal;
   protected readonly newCount = this.devisService.newCount;
-
-  protected readonly contracts = this.contractsService.contractsSignal;
-  protected readonly contractsLoading = this.contractsService.isLoading;
-  protected readonly contractsError = this.contractsService.errorSignal;
 
   protected readonly tableRows = computed((): CatererQuoteRequest[] =>
     [...this.requests()].sort((a, b) => b.requestedAtMs - a.requestedAtMs),
-  );
-
-  protected readonly contractRows = computed((): UserProContract[] =>
-    [...this.contracts()].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    ),
   );
 
   protected readonly statsSummary = computed(() => {
@@ -67,50 +76,113 @@ export class DashboardDevis {
     };
   });
 
-  protected refreshContracts(): void {
-    void this.contractsService.load();
-  }
-
-  protected openDetail(request: CatererQuoteRequest): void {
+  protected openDetail(request: CatererQuoteRequest, event?: Event): void {
+    event?.stopPropagation();
     this.devisService.markAsViewed(request.id);
     const current = this.requests().find((r) => r.id === request.id) ?? request;
     this.detailRequest.set(current);
     this.detailVisible.set(true);
   }
 
-  protected openRespond(request: CatererQuoteRequest): void {
+  protected async openConversation(
+    request: CatererQuoteRequest,
+    event?: Event,
+  ): Promise<void> {
+    event?.stopPropagation();
     this.devisService.markAsViewed(request.id);
     const current = this.requests().find((r) => r.id === request.id) ?? request;
-    this.respondRequest.set(current);
-    this.responseText.set(current.proResponse ?? '');
-    this.respondSuccess.set(false);
-    this.respondVisible.set(true);
+    this.conversationRequest.set(current);
+    this.draft.set('');
+    this.pendingFiles.set([]);
+    this.threadError.set('');
+    this.conversationVisible.set(true);
+    await this.reloadThread(current);
   }
 
-  protected openRespondFromDetail(): void {
+  protected async openConversationFromDetail(): Promise<void> {
     const request = this.detailRequest();
     if (!request) {
       return;
     }
     this.detailVisible.set(false);
-    this.openRespond(request);
+    await this.openConversation(request);
   }
 
-  protected closeRespond(): void {
-    this.respondVisible.set(false);
-    this.respondSuccess.set(false);
+  protected async onAttach(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    this.threadError.set('');
+
+    const next = [...this.pendingFiles()];
+    for (const file of files) {
+      if (next.length >= 6) {
+        this.threadError.set('6 pièces jointes maximum.');
+        break;
+      }
+      try {
+        next.push(await fileToQuoteAttachment(file));
+      } catch (err) {
+        this.threadError.set(
+          err instanceof Error ? err.message : 'Fichier impossible à ajouter.',
+        );
+      }
+    }
+    this.pendingFiles.set(next);
   }
 
-  protected sendResponse(): void {
-    const request = this.respondRequest();
-    const text = this.responseText().trim();
-    if (!request || !text) {
+  protected removePending(id: string): void {
+    this.pendingFiles.update((files) => files.filter((file) => file.id !== id));
+  }
+
+  protected async sendMessage(): Promise<void> {
+    const request = this.conversationRequest();
+    const body = this.draft().trim();
+    const attachments = this.pendingFiles();
+    if (!request || this.threadSending() || (!body && attachments.length === 0)) {
       return;
     }
-    this.devisService.submitResponse(request.id, text);
-    this.syncRequestSignals(request.id);
-    this.respondSuccess.set(true);
-    this.responseText.set(text);
+
+    this.threadSending.set(true);
+    this.threadError.set('');
+    try {
+      await this.threads.send({
+        quoteId: request.id,
+        author: 'craftsman',
+        body,
+        attachments,
+      });
+      if (body) {
+        await this.devisService.submitResponse(request.id, body);
+        this.syncRequestSignals(request.id);
+      }
+      this.draft.set('');
+      this.pendingFiles.set([]);
+      const current =
+        this.requests().find((item) => item.id === request.id) ?? request;
+      this.conversationRequest.set(current);
+      await this.reloadThread(current);
+    } catch (err) {
+      this.threadError.set(
+        err instanceof Error ? err.message : 'Envoi impossible.',
+      );
+    } finally {
+      this.threadSending.set(false);
+    }
+  }
+
+  protected sortRequests(event: {
+    data?: CatererQuoteRequest[];
+    field?: string;
+    order?: number;
+  }): void {
+    const rows = event.data;
+    const field = event.field;
+    if (!rows || !field) {
+      return;
+    }
+    const order = event.order ?? 1;
+    rows.sort((left, right) => compareQuoteColumn(left, right, field, order));
   }
 
   protected statusLabel(status: QuoteRequestStatus): string {
@@ -138,61 +210,6 @@ export class DashboardDevis {
     }
   }
 
-  protected contractStatusLabel(status: UserProContractStatus): string {
-    const labels: Record<UserProContractStatus, string> = {
-      draft: 'Brouillon',
-      sent: 'Envoyé',
-      signed: 'Signé',
-      cancelled: 'Annulé',
-    };
-    return labels[status];
-  }
-
-  protected contractStatusSeverity(
-    status: UserProContractStatus,
-  ): 'success' | 'info' | 'warn' | 'secondary' | 'danger' {
-    switch (status) {
-      case 'draft':
-        return 'secondary';
-      case 'sent':
-        return 'info';
-      case 'signed':
-        return 'success';
-      case 'cancelled':
-        return 'danger';
-    }
-  }
-
-  protected formatAmount(contract: UserProContract): string {
-    if (contract.amountCents == null) {
-      return '—';
-    }
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: contract.currency || 'EUR',
-    }).format(contract.amountCents / 100);
-  }
-
-  protected formatContractDate(value: string | Date | null): string {
-    if (!value) {
-      return '—';
-    }
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return '—';
-    }
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
-  }
-
-  protected markAsAnswered(id: string): void {
-    this.devisService.markAsAnswered(id);
-    this.syncRequestSignals(id);
-  }
-
   protected clientInitials(name: string): string {
     return name
       .split(/\s+/)
@@ -206,6 +223,62 @@ export class DashboardDevis {
     return request.status !== 'archived';
   }
 
+  protected formatMessageTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  private async reloadThread(request: CatererQuoteRequest): Promise<void> {
+    const stored = await this.threads.list(request.id);
+    this.messages.set(this.displayMessages(request, stored));
+    queueMicrotask(() => {
+      const scroller = this.threadScroller()?.nativeElement;
+      if (scroller) {
+        scroller.scrollTop = scroller.scrollHeight;
+      }
+    });
+  }
+
+  private displayMessages(
+    request: CatererQuoteRequest,
+    stored: QuoteThreadMessage[],
+  ): QuoteThreadMessage[] {
+    const origin: QuoteThreadMessage = {
+      id: `origin-${request.id}`,
+      quoteId: request.id,
+      author: 'client',
+      body: request.message,
+      createdAt: new Date(request.requestedAtMs).toISOString(),
+      attachments: [],
+    };
+    const history: QuoteThreadMessage[] = [origin];
+    if (
+      request.proResponse &&
+      !stored.some(
+        (message) =>
+          message.author === 'craftsman' && message.body === request.proResponse,
+      )
+    ) {
+      history.push({
+        id: `response-${request.id}`,
+        quoteId: request.id,
+        author: 'craftsman',
+        body: request.proResponse,
+        createdAt: new Date(request.requestedAtMs + 60_000).toISOString(),
+        attachments: [],
+      });
+    }
+    return [...history, ...stored];
+  }
+
   private syncRequestSignals(id: string): void {
     const current = this.requests().find((r) => r.id === id);
     if (!current) {
@@ -214,8 +287,8 @@ export class DashboardDevis {
     if (this.detailRequest()?.id === id) {
       this.detailRequest.set(current);
     }
-    if (this.respondRequest()?.id === id) {
-      this.respondRequest.set(current);
+    if (this.conversationRequest()?.id === id) {
+      this.conversationRequest.set(current);
     }
   }
 }

@@ -18,5 +18,6 @@ export {
   type CraftsmanSearchSort,
 } from './lib/service/craftsman/craftsman.service';
 export { EstimateService } from './lib/service/estimate/estimate.service';
+export { QuoteThreadService } from './lib/service/quote-thread/quote-thread.service';
 export { FavoriteService } from './lib/service/favorite/favorite.service';
 export { UserService } from './lib/service/user/user.service';

@@ -50,14 +50,26 @@ export class SearchListing {
 
   protected readonly photos = computed((): ListingPhoto[] => {
     const c = this.craftsman();
-    const photos = [
-      { id: 'cover', imageUrl: c.imageUrl, caption: c.name },
-      ...c.realisations.map((r) => ({
-        id: r.id,
-        imageUrl: r.imageUrl,
-        caption: r.caption,
-      })),
-    ].filter((photo) => photo.imageUrl.trim().length > 0);
+    const seen = new Set<string>();
+    const photos: ListingPhoto[] = [];
+
+    const add = (photo: ListingPhoto): void => {
+      const imageUrl = photo.imageUrl.trim();
+      if (!imageUrl || seen.has(imageUrl)) {
+        return;
+      }
+      seen.add(imageUrl);
+      photos.push({ ...photo, imageUrl });
+    };
+
+    add({ id: 'cover', imageUrl: c.imageUrl, caption: c.name });
+    for (const realisation of c.realisations) {
+      add({
+        id: realisation.id,
+        imageUrl: realisation.imageUrl,
+        caption: realisation.caption || c.name,
+      });
+    }
 
     if (photos.length === 0) {
       return [

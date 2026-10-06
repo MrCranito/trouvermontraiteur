@@ -4,7 +4,7 @@
       <p class="dash-devis__eyebrow">Demandes clients</p>
       <h2>Devis</h2>
       <p class="dash-devis__lead">
-        Consultez et répondez aux demandes envoyées depuis l'application publique.
+        Ouvrez une demande pour échanger avec le client, ou consultez le résumé depuis l’icône détail.
       </p>
     </div>
     @if (newCount() > 0) {
@@ -35,109 +35,6 @@
     </li>
   </ul>
 
-  <section class="dash-devis__section" aria-labelledby="dash-devis-contracts-title">
-    <div class="dash-devis__section-head">
-      <div>
-        <p class="dash-devis__eyebrow">Contrats signés &amp; en cours</p>
-        <h3 id="dash-devis-contracts-title">Contrats</h3>
-      </div>
-      <p-button
-        type="button"
-        icon="pi pi-refresh"
-        [rounded]="true"
-        [outlined]="true"
-        severity="secondary"
-        size="small"
-        ariaLabel="Actualiser les contrats"
-        [loading]="contractsLoading()"
-        (onClick)="refreshContracts()"
-      />
-    </div>
-
-    @if (contractsError(); as error) {
-      <p-message severity="error" [text]="error" />
-    }
-
-    <div class="dash-devis__card">
-      <p-table
-        class="dash-devis__table"
-        [value]="contractRows()"
-        [rowHover]="true"
-        [loading]="contractsLoading()"
-        [paginator]="contractRows().length > 8"
-        [rows]="8"
-        [rowsPerPageOptions]="[8, 15, 25]"
-        dataKey="id"
-        responsiveLayout="scroll"
-        styleClass="dash-devis-table"
-        paginatorStyleClass="dash-devis-paginator"
-      >
-        <ng-template #header>
-          <tr>
-            <th>Client</th>
-            <th>Événement</th>
-            <th>Date</th>
-            <th>Montant</th>
-            <th>Statut</th>
-            <th>Créé</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-contract>
-          <tr>
-            <td>
-              <div class="dash-devis__client">
-                <span class="dash-devis__avatar" aria-hidden="true">{{
-                  clientInitials(contract.clientName || '?')
-                }}</span>
-                <div>
-                  <strong>{{ contract.clientName || 'Client' }}</strong>
-                  @if (contract.clientEmail) {
-                    <span class="dash-devis__email">{{ contract.clientEmail }}</span>
-                  }
-                </div>
-              </div>
-            </td>
-            <td>
-              @if (contract.eventType || contract.title) {
-                <span class="dash-devis__event-chip">
-                  <i class="pi pi-file" aria-hidden="true"></i>
-                  {{ contract.eventType || contract.title }}
-                </span>
-              } @else {
-                <span class="dash-devis__budget dash-devis__budget--muted">—</span>
-              }
-            </td>
-            <td>{{ formatContractDate(contract.eventDate) }}</td>
-            <td>{{ formatAmount(contract) }}</td>
-            <td>
-              <p-tag
-                [value]="contractStatusLabel(contract.status)"
-                [severity]="contractStatusSeverity(contract.status)"
-                [rounded]="true"
-              />
-            </td>
-            <td>
-              <span class="dash-devis__time">
-                <i class="pi pi-clock" aria-hidden="true"></i>
-                {{ formatContractDate(contract.createdAt) }}
-              </span>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="6">
-              <div class="dash-devis__empty">
-                <i class="pi pi-file" aria-hidden="true"></i>
-                <p>Aucun contrat pour le moment.</p>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  </section>
-
   <section class="dash-devis__section" aria-labelledby="dash-devis-requests-title">
     <div class="dash-devis__section-head">
       <div>
@@ -146,10 +43,17 @@
       </div>
     </div>
 
+    @if (requestsError(); as error) {
+      <p class="dash-devis__error" role="alert">{{ error }}</p>
+    }
+
   <div class="dash-devis__card">
     <p-table
       class="dash-devis__table"
       [value]="tableRows()"
+      [loading]="requestsLoading()"
+      [customSort]="true"
+      (sortFunction)="sortRequests($event)"
       [rowHover]="true"
       [stripedRows]="false"
       [paginator]="tableRows().length > 8"
@@ -184,10 +88,10 @@
               <p-sortIcon field="eventType" />
             </span>
           </th>
-          <th pSortableColumn="eventDateLabel">
+          <th pSortableColumn="eventDateMs">
             <span class="dash-devis__th-sort">
               Date
-              <p-sortIcon field="eventDateLabel" />
+              <p-sortIcon field="eventDateMs" />
             </span>
           </th>
           <th pSortableColumn="guestCount" class="dash-devis__col-numeric">
@@ -218,7 +122,11 @@
         </tr>
       </ng-template>
       <ng-template #body let-request>
-        <tr [class.dash-devis__row--new]="request.status === 'new'">
+        <tr
+          class="dash-devis__row--link"
+          [class.dash-devis__row--new]="request.status === 'new'"
+          (click)="openConversation(request)"
+        >
           <td>
             <div class="dash-devis__client">
               <span class="dash-devis__avatar" aria-hidden="true">{{
@@ -240,7 +148,7 @@
           <td class="dash-devis__col-numeric">
             <span class="dash-devis__guests">
               <i class="pi pi-users" aria-hidden="true"></i>
-              {{ request.guestCount }}
+              {{ request.guestCount ?? '—' }}
             </span>
           </td>
           <td>
@@ -265,7 +173,7 @@
             </span>
           </td>
           <td class="dash-devis__col-actions">
-            <div class="dash-devis__actions">
+            <div class="dash-devis__actions" (click)="$event.stopPropagation()">
               <p-button
                 type="button"
                 icon="pi pi-eye"
@@ -273,19 +181,17 @@
                 [outlined]="true"
                 severity="secondary"
                 size="small"
-                ariaLabel="Voir le message"
-               
+                ariaLabel="Voir le résumé"
                 (onClick)="openDetail(request)"
               />
               @if (canRespond(request)) {
                 <p-button
                   type="button"
-                  icon="pi pi-reply"
+                  icon="pi pi-comments"
                   [rounded]="true"
                   size="small"
-                  ariaLabel="Répondre au client"
-                 
-                  (onClick)="openRespond(request)"
+                  ariaLabel="Ouvrir la conversation"
+                  (onClick)="openConversation(request)"
                 />
               }
             </div>
@@ -307,157 +213,256 @@
   </section>
 
   <p-dialog
-    header="Demande de devis"
     [visible]="detailVisible()"
     (visibleChange)="detailVisible.set($event)"
     [modal]="true"
-    [style]="{ width: 'min(34rem, 94vw)' }"
+    [closable]="false"
     [draggable]="false"
     [resizable]="false"
-    styleClass="dash-devis-dialog"
+    [style]="{ width: 'min(640px, calc(100vw - 2rem))' }"
+    styleClass="dash-devis-resume"
   >
-    @if (detailRequest(); as request) {
-      <div class="dash-devis__dialog">
-        <header class="dash-devis__dialog-head">
-          <div class="dash-devis__dialog-client">
-            <span class="dash-devis__avatar dash-devis__avatar--lg" aria-hidden="true">{{
-              clientInitials(request.clientName)
-            }}</span>
+    <ng-template #header>
+      <div class="qresume__header">
+        <div class="qresume__title-row">
+          <h2 class="qresume__title">Demande de devis</h2>
+          <button
+            type="button"
+            class="qresume__close"
+            aria-label="Fermer"
+            (click)="detailVisible.set(false)"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        @if (detailRequest(); as request) {
+          <div class="qresume__person">
+            <div class="qresume__avatar" aria-hidden="true">
+              {{ clientInitials(request.clientName) }}
+            </div>
             <div>
-              <p class="dash-devis__eyebrow">{{ request.eventType }}</p>
-              <h3>{{ request.clientName }}</h3>
-              <p class="dash-devis__dialog-sub">
-                {{ request.eventDateLabel }} ·
-                {{ request.guestCount }} invité{{ request.guestCount > 1 ? 's' : '' }}
+              <span class="qresume__person-name">{{ request.clientName }}</span>
+              <span class="qresume__person-meta">
+                {{ request.clientEmail }} · reçu {{ request.requestedAt }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </ng-template>
+
+    @if (detailRequest(); as request) {
+      <div class="qresume__body">
+        <section class="qresume__section">
+          <h3>Type d’événement</h3>
+          <div class="qresume__choices">
+            <span class="qresume__choice qresume__choice--on">{{ request.eventType }}</span>
+          </div>
+        </section>
+
+        <section class="qresume__section">
+          <h3>Quand et où ?</h3>
+          <div class="qresume__when">
+            <div class="qresume__field">
+              <span>Date de l’événement</span>
+              <p>
+                {{ request.eventDateLabel }}
+                @if (request.datesFlexible) {
+                  <em> · dates flexibles</em>
+                }
               </p>
             </div>
-          </div>
-          <p-tag
-            [value]="statusLabel(request.status)"
-            [severity]="statusSeverity(request.status)"
-            [rounded]="true"
-          />
-        </header>
-
-        <dl class="dash-devis__facts">
-          <div>
-            <dt>E-mail</dt>
-            <dd>
-              <a [href]="'mailto:' + request.clientEmail">{{ request.clientEmail }}</a>
-            </dd>
-          </div>
-          @if (request.budgetHint) {
-            <div>
-              <dt>Budget indicatif</dt>
-              <dd>{{ request.budgetHint }}</dd>
+            <div class="qresume__field">
+              <span>Ville ou lieu</span>
+              <p>{{ request.place || 'Non précisé' }}</p>
             </div>
-          }
-          <div>
-            <dt>Reçu</dt>
-            <dd>{{ request.requestedAt }}</dd>
           </div>
-        </dl>
+        </section>
 
-        <article class="dash-devis__message dash-devis__message--inbound">
-          <h4><i class="pi pi-comment" aria-hidden="true"></i> Message du client</h4>
-          <p>{{ request.message }}</p>
-        </article>
+        <section class="qresume__section">
+          <h3>Nombre d’invités</h3>
+          <div class="qresume__choices">
+            <span class="qresume__choice qresume__choice--on">
+              {{ request.guestRange || (request.guestCount != null ? request.guestCount + ' invités' : 'Non précisé') }}
+            </span>
+          </div>
+        </section>
 
-        @if (request.proResponse) {
-          <article class="dash-devis__message dash-devis__message--outbound">
-            <h4><i class="pi pi-send" aria-hidden="true"></i> Votre réponse</h4>
-            <p>{{ request.proResponse }}</p>
-            @if (request.respondedAt) {
-              <footer class="dash-devis__message-meta">Envoyée le {{ request.respondedAt }}</footer>
-            }
-          </article>
+        @if (request.services?.length) {
+          <section class="qresume__section">
+            <div class="qresume__section-head">
+              <h3>Prestations souhaitées</h3>
+            </div>
+            <div class="qresume__chips">
+              @for (service of request.services; track service) {
+                <span class="qresume__chip qresume__chip--on">{{ service }}</span>
+              }
+            </div>
+          </section>
         }
 
-        <footer class="dash-devis__dialog-actions">
-          @if (canRespond(request)) {
-            <p-button
-              label="Répondre au client"
-              icon="pi pi-reply"
-              (onClick)="openRespondFromDetail()"
-            />
-          }
-          @if (request.status === 'new' || request.status === 'viewed') {
-            <p-button
-              label="Marquer comme répondu"
-              icon="pi pi-check"
-              [outlined]="true"
-              severity="secondary"
-              (onClick)="markAsAnswered(request.id)"
-            />
-          }
-        </footer>
+        <section class="qresume__section">
+          <div class="qresume__section-head">
+            <h3>Budget indicatif</h3>
+            <span>Optionnel · TTC</span>
+          </div>
+          <div class="qresume__chips">
+            <span class="qresume__chip qresume__chip--on">
+              {{ request.budgetHint || 'Non précisé' }}
+            </span>
+          </div>
+        </section>
+
+        <section class="qresume__section">
+          <h3>Message</h3>
+          <p class="qresume__message">{{ request.message }}</p>
+        </section>
       </div>
     }
+
+    <ng-template #footer>
+      @if (detailRequest(); as request) {
+        <div class="qresume__footer">
+          <span class="qresume__footer-note">{{ statusLabel(request.status) }}</span>
+          @if (canRespond(request)) {
+            <button type="button" class="qresume__open" (click)="openConversationFromDetail()">
+              <i class="pi pi-comments" aria-hidden="true"></i>
+              Ouvrir la conversation
+            </button>
+          }
+        </div>
+      }
+    </ng-template>
   </p-dialog>
 
   <p-dialog
-    header="Répondre au client"
-    [visible]="respondVisible()"
-    (visibleChange)="respondVisible.set($event)"
+    [visible]="conversationVisible()"
+    (visibleChange)="conversationVisible.set($event)"
     [modal]="true"
-    [style]="{ width: 'min(36rem, 94vw)' }"
+    [closable]="false"
     [draggable]="false"
     [resizable]="false"
-    styleClass="dash-devis-dialog dash-devis-dialog--respond"
+    [style]="{ width: 'min(720px, calc(100vw - 2rem))' }"
+    styleClass="dash-devis-thread"
   >
-    @if (respondRequest(); as request) {
-      <div class="dash-devis__respond">
-        @if (respondSuccess()) {
-          <p-message
-            severity="success"
-            text="Votre réponse a été enregistrée. Le client sera notifié (démo)."
-          />
+    <ng-template #header>
+      <div class="qresume__header">
+        <div class="qresume__title-row">
+          <h2 class="qresume__title">Conversation</h2>
+          <button
+            type="button"
+            class="qresume__close"
+            aria-label="Fermer"
+            (click)="conversationVisible.set(false)"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        @if (conversationRequest(); as request) {
+          <div class="qresume__person">
+            <div class="qresume__avatar" aria-hidden="true">
+              {{ clientInitials(request.clientName) }}
+            </div>
+            <div>
+              <span class="qresume__person-name">{{ request.clientName }}</span>
+              <span class="qresume__person-meta">
+                {{ request.eventType }} · {{ request.eventDateLabel }} ·
+                {{ request.guestCount ?? '—' }} invités
+              </span>
+            </div>
+          </div>
         }
+      </div>
+    </ng-template>
 
-        <aside class="dash-devis__respond-context">
-          <p class="dash-devis__respond-label">Destinataire</p>
-          <p class="dash-devis__respond-recipient">
-            <strong>{{ request.clientName }}</strong>
-            <span>{{ request.clientEmail }}</span>
-          </p>
-          <p class="dash-devis__respond-label">Demande</p>
-          <p class="dash-devis__respond-quote">
-            {{ request.eventType }} · {{ request.eventDateLabel }} ·
-            {{ request.guestCount }} invités
-          </p>
-          <blockquote class="dash-devis__respond-inbound">{{ request.message }}</blockquote>
-        </aside>
-
-        <div class="dash-devis__respond-field">
-          <label for="devis-response">Votre réponse</label>
-          <textarea
-            pTextarea
-            id="devis-response"
-            rows="8"
-            class="dash-devis__respond-textarea"
-            placeholder="Rédigez votre proposition : formules, tarifs, disponibilités, questions complémentaires…"
-            [ngModel]="responseText()"
-            (ngModelChange)="responseText.set($event); respondSuccess.set(false)"
-          ></textarea>
-          <p class="dash-devis__respond-hint">
-            Cette réponse sera associée à la demande (démo locale).
-          </p>
+    @if (conversationRequest(); as request) {
+      <div class="qthread">
+        <div #threadScroller class="qthread__log" role="log" aria-live="polite">
+          @for (message of messages(); track message.id) {
+            <article
+              class="qthread__bubble"
+              [class.qthread__bubble--mine]="message.author === 'craftsman'"
+            >
+              <header>
+                {{ message.author === 'craftsman' ? 'Vous' : request.clientName }}
+                <time>{{ formatMessageTime(message.createdAt) }}</time>
+              </header>
+              @if (message.body) {
+                <p>{{ message.body }}</p>
+              }
+              @if (message.attachments.length) {
+                <ul class="qthread__files">
+                  @for (file of message.attachments; track file.id) {
+                    <li>
+                      @if (isImage(file.mimeType)) {
+                        <a [href]="file.dataUrl" target="_blank" rel="noopener">
+                          <img [src]="file.dataUrl" [alt]="file.name" />
+                        </a>
+                      } @else {
+                        <a [href]="file.dataUrl" [download]="file.name">
+                          <i class="pi pi-file" aria-hidden="true"></i>
+                          {{ file.name }}
+                        </a>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </article>
+          }
         </div>
 
-        <footer class="dash-devis__dialog-actions dash-devis__dialog-actions--end">
-          <p-button
-            label="Annuler"
-            [text]="true"
-            severity="secondary"
-            (onClick)="closeRespond()"
-          />
-          <p-button
-            label="Envoyer la réponse"
-            icon="pi pi-send"
-            [disabled]="!responseText().trim()"
-            (onClick)="sendResponse()"
-          />
-        </footer>
+        @if (canRespond(request)) {
+          <form class="qthread__composer" (ngSubmit)="sendMessage()">
+            @if (pendingFiles().length) {
+              <ul class="qthread__pending">
+                @for (file of pendingFiles(); track file.id) {
+                  <li>
+                    @if (isImage(file.mimeType)) {
+                      <img [src]="file.dataUrl" [alt]="file.name" />
+                    } @else {
+                      <i class="pi pi-file" aria-hidden="true"></i>
+                    }
+                    <span>{{ file.name }}</span>
+                    <button type="button" (click)="removePending(file.id)" aria-label="Retirer">
+                      <i class="pi pi-times" aria-hidden="true"></i>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            @if (threadError()) {
+              <p class="qthread__error" role="alert">{{ threadError() }}</p>
+            }
+            <div class="qthread__compose-row">
+              <label class="qthread__attach">
+                <i class="pi pi-paperclip" aria-hidden="true"></i>
+                <span class="qresume__sr">Ajouter des fichiers ou des photos</span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+                  (change)="onAttach($event)"
+                />
+              </label>
+              <textarea
+                rows="2"
+                [ngModel]="draft()"
+                (ngModelChange)="draft.set($event)"
+                name="draft"
+                placeholder="Écrivez un message, ajoutez une photo ou un fichier…"
+              ></textarea>
+              <button
+                type="submit"
+                class="qthread__send"
+                [disabled]="threadSending() || (!draft().trim() && pendingFiles().length === 0)"
+              >
+                <i class="pi pi-send" aria-hidden="true"></i>
+                Envoyer
+              </button>
+            </div>
+          </form>
+        }
       </div>
     }
   </p-dialog>
