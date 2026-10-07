@@ -49,11 +49,9 @@ __screenshots__/
 
 vitest.config.*.timestamp*
 
-# Local env (copy from env/*.example.ts)
-env/environment.ts
-env/environment.prod.ts
-.env/environment.ts
-.env/environment.prod.ts
+# Generated at build time from Netlify environment variables, or kept locally.
+/env/
+/.env/
 
 # Scraped Google Places dumps (local only)
 /traiteurs_toulouse/
